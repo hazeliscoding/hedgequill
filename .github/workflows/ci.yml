@@ -89,6 +89,7 @@ jobs:
           fi
           kill "$pid"
 
+      # To the run's summary page, and to the log, where `gh run view --log` can read it.
       - name: Record the probe and the sizes
         if: ${{ !cancelled() }}
         run: |
@@ -99,10 +100,13 @@ jobs:
             echo '```'
             echo '| File | Bytes |'
             echo '|---|---|'
-            find artifacts/aot -maxdepth 1 -type f ! -name '*.pdb' ! -name '*.dbg' | sort | while read -r file; do
-              echo "| \`$(basename "$file")\` | $(wc -c < "$file" | tr -d ' ') |"
-            done
-          } >> "$GITHUB_STEP_SUMMARY"
+            # A run that failed before publishing has no artifacts/aot.
+            if [ -d artifacts/aot ]; then
+              find artifacts/aot -maxdepth 1 -type f ! -name '*.pdb' ! -name '*.dbg' | sort | while read -r file; do
+                echo "| \`$(basename "$file")\` | $(wc -c < "$file" | tr -d ' ') |"
+              done
+            fi
+          } | tee -a "$GITHUB_STEP_SUMMARY"
 
       # gitleaks is pinned and checked against its release checksum. --full-history HEAD scans this branch's
       # history only; by default it scans every ref, so one branch's leak would fail every run.
