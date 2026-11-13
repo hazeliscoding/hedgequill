@@ -34,6 +34,7 @@ Interface type scale: caption 11/14, callout 12/16, body 13/18, heading 15/20, d
 | Accent pressed | `#4d1923` | `#8f3f50` |
 | Accent soft | `#f1e3e5` | `rgba(161,74,92,.18)` |
 | Accent text and links | `#6e2633` | `#dc98a4` |
+| Focus ring | `#6e2633` | `#dc98a4` (the dark accent is only 2.9:1 on the page) |
 | Window and sidebar | `#f0ede6` | `#1a1917` |
 | Page (editor) | `#fbf8f1` | `#201f1d` |
 | Raised (menus, dialogs) | `#fffdf8` | `#2b2927` |
