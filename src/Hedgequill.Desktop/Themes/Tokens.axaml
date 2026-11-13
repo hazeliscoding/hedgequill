@@ -1,0 +1,94 @@
+<!--
+  The tokens in docs/brand/tokens.md, from the UI prototype. Change them there and here together.
+  The theme follows the OS setting. ContrastTests checks every text pair it lists, in both themes.
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- type: the interface uses the system font (Segoe UI, or the system font on macOS) -->
+  <FontFamily x:Key="FontManuscript">avares://Hedgequill/Assets/Fonts/Cardo#Cardo</FontFamily>
+  <FontFamily x:Key="FontTitle">avares://Hedgequill/Assets/Fonts/Gloock#Gloock</FontFamily>
+
+  <!-- radius -->
+  <CornerRadius x:Key="RadiusSmall">5</CornerRadius>
+  <CornerRadius x:Key="RadiusMedium">7</CornerRadius>
+
+  <ResourceDictionary.ThemeDictionaries>
+    <ResourceDictionary x:Key="Light">
+      <SolidColorBrush x:Key="Accent" Color="#6E2633" />
+      <SolidColorBrush x:Key="AccentHover" Color="#5D1F2B" />
+      <SolidColorBrush x:Key="AccentPressed" Color="#4D1923" />
+      <SolidColorBrush x:Key="AccentText" Color="#6E2633" />
+      <SolidColorBrush x:Key="TextOnAccent" Color="#FFFFFF" />
+      <StaticResource x:Key="FocusRing" ResourceKey="Accent" />
+
+      <SolidColorBrush x:Key="BgWindow" Color="#F0EDE6" />
+      <SolidColorBrush x:Key="BgPage" Color="#FBF8F1" />
+      <SolidColorBrush x:Key="BgRaised" Color="#FFFDF8" />
+      <SolidColorBrush x:Key="BgSunken" Color="#F5F2EB" />
+      <SolidColorBrush x:Key="BgToolbar" Color="#F3F0E9" />
+
+      <SolidColorBrush x:Key="TextPrimary" Color="#231F1C" />
+      <SolidColorBrush x:Key="TextSecondary" Color="#5F5852" />
+      <!-- AA: the prototype's #7D756D fell to 3.9:1 on BgWindow -->
+      <SolidColorBrush x:Key="TextTertiary" Color="#6C655F" />
+      <SolidColorBrush x:Key="MarkerFaded" Color="#9A918A" />
+
+      <SolidColorBrush x:Key="BorderDefault" Color="#1A28241E" />
+      <SolidColorBrush x:Key="Separator" Color="#1428241E" />
+      <SolidColorBrush x:Key="StateHover" Color="#0B28241E" />
+
+      <!-- Fluent's button resources, set to the prototype's -->
+      <StaticResource x:Key="AccentButtonBackground" ResourceKey="Accent" />
+      <StaticResource x:Key="AccentButtonBackgroundPointerOver" ResourceKey="AccentHover" />
+      <StaticResource x:Key="AccentButtonBackgroundPressed" ResourceKey="AccentPressed" />
+      <StaticResource x:Key="AccentButtonForeground" ResourceKey="TextOnAccent" />
+      <StaticResource x:Key="AccentButtonForegroundPointerOver" ResourceKey="TextOnAccent" />
+      <StaticResource x:Key="AccentButtonForegroundPressed" ResourceKey="TextOnAccent" />
+      <StaticResource x:Key="ButtonBackground" ResourceKey="BgRaised" />
+      <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#FBFAF9" />
+      <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="BgWindow" />
+      <SolidColorBrush x:Key="ButtonBorderBrush" Color="#2428241E" />
+      <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#3828241E" />
+      <StaticResource x:Key="ButtonForeground" ResourceKey="TextPrimary" />
+    </ResourceDictionary>
+
+    <ResourceDictionary x:Key="Dark">
+      <SolidColorBrush x:Key="Accent" Color="#A14A5C" />
+      <SolidColorBrush x:Key="AccentHover" Color="#AD5668" />
+      <SolidColorBrush x:Key="AccentPressed" Color="#8F3F50" />
+      <SolidColorBrush x:Key="AccentText" Color="#DC98A4" />
+      <SolidColorBrush x:Key="TextOnAccent" Color="#FFFFFF" />
+      <!-- The accent itself is under 3:1 on BgPage, so focus uses the lighter accent text. -->
+      <StaticResource x:Key="FocusRing" ResourceKey="AccentText" />
+
+      <SolidColorBrush x:Key="BgWindow" Color="#1A1917" />
+      <SolidColorBrush x:Key="BgPage" Color="#201F1D" />
+      <SolidColorBrush x:Key="BgRaised" Color="#2B2927" />
+      <SolidColorBrush x:Key="BgSunken" Color="#1A1917" />
+      <SolidColorBrush x:Key="BgToolbar" Color="#1D1C1A" />
+
+      <SolidColorBrush x:Key="TextPrimary" Color="#ECE6DA" />
+      <SolidColorBrush x:Key="TextSecondary" Color="#AAA399" />
+      <!-- AA: the prototype's #8A837A fell to 4.4:1 on BgPage -->
+      <SolidColorBrush x:Key="TextTertiary" Color="#968F86" />
+      <SolidColorBrush x:Key="MarkerFaded" Color="#847C73" />
+
+      <SolidColorBrush x:Key="BorderDefault" Color="#1CFFF6E6" />
+      <SolidColorBrush x:Key="Separator" Color="#14FFF6E6" />
+      <SolidColorBrush x:Key="StateHover" Color="#0EFFF6E6" />
+
+      <StaticResource x:Key="AccentButtonBackground" ResourceKey="Accent" />
+      <StaticResource x:Key="AccentButtonBackgroundPointerOver" ResourceKey="AccentHover" />
+      <StaticResource x:Key="AccentButtonBackgroundPressed" ResourceKey="AccentPressed" />
+      <StaticResource x:Key="AccentButtonForeground" ResourceKey="TextOnAccent" />
+      <StaticResource x:Key="AccentButtonForegroundPointerOver" ResourceKey="TextOnAccent" />
+      <StaticResource x:Key="AccentButtonForegroundPressed" ResourceKey="TextOnAccent" />
+      <SolidColorBrush x:Key="ButtonBackground" Color="#2E2C29" />
+      <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#353230" />
+      <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#282624" />
+      <SolidColorBrush x:Key="ButtonBorderBrush" Color="#1CFFF6E6" />
+      <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#2EFFF6E6" />
+      <StaticResource x:Key="ButtonForeground" ResourceKey="TextPrimary" />
+    </ResourceDictionary>
+  </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>
