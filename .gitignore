@@ -6,6 +6,9 @@ publish/
 TestResults/
 *.binlog
 
+# A repo-local SDK, which global.json prefers when it exists
+.dotnet/
+
 # Editors
 .vs/
 .idea/
