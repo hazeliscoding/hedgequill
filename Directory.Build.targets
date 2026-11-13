@@ -1,0 +1,4 @@
+<Project>
+  <!-- Replaces Avalonia.BuildServices' telemetry target, which sends from the build machine: a private app sends nothing its contributors didn't choose. -->
+  <Target Name="AvaloniaStats" />
+</Project>
