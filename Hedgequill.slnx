@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Hedgequill.Core/Hedgequill.Core.csproj" />
+    <Project Path="src/Hedgequill.Desktop/Hedgequill.Desktop.csproj" />
+  </Folder>
+</Solution>

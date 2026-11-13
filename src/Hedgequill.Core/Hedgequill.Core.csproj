@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The project model, files, saving and AO3 HTML. No UI: CorePurityTests fails on any reference to Avalonia or the updater. -->
+  <PropertyGroup>
+    <RootNamespace>Hedgequill.Core</RootNamespace>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+</Project>
