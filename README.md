@@ -9,7 +9,12 @@
 
 Writing apps for long fiction tend to be paid, or busy with features a fic doesn't need. Simple Markdown editors have no idea what a chapter or a scene is. And getting a chapter into AO3 with its italics and scene breaks intact means pasting and checking by hand. Hedgequill is one calm window for the whole job, and your words stay in plain files on your computer.
 
-> **Status: planning.** Nothing to download yet. [ROADMAP.md](ROADMAP.md) says what gets built, in what order.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/welcome-dark.png">
+  <img alt="Hedgequill's Welcome screen: the name, &quot;A quiet place to write.&quot;, New project… and Open folder… buttons, a note that a project is a folder of Markdown files on your computer, and an empty Recent list that says &quot;Nothing here yet.&quot;" src="docs/screenshots/welcome-light.png">
+</picture>
+
+> **Status: early.** The Welcome screen is all there is so far, and there's nothing to download yet. [ROADMAP.md](ROADMAP.md) says what gets built, in what order.
 
 ## Before and after
 
