@@ -34,23 +34,38 @@ What the design must protect, in this order when two conflict. Everything else g
 - **Design tokens come from the prototype,** in `docs/brand/tokens.md`. Its tertiary text fell below 4.5:1, so it's darkened in light mode and lightened in dark. This gives up an exact match with the prototype's grey.
 - **Avalonia's build telemetry is off,** as in Carmine. Avalonia 12 sends usage data from every build, and a private app shouldn't send anything its contributors didn't choose. This gives up Avalonia's usage data from this repo.
 
+## Decisions (2026-11-13)
+
+- **NativeAOT stays: AvaloniaEdit works under it.** M0's probe (`tools/Hedgequill.AotProbe`) published AvaloniaEdit 12.0.0 on Avalonia 12.1.6 for win-x64 and osx-arm64 with no trim or AOT warnings. In a real window it typed, undid, redid, selected, replaced a selection, and faded and italicized Markdown markers through a line transformer, on both. Its working set after the checks was 57 MB on CI's win-x64 runner and 107 MB on osx-arm64 (72 MB on the owner's PC, against 131 MB without NativeAOT). The app's own win-x64 build is a 17.3 MB exe plus 18 MB of native libraries (Skia 11.1, ANGLE 5.1, HarfBuzz 1.7), and with the Welcome screen open it holds a 78 MB working set and 103 MB private. This gives up any library that needs reflection: the Markdown and AO3 code in M1–M3 must stay NativeAOT-safe, and the fallback to a build without NativeAOT goes unused.
+- **.NET SDK 10.0.404 or later.** The SDK on the owner's PC, 10.0.302, brings a NativeAOT compiler (Microsoft.DotNet.ILCompiler 10.0.10) with a high-severity advisory, GHSA-p3jp-9v83-76w9, fixed in 10.0.14, and warnings as errors turns the advisory into a failed restore. `global.json` pins 10.0.404 and looks in a git-ignored, repo-local `.dotnet/` first, then the system install, so the system SDK stays untouched. This gives up building with an older SDK.
+- **The dark focus ring is the accent text color** (`#dc98a4`), because the dark accent (`#a14a5c`) is only 2.86:1 on the page. This gives up one focus color for both themes.
+- **The app icon is the light mark on a paper tile**, edge to edge on every platform, because the ink nib disappears on a dark taskbar. This gives up macOS's inset icon grid until M4's packaging.
+- **gitleaks runs on the Windows leg only,** as in Staypaw. It scans the history, and one scan per run is enough.
+
 ## M0: Placeholder (as soon as possible)
 
 - [x] Add `LICENSE` (Apache-2.0), `.gitignore` and `.gitattributes`.
 - [x] Add the logo, lockups and design tokens in `docs/brand/`.
-- [ ] Scaffold the solution: `Hedgequill.Core`, `Hedgequill.Desktop` and `Hedgequill.Tests` on .NET 10 and Avalonia 12, with nullable on, warnings as errors, and versions in `Directory.Packages.props`.
-- [ ] Build a static Welcome screen from the prototype: Hedgequill, "A quiet place to write.", New project…, Open folder…, an empty Recent list and the line about plain files, in light and dark. Cardo and Gloock ship as static TTF files.
-- [ ] Generate the app icons (`.ico`, `.icns`, `.png`) from `mark.svg` on a paper tile.
-- [ ] Run the NativeAOT probe: publish for win-x64 and osx-arm64 with AvaloniaEdit showing invented sample text. Record trim or AOT warnings, whether typing, undo and selection work, the exe size and the working set. Record the result as a decision.
-- [ ] Turn on the guardrails from the first code commit:
-  - [ ] CI builds and tests on Windows and macOS;
-  - [ ] gitleaks, run from its release binary checked against its published checksum, with `--log-opts="--full-history HEAD"`;
-  - [ ] a network guard that fails on networking APIs anywhere but the updater's file, with a positive control;
-  - [ ] a test that fails if `Hedgequill.Core` references Avalonia;
-  - [ ] Avalonia's build telemetry off, with a test that fails if the override stops working.
-- [ ] Add a screenshot of the Welcome screen to the README.
+- [x] Scaffold the solution: `Hedgequill.Core`, `Hedgequill.Desktop` and `Hedgequill.Tests` on .NET 10 and Avalonia 12, with nullable on, warnings as errors, and versions in `Directory.Packages.props`.
+- [x] Build a static Welcome screen from the prototype: Hedgequill, "A quiet place to write.", New project…, Open folder…, an empty Recent list and the line about plain files, in light and dark. Cardo and Gloock ship as static TTF files.
+- [x] Generate the app icons (`.ico`, `.icns`, `.png`) from `mark.svg` on a paper tile.
+- [x] Run the NativeAOT probe: publish for win-x64 and osx-arm64 with AvaloniaEdit showing invented sample text. Record trim or AOT warnings, whether typing, undo and selection work, the exe size and the working set. Record the result as a decision.
+- [x] Turn on the guardrails from the first code commit:
+  - [x] CI builds and tests on Windows and macOS;
+  - [x] gitleaks, run from its release binary checked against its published checksum, with `--log-opts="--full-history HEAD"`;
+  - [x] a network guard that fails on networking APIs anywhere but the updater's file, with a positive control;
+  - [x] a test that fails if `Hedgequill.Core` references Avalonia;
+  - [x] Avalonia's build telemetry off, with a test that fails if the override stops working.
+- [x] Add a screenshot of the Welcome screen to the README.
 
 **Done when:** CI is green on Windows and macOS, the Welcome screen renders in both themes, the NativeAOT probe's result is a dated decision here, and a test PR that adds `HttpClient` to `Hedgequill.Core` fails the network guard.
+
+**Done** (2026-11-13), in [#1](https://github.com/hazeliscoding/hedgequill/pull/1):
+- CI is green on win-x64 and osx-arm64 ([run](https://github.com/hazeliscoding/hedgequill/actions/runs/43379974849)): build, 80 tests, format, NativeAOT publish with warnings as errors, the probe, a 15-second smoke test, and gitleaks.
+- `WelcomeTests` renders the Welcome screen headlessly in both themes and checks the window and card colors against the tokens. `docs/screenshots/` holds both renders.
+- The probe's result is the first decision of 2026-11-13, above.
+- [#2](https://github.com/hazeliscoding/hedgequill/pull/2) added an `HttpClient` to `Hedgequill.Core`. Its [run](https://github.com/hazeliscoding/hedgequill/actions/runs/43381318104) failed on both runners with `src/Hedgequill.Core/Leak.cs:6  HTTP client`, and it was closed without merging.
+- Locally, the same leak plus the word "Avalonia" in Core and an emptied telemetry override failed the core purity test, the network guard and the telemetry test.
 
 ## M1: Write
 
