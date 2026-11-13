@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test (${{ matrix.rid }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+          - os: macos-latest
+            rid: osx-arm64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      AVALONIA_TELEMETRY_OPTOUT: true
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # The secret scan reads the whole history.
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Hedgequill.slnx
+
+      - name: Build
+        run: dotnet build Hedgequill.slnx --configuration Release --no-restore
+
+      # The privacy guards are tests: network APIs outside the updater, the package allowlist, Core's purity and
+      # Avalonia's build telemetry. So are the contrast check and the headless Welcome screen.
+      - name: Test
+        run: dotnet test --project tests/Hedgequill.Tests --configuration Release --no-build
+
+      - name: Format
+        run: dotnet format Hedgequill.slnx --verify-no-changes --no-restore
+
+      # Trim and AOT warnings only appear at publish, so -warnaserror fails the build on them.
+      - name: Publish the app (NativeAOT)
+        run: dotnet publish src/Hedgequill.Desktop --configuration Release --runtime ${{ matrix.rid }} --output artifacts/aot -warnaserror
+
+      - name: Publish the AvaloniaEdit probe (NativeAOT)
+        run: dotnet publish tools/Hedgequill.AotProbe --configuration Release --runtime ${{ matrix.rid }} --output artifacts/aot-probe -warnaserror
+
+      # Opens AvaloniaEdit in a real window, types, undoes, selects and styles Markdown markers, and exits 0 only if
+      # every check passed.
+      - name: Run the AvaloniaEdit probe
+        timeout-minutes: 3
+        run: |
+          probe=artifacts/aot-probe/Hedgequill.AotProbe
+          if [ "$RUNNER_OS" = Windows ]; then probe=$probe.exe; fi
+          "$probe" | tee probe.txt
+
+      # A crash at start, such as a font or type the trimmer dropped, ends the app before 15 seconds are up.
+      - name: Smoke test the app
+        run: |
+          app=artifacts/aot/Hedgequill
+          if [ "$RUNNER_OS" = Windows ]; then app=$app.exe; fi
+          "$app" &
+          pid=$!
+          sleep 15
+          if ! kill -0 "$pid" 2>/dev/null; then
+            status=0
+            wait "$pid" || status=$?
+            echo "Hedgequill stopped with status $status within 15 seconds."
+            exit 1
+          fi
+          kill "$pid"
+
+      - name: Record the probe and the sizes
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo "### NativeAOT on ${{ matrix.rid }}"
+            echo '```'
+            cat probe.txt 2>/dev/null || echo "The probe didn't run."
+            echo '```'
+            echo '| File | Bytes |'
+            echo '|---|---|'
+            find artifacts/aot -maxdepth 1 -type f ! -name '*.pdb' ! -name '*.dbg' | sort | while read -r file; do
+              echo "| \`$(basename "$file")\` | $(wc -c < "$file" | tr -d ' ') |"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # gitleaks is pinned and checked against its release checksum. --full-history HEAD scans this branch's
+      # history only; by default it scans every ref, so one branch's leak would fail every run.
+      - name: Secret scan
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $zip = "$env:RUNNER_TEMP\gitleaks.zip"
+          Invoke-WebRequest -Uri https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_windows_x64.zip -OutFile $zip
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($hash -ne 'd29144deff3a68aa93ced33dddf84b7fdc26070add4aa0f4513094c8332afc4e') { throw "gitleaks checksum mismatch: $hash" }
+          Expand-Archive $zip "$env:RUNNER_TEMP\gitleaks"
+          & "$env:RUNNER_TEMP\gitleaks\gitleaks.exe" git --log-opts="--full-history HEAD" --redact --no-banner
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
