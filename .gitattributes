@@ -1,0 +1,8 @@
+# Normalize to LF everywhere.
+* text=auto eol=lf
+
+# Binary brand and font files
+*.png binary
+*.ico binary
+*.icns binary
+*.ttf binary
