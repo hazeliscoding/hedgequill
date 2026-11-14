@@ -9,7 +9,7 @@ namespace Hedgequill.Tests.Desktop;
 public partial class ContrastTests
 {
     private static readonly string[] Text = ["TextPrimary", "TextSecondary", "TextTertiary", "AccentText"];
-    private static readonly string[] Surfaces = ["BgWindow", "BgPage", "BgRaised"];
+    private static readonly string[] Surfaces = ["BgWindow", "BgPage", "BgRaised", "BgInset", "BgInput"];
 
     // (foreground, background, minimum ratio): 4.5 for text (SC 1.4.3), 3 for focus indicators (SC 1.4.11).
     // MarkerFaded is left out on purpose: faded Markdown markers recede, and the text they wrap stays full contrast.

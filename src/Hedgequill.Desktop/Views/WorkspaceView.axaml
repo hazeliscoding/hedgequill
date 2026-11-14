@@ -1,0 +1,38 @@
+<!-- A project open: the navigator on the left and the content column, as the prototype lays them out. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Hedgequill.Desktop.Views"
+             x:Class="Hedgequill.Desktop.Views.WorkspaceView">
+  <Grid ColumnDefinitions="236,*">
+    <DockPanel Grid.Column="0">
+      <TextBlock x:Name="ProjectTitle" DockPanel.Dock="Top" Classes="project-title" Margin="16,12,16,6" AutomationProperties.HeadingLevel="1" />
+      <ListBox x:Name="Navigator" Classes="navigator" AutomationProperties.Name="Manuscript">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="views:NavigatorRow">
+            <Grid Height="{Binding Height}" Margin="{Binding Indent}" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="4" Background="Transparent">
+              <Button Classes="chevron" Classes.empty="{Binding !HasChildren}" Classes.quiet="{Binding QuietChevron}" AutomationProperties.Name="Expand or collapse" Focusable="False">
+                <Path Data="M4.5 3L7.5 6L4.5 9">
+                  <Path.RenderTransform>
+                    <RotateTransform Angle="{Binding ChevronAngle}" />
+                  </Path.RenderTransform>
+                </Path>
+              </Button>
+              <TextBlock Grid.Column="1" Classes="row-number" IsVisible="{Binding IsChapter}" Text="{Binding Number}" />
+              <TextBlock Grid.Column="2" Classes="row-title" Classes.label="{Binding IsLabel}" Classes.chapter="{Binding IsChapter}" Text="{Binding Title}" />
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </DockPanel>
+
+    <DockPanel Grid.Column="1">
+      <StackPanel DockPanel.Dock="Top" Height="40" Margin="16,0" VerticalAlignment="Center" Spacing="0">
+        <TextBlock x:Name="HeaderTitle" Classes="header-title" Margin="0,5,0,0" />
+        <TextBlock x:Name="HeaderSub" Classes="caption" />
+      </StackPanel>
+      <Border Classes="content-pane">
+        <TextBlock x:Name="Placeholder" Classes="manuscript-italic" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" MaxWidth="320" TextWrapping="Wrap" />
+      </Border>
+    </DockPanel>
+  </Grid>
+</UserControl>
