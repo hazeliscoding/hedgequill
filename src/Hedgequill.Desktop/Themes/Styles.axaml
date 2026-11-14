@@ -137,10 +137,11 @@
     <Setter Property="Padding" Value="0" />
     <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
   </Style>
+  <!-- Icons are drawn on a 12 px grid, unscaled, so their strokes stay crisp. -->
   <Style Selector="Button.icon Path, Button.chevron Path">
     <Setter Property="Width" Value="12" />
     <Setter Property="Height" Value="12" />
-    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="Stretch" Value="None" />
     <Setter Property="StrokeThickness" Value="1.5" />
     <Setter Property="StrokeLineCap" Value="Round" />
     <Setter Property="StrokeJoin" Value="Round" />
@@ -245,7 +246,6 @@
     <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
   </Style>
   <Style Selector="Button.chevron Path">
-    <Setter Property="Stretch" Value="None" />
     <Setter Property="RenderTransformOrigin" Value="50%,50%" />
   </Style>
   <!-- A row without children keeps the chevron's space, so titles line up by depth. -->
@@ -282,5 +282,60 @@
   <Style Selector="ListBox.navigator > ListBoxItem:selected TextBlock.row-title">
     <Setter Property="FontWeight" Value="Medium" />
     <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
+  </Style>
+
+  <!-- Destructive actions, and the quiet button in the navigator's footer. -->
+  <Style Selector="Button.danger">
+    <Setter Property="Background" Value="{DynamicResource DangerButton}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextOnAccent}" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.danger:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource DangerButtonHover}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextOnAccent}" />
+  </Style>
+  <Style Selector="MenuItem.danger">
+    <Setter Property="Foreground" Value="{DynamicResource DangerText}" />
+  </Style>
+  <Style Selector="Button.tertiary">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+  </Style>
+  <Style Selector="Button.tertiary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource StateHover}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+  </Style>
+  <Style Selector="Button.tertiary > StackPanel">
+    <Setter Property="Orientation" Value="Horizontal" />
+    <Setter Property="Spacing" Value="4" />
+  </Style>
+  <Style Selector="Button.tertiary Path">
+    <Setter Property="Width" Value="12" />
+    <Setter Property="Height" Value="12" />
+    <Setter Property="StrokeThickness" Value="1.5" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="Stroke" Value="{Binding $self.(TextElement.Foreground)}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- Renaming in the navigator, and where a dragged row will land. -->
+  <Style Selector="TextBox.rename">
+    <Setter Property="Height" Value="22" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Padding" Value="6,0" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+  </Style>
+  <Style Selector="Border.drop-line">
+    <Setter Property="Height" Value="2" />
+    <Setter Property="CornerRadius" Value="2" />
+    <Setter Property="Background" Value="{DynamicResource Accent}" />
+  </Style>
+  <Style Selector="Border.drop-box">
+    <Setter Property="BorderThickness" Value="1.5" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
   </Style>
 </Styles>

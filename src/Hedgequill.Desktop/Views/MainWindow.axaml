@@ -1,4 +1,4 @@
-<!-- The one window: the Welcome screen or a project's workspace, with the New project sheet and a toast over them. -->
+<!-- The one window: the Welcome screen or a project's workspace, with the sheets and a toast over them. -->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="using:Hedgequill.Desktop.Views"
@@ -10,6 +10,7 @@
   <Panel>
     <ContentControl x:Name="Screen" Focusable="False" />
     <views:NewProjectSheet x:Name="Sheet" IsVisible="False" />
+    <views:ConfirmSheet x:Name="Confirmation" IsVisible="False" />
     <views:Toast x:Name="Notice" IsVisible="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16" />
   </Panel>
 </Window>

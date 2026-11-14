@@ -16,7 +16,8 @@ public partial class ContrastTests
     private static readonly (string Fg, string Bg, double Min)[] Pairs =
     [
         .. Text.SelectMany(fg => Surfaces.Select(bg => (fg, bg, 4.5))),
-        .. new[] { "Accent", "AccentHover", "AccentPressed" }.Select(bg => ("TextOnAccent", bg, 4.5)),
+        .. new[] { "Accent", "AccentHover", "AccentPressed", "DangerButton", "DangerButtonHover" }.Select(bg => ("TextOnAccent", bg, 4.5)),
+        .. new[] { "BgRaised", "BgPage" }.Select(bg => ("DangerText", bg, 4.5)),
         .. new[] { "ButtonBackground", "ButtonBackgroundPointerOver", "ButtonBackgroundPressed" }.Select(bg => ("TextPrimary", bg, 4.5)),
         .. Surfaces.Select(bg => ("FocusRing", bg, 3.0)),
     ];

@@ -50,7 +50,8 @@ Interface type scale: caption 11/14, callout 12/16, body 13/18, heading 15/20, d
 | Text, tertiary | `#6c655f` | `#968f86` |
 | Markdown markers (faded) | `#9a918a` | `#847c73` |
 | Selection in the manuscript | `rgba(110,38,51,.16)` | `rgba(161,74,92,.3)` |
-| Danger | `#d9453b`, text `#b1362d` | |
+| Danger | `#d9453b`, text `#b1362d` | text `#f0968f` |
+| Danger button, with white text | `#b1362d`, hover `#9a2e26` | the same (white on `#d9453b` is only about 4:1) |
 | Warning | `#c9830f`, text `#83560a` | |
 | Success | `#2f9a5a`, text `#1f6f41` | |
 
