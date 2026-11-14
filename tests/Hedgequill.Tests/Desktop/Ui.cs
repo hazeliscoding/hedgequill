@@ -11,7 +11,6 @@ using Avalonia.Platform;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
-using Hedgequill.Core.Projects;
 using Hedgequill.Desktop;
 using Hedgequill.Desktop.Views;
 
@@ -32,7 +31,7 @@ internal static class Ui
 
     /// <summary>Runs a test on a 1280 × 800 main window whose Recent list lives in its own folder, never the real one.</summary>
     public static Task OnWindow(ThemeVariant theme, string settings, Action<MainWindow> test) =>
-        OnWindow(theme, test, () => new MainWindow(new RecentProjects(settings)) { Width = 1280, Height = 800 });
+        OnWindow(theme, test, () => new MainWindow(settings) { Width = 1280, Height = 800 });
 
     public static Task OnWindow<T>(ThemeVariant theme, Action<T> test, Func<T> create)
         where T : Window => Session.Dispatch(() =>

@@ -25,7 +25,7 @@ public sealed class WelcomeTests : IDisposable
             ["Hedgequill", "A quiet place to write.", "New project…", "Open folder…",
              "A project is a folder of Markdown files on your computer. Nothing leaves it unless you copy it out.",
              "Recent", "Nothing here yet.", "Projects you open will be listed here."],
-            VisibleText(window));
+            VisibleText(Find<ContentControl>(window, "Screen")));
         Assert.Equal("Hedgequill", window.Title);
         Assert.Empty(Errors.Messages);
     });
@@ -57,7 +57,7 @@ public sealed class WelcomeTests : IDisposable
     [Fact]
     public Task The_title_and_tagline_use_the_bundled_fonts() => OnWindow(ThemeVariant.Light, _temp["settings"], window =>
     {
-        var blocks = window.GetVisualDescendants().OfType<TextBlock>().Where(t => t.IsEffectivelyVisible).ToDictionary(t => t.Text ?? "");
+        var blocks = Find<ContentControl>(window, "Screen").GetVisualDescendants().OfType<TextBlock>().Where(t => t.IsEffectivelyVisible).ToDictionary(t => t.Text ?? "");
         Assert.Equal(("Gloock", FontStyle.Normal), Face(blocks["Hedgequill"]));
         Assert.Equal(("Cardo", FontStyle.Italic), Face(blocks["A quiet place to write."]));
         Assert.Equal(("Cardo", FontStyle.Italic), Face(blocks["Nothing here yet."]));

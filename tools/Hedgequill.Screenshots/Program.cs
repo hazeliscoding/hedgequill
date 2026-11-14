@@ -46,7 +46,7 @@ internal static class Program
 
     private static void Capture(string output, string name, string settings, Action<MainWindow> arrange)
     {
-        var window = new MainWindow(new RecentProjects(settings)) { Width = 1280, Height = 800 };
+        var window = new MainWindow(settings) { Width = 1280, Height = 800 };
         window.Show();
         arrange(window);
         Settle(TimeSpan.FromSeconds(1));

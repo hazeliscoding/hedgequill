@@ -51,6 +51,13 @@ What the design must protect, in this order when two conflict. Everything else g
 - **Choose folder… copies the whole project,** with the text in memory, into the folder the writer picks, and carries on there. A read-only folder can't take a single scene, and splitting a project across folders would break it. This gives up writing just the one scene elsewhere; Save a copy… still does that when a save fails.
 - **Closing with unsaved text asks first:** "Close without saving?", with Close anyway. The prototype doesn't draw it, but AGENTS.md's first rule is never to lose words without the writer choosing to. This gives up a window that always closes at once.
 - **A printed book moves from Not planned to Later,** at the owner's request: a PDF to print and bind, like the gift edition the owner already makes with a script. Not planned keeps ePub, Word and other compile formats. This gives up part of the line that kept Hedgequill out of compiling.
+- **The menu bar is one NativeMenu:** File, Edit, View and Chapter, as the prototype draws them.
+  - macOS shows it at the top of the screen. Windows shows it in the prototype's caption row (app icon, menus, title), and Avalonia draws the window buttons there.
+  - Help and the AO3 items stay out until M3 and M4, so no item does nothing.
+  - This gives up the system-drawn Windows title bar; whether Windows 11's snap layouts still show over the maximize button is unchecked.
+- **View › Appearance offers Match system, Light and Dark,** remembered in `settings.json` beside the Recent list. The prototype shows Light and Dark only, but the app follows the system until the writer picks. This gives up nothing the prototype shows.
+- **Duplicate is built now,** as the prototype draws it in the row menus, the Chapter menu and on Ctrl+D (⌘D): "Title copy" right after the original, with the text in memory. This gives up nothing; it was missing from the M1 items.
+- **File › Show project folder is the one thing Hedgequill launches:** `Launcher.LaunchDirectoryInfoAsync` on the project folder, which opens Explorer or Finder. The network guard allows that one call and still fails on every other launcher, URL or file opener. Opening a local folder sends nothing anywhere. This gives up a guard that bans the launcher outright.
 
 ## M0: Placeholder (as soon as possible)
 

@@ -489,4 +489,33 @@
     <Setter Property="Stroke" Value="{DynamicResource TextTertiary}" />
     <Setter Property="VerticalAlignment" Value="Center" />
   </Style>
+
+  <!-- The caption row's menu bar and title, as the prototype draws them: 12 px items, 24 px tall, with a 4 px corner. -->
+  <Style Selector="NativeMenuBar Menu">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Height" Value="24" />
+  </Style>
+  <Style Selector="NativeMenuBar Menu > MenuItem">
+    <Setter Property="Height" Value="24" />
+    <Setter Property="Padding" Value="8,0" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="CornerRadius" Value="4" />
+  </Style>
+  <Style Selector="TextBlock.caption-title">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="LineHeight" Value="16" />
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+
+  <!--
+    On Windows, Avalonia draws the window buttons once the caption row extends into the title bar. The caption row shows
+    the title itself, and the prototype has no full-screen button. The title's panel binds its own visibility, so the text inside is hidden.
+  -->
+  <Style Selector="WindowDrawnDecorations /template/ Panel#PART_TitleTextPanel > TextBlock">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="WindowDrawnDecorations /template/ Button#PART_FullScreenButton">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
 </Styles>

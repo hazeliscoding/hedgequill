@@ -182,6 +182,15 @@ public partial class ManuscriptView : UserControl
         };
     }
 
+    /// <summary>Edit › Find…: AvaloniaEdit's search panel, on the open scene or page.</summary>
+    public void OpenFind()
+    {
+        if (_node?.IsFile == true)
+        {
+            _search.Open();
+        }
+    }
+
     public void Wrap(string marker) => Apply(Markdown.Wrap(Editor.Document.Text, Editor.SelectionStart, Editor.SelectionStart + Editor.SelectionLength, marker));
 
     public void InsertSceneBreak() => Apply(Markdown.InsertSceneBreak(Editor.Document.Text, Editor.SelectionStart, Editor.SelectionStart + Editor.SelectionLength));

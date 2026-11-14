@@ -102,6 +102,9 @@ public partial class WorkspaceView : UserControl
     /// <summary>Close project, from the project menu: back to the Welcome screen.</summary>
     public event Action? CloseRequested;
 
+    /// <summary>The selection, focus mode or the navigator changed, so the menu bar's enabled and checked items may too.</summary>
+    public event Action? StateChanged;
+
     /// <summary>Before anything moves or closes a file: write what's in the editor.</summary>
     public event Action? FlushRequested;
 
@@ -129,6 +132,43 @@ public partial class WorkspaceView : UserControl
 
     public Node? Renaming => _renaming;
 
+    public Project Project => _project;
+
+    public AvaloniaEdit.TextEditor Editor => Manuscript.TextEditor;
+
+    /// <summary>The scene or page open in the editor, if any.</summary>
+    public Node? OpenDocument => Manuscript.Node is { IsFile: true } node ? node : null;
+
+    /// <summary>The selected chapter, or the chapter the selected scene is in.</summary>
+    public Node? CurrentChapter => ChapterOf(Selected);
+
+    public void Wrap(string marker) => Manuscript.Wrap(marker);
+
+    public void InsertSceneBreak() => Manuscript.InsertSceneBreak();
+
+    public void OpenFind() => Manuscript.OpenFind();
+
+    /// <summary>Copies a scene, page or chapter to "… copy" right after it and selects the copy, as the prototype does.</summary>
+    public void Duplicate(Node node)
+    {
+        if (node.Kind is not (NodeKind.Scene or NodeKind.Page or NodeKind.Chapter))
+        {
+            return;
+        }
+
+        FlushRequested?.Invoke();
+        Manuscript.Commit();
+        Attempt($"Couldn't duplicate “{node.Title}”", () => AfterChange(_project.Duplicate(node)));
+    }
+
+    public void CollapseAll()
+    {
+        _collapsed.UnionWith(_project.Root.Descendants().Where(node => node.Children.Count > 0));
+        var selected = Selected;
+        Refresh();
+        Select(selected is null ? null : Ancestors(selected).LastOrDefault() ?? selected);
+    }
+
     public void Select(Node? node) => Navigator.SelectedItem = Rows.FirstOrDefault(row => row.Node == node);
 
     /// <summary>Puts keyboard focus on the selected row. The ListBox itself doesn't take focus, its rows do, and a new row exists only after layout.</summary>
@@ -152,6 +192,8 @@ public partial class WorkspaceView : UserControl
         {
             Manuscript.TextEditor.TextArea.Focus();
         }
+
+        StateChanged?.Invoke();
     }
 
     public void ToggleNavigator()
@@ -161,6 +203,7 @@ public partial class WorkspaceView : UserControl
         NavigatorPane.IsVisible = _navigatorWanted;
         NavigatorToggle.Classes.Set("selected", _navigatorWanted);
         AutomationProperties.SetName(NavigatorToggle, _navigatorWanted ? "Hide navigator" : "Show navigator");
+        StateChanged?.Invoke();
     }
 
     public void Toggle(Node node)
@@ -189,6 +232,9 @@ public partial class WorkspaceView : UserControl
             Add(chapter, NodeKind.Scene);
         }
     }
+
+    /// <summary>New chapter: in the selected act, or at the top level.</summary>
+    public void AddChapter() => Add(ActOf(Selected) ?? _project.Root, NodeKind.Chapter);
 
     public void Add(Node parent, NodeKind kind) => Attempt($"Couldn't add a {kind.ToString().ToLowerInvariant()}", () =>
     {
@@ -373,12 +419,13 @@ public partial class WorkspaceView : UserControl
     {
         var rename = OperatingSystem.IsMacOS() ? new KeyGesture(Key.Enter) : new KeyGesture(Key.F2);
         var delete = OperatingSystem.IsMacOS() ? new KeyGesture(Key.Back, KeyModifiers.Meta) : new KeyGesture(Key.Delete);
+        var duplicate = new KeyGesture(Key.D, OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control);
         return node.Kind switch
         {
             NodeKind.Scene or NodeKind.Page =>
-                [Item("Rename", () => StartRename(node), rename), new Separator(), Item(node.Kind == NodeKind.Scene ? "Delete scene" : "Delete page", () => AskDelete(node), delete, danger: true)],
+                [Item("Rename", () => StartRename(node), rename), Item("Duplicate", () => Duplicate(node), duplicate), new Separator(), Item(node.Kind == NodeKind.Scene ? "Delete scene" : "Delete page", () => AskDelete(node), delete, danger: true)],
             NodeKind.Chapter =>
-                [Item("New scene", () => Add(node, NodeKind.Scene)), Item("Rename", () => StartRename(node), rename), new Separator(), Item("Delete chapter", () => AskDelete(node), delete, danger: true)],
+                [Item("New scene", () => Add(node, NodeKind.Scene)), Item("Rename", () => StartRename(node), rename), Item("Duplicate", () => Duplicate(node)), new Separator(), Item("Delete chapter", () => AskDelete(node), delete, danger: true)],
             NodeKind.Act =>
                 [Item("New chapter", () => Add(node, NodeKind.Chapter)), Item("Rename", () => StartRename(node), rename), new Separator(), Item("Delete act", () => AskDelete(node), delete, danger: true)],
             _ => [Item("New page", () => Add(node, NodeKind.Page))],
@@ -388,21 +435,14 @@ public partial class WorkspaceView : UserControl
     private List<Control> AddMenu()
     {
         var notes = _project.Root.Children.First(node => node.Kind == NodeKind.Notes);
-        var collapsible = _project.Root.Descendants().Where(node => node.Children.Count > 0);
         return
         [
             Item("New scene", AddScene),
-            Item("New chapter", () => Add(ActOf(Selected) ?? _project.Root, NodeKind.Chapter)),
+            Item("New chapter", AddChapter),
             Item("New act", () => Add(_project.Root, NodeKind.Act)),
             new Separator(),
             Item("New note", () => Add(notes, NodeKind.Page)),
-            Item("Collapse all", () =>
-            {
-                _collapsed.UnionWith(collapsible);
-                var selected = Selected;
-                Refresh();
-                Select(selected is null ? null : Ancestors(selected).LastOrDefault() ?? selected);
-            }),
+            Item("Collapse all", CollapseAll),
         ];
     }
 
@@ -439,6 +479,9 @@ public partial class WorkspaceView : UserControl
         {
             case Key.Up or Key.Down when e.KeyModifiers == KeyModifiers.Alt:
                 Nudge(node, e.Key == Key.Up ? -1 : 1);
+                break;
+            case Key.D when e.KeyModifiers == command:
+                Duplicate(node);
                 break;
             case Key.F2 or Key.Enter when e.KeyModifiers == KeyModifiers.None:
                 StartRename(node);
@@ -628,6 +671,7 @@ public partial class WorkspaceView : UserControl
         }
 
         Manuscript.Show(_project, node);
+        StateChanged?.Invoke();
     }
 
     private static string Shortcut(string keys) => OperatingSystem.IsMacOS() ? "⌘" + keys.Replace("Shift+", "⇧", StringComparison.Ordinal) : "Ctrl+" + keys;
