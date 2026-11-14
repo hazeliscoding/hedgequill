@@ -56,6 +56,8 @@ One meaning per term. Use these words in code, docs and commits.
 ## Commands
 
 - `dotnet build` builds everything. `dotnet test --project tests/Hedgequill.Tests` runs the tests, the privacy guards among them. `dotnet format --verify-no-changes` checks style, as CI does.
+- `tests/Hedgequill.UiTests` drives the published app's real window on Windows with FlaUI. Set `HEDGEQUILL_APP` to the NativeAOT `Hedgequill.exe` and `HEDGEQUILL_UI_SHOTS` to a folder for its screenshots, then `dotnet test --project tests/Hedgequill.UiTests`. It moves the real mouse and types, so leave the PC alone while it runs; without `HEDGEQUILL_APP` it skips. CI runs it on Windows and uploads the screenshots, with the macOS runner's.
+- `HEDGEQUILL_SETTINGS` points the app at another folder for its Recent list and `settings.json`, so tests never touch the writer's.
 - `global.json` pins .NET SDK 10.0.404 or later, because older 10.0 SDKs bring a NativeAOT compiler with a known vulnerability. It looks in a repo-local `.dotnet/` first (git-ignored), then the system install.
 - `dotnet publish src/Hedgequill.Desktop -c Release -r win-x64 -warnaserror` builds the NativeAOT app (`osx-arm64` on a Mac; NativeAOT can't build for another OS). On Windows with Visual Studio 18, put `%ProgramFiles(x86)%\Microsoft Visual Studio\Installer` on `PATH` first, or the link step fails because `vswhere.exe` isn't found.
 - `tools/Hedgequill.AotProbe`, published the same way and run, opens AvaloniaEdit under NativeAOT, types, undoes, selects and styles Markdown markers, and exits 0 only if every check passed. CI runs it on Windows and macOS. It opens a window for about a second.
