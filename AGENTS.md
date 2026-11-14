@@ -14,7 +14,8 @@ These are the working rules for agents in this repo. Hedgequill is a desktop app
 - **Never lose words.** Autosave. Write a file atomically (temporary file, then replace), so a crash never leaves half of it. When a save fails, the text stays in the editor and the user gets Retry and Save a copy…, as the prototype shows. Never discard unsaved text without the user choosing to: not on close, not on reload, not on update. A writer who loses a chapter once won't come back.
 - **The update check is the only network code.** Velopack makes it, from one file in `Hedgequill.Desktop`. No telemetry, no analytics, no crash reports the app sends itself, no fonts or images fetched at runtime, and no other network use. `Hedgequill.Core` never references Velopack or networking. Tests fail on both. The privacy promise in the README depends on this.
 - **Never restart into an update on your own.** A downloaded update installs when the user closes Hedgequill, or when they choose to restart. An unprompted restart can interrupt a sentence.
-- **The user's files stay plain Markdown** that any text editor can open. Hedgequill's own data in a project is one small file for order and details. Never write a format only Hedgequill can read.
+- **The user's files stay plain Markdown** that any text editor can open. Hedgequill's own data in a project is `hedgequill.json`, for order and details. Never write a format only Hedgequill can read.
+- **Delete never erases.** It moves the file or folder into the project's `Trash/` folder, and Undo moves it back. A Markdown file Hedgequill can't place in the outline stays on disk untouched.
 - **Tests and fixtures use invented sample text, never a real fic.** The owner's writing is private, and this repo is public.
 - **AO3 HTML stays within what AO3 keeps:** paragraphs, emphasis, headings, quotes and scene breaks. Anything else becomes plain text, so the preview matches what gets posted.
 - **Velopack's package ID stays `hazeliscoding.Hedgequill`,** never `Hedgequill`. Setup empties `%LOCALAPPDATA%\<packId>` on every install, and `%LOCALAPPDATA%\Hedgequill` holds settings and the recent-projects list.
@@ -42,8 +43,9 @@ These are the working rules for agents in this repo. Hedgequill is a desktop app
 
 One meaning per term. Use these words in code, docs and commits.
 
-- **Project:** a folder of Markdown files plus Hedgequill's small file for their order and details.
-- **Act, chapter, scene:** the three levels of the story, in that order. A scene is the smallest part the navigator moves. A chapter is what Copy for AO3 copies. How they map to files is settled in M1.
+- **Project:** a folder of Markdown files plus `hedgequill.json`, which holds their order and details.
+- **Act, chapter, scene:** the three levels of the story, in that order. Acts and chapters are folders, a scene is a Markdown file, and acts are optional. A scene is the smallest part the navigator moves. A chapter is what Copy for AO3 copies.
+- **Index:** `hedgequill.json` at the project root: each folder's order, which folders are acts, and titles a file name can't hold.
 - **Page:** a Markdown file in Notes or Research, outside the story.
 - **Navigator:** the list on the left that shows the project's acts, chapters, scenes and pages.
 - **Scene break:** the marker between scenes inside a chapter. It's a plain Markdown break in the file.
