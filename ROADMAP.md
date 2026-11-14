@@ -41,6 +41,37 @@ What the design must protect, in this order when two conflict. Everything else g
 - **The dark focus ring is the accent text color** (`#dc98a4`), because the dark accent (`#a14a5c`) is only 2.86:1 on the page. This gives up one focus color for both themes.
 - **The app icon is the light mark on a paper tile**, edge to edge on every platform, because the ink nib disappears on a dark taskbar. This gives up macOS's inset icon grid until M4's packaging.
 - **gitleaks runs on the Windows leg only,** as in Staypaw. It scans the history, and one scan per run is enough.
+- **A project's folders mirror its outline,** as the prototype draws them. Acts and chapters are folders, a scene is a Markdown file named after its title, and pages sit in `Notes/` and `Research/`. Acts are optional, so a chapter can sit at the top. A new project is a folder named after its title, holding `Chapter 1/Scene 1.md`, `Notes/` and `Research/`. Another editor sees the outline in the folder tree. This gives up file names that stay put: renaming a scene renames its file.
+- **`hedgequill.json` holds the order and details,** at the project root: the order of each folder's contents, which folders are acts, and any title a file name can't hold, such as "What now?" on Windows. Files it doesn't list still show, sorted by name, and deleting it loses only the order. JSON, because .NET reads and writes it NativeAOT-safe without another library. Acts are listed so an empty act doesn't reopen as an empty chapter. This gives up a project folder that looks untouched.
+- **Delete moves to the project's `Trash/` folder,** with Undo, as the prototype shows, not to the system trash the M1 item first named. A move works the same on Windows, macOS and drives without a trash, needs no native code, and keeps every word inside the project. This gives up a tidy project: the writer empties `Trash/` themselves.
+- **Alt+Up and Alt+Down reorder the navigator,** which the prototype doesn't draw but M1 asks for. A scene or page at the edge of its chapter or group moves into the next one. This gives up nothing the prototype shows.
+- **Find is AvaloniaEdit's own search panel,** opened with Ctrl+F (⌘F). The prototype lists Find… without drawing it, and the panel already searches, steps through matches and replaces. This gives up a Find bar styled from the prototype until one is drawn.
+- **Files are written with LF line endings.** A scene saved on Windows reads the same on a Mac and in Git, and a file with CRLF endings changes to LF the first time Hedgequill saves it. This gives up keeping each file's original line endings.
+- **Changed on disk is noticed when Hedgequill next saves that file:** before writing, it compares the file with what it last read or wrote. It never overwrites the other app's change without Keep mine. This gives up a warning the moment another app saves; a file watcher can add one later.
+- **Choose folder… copies the whole project,** with the text in memory, into the folder the writer picks, and carries on there. A read-only folder can't take a single scene, and splitting a project across folders would break it. This gives up writing just the one scene elsewhere; Save a copy… still does that when a save fails.
+- **Closing with unsaved text asks first:** "Close without saving?", with Close anyway. The prototype doesn't draw it, but AGENTS.md's first rule is never to lose words without the writer choosing to. This gives up a window that always closes at once.
+- **A printed book moves from Not planned to Later,** at the owner's request: a PDF to print and bind, like the gift edition the owner already makes with a script. Not planned keeps ePub, Word and other compile formats. This gives up part of the line that kept Hedgequill out of compiling.
+- **The menu bar is one NativeMenu:** File, Edit, View and Chapter, as the prototype draws them.
+  - macOS shows it at the top of the screen. Windows shows it in the prototype's caption row (app icon, menus, title), and Avalonia draws the window buttons there.
+  - Help and the AO3 items stay out until M3 and M4, so no item does nothing.
+  - This gives up the system-drawn Windows title bar; whether Windows 11's snap layouts still show over the maximize button is unchecked.
+- **View › Appearance offers Match system, Light and Dark,** remembered in `settings.json` beside the Recent list. The prototype shows Light and Dark only, but the app follows the system until the writer picks. This gives up nothing the prototype shows.
+- **Duplicate is built now,** as the prototype draws it in the row menus, the Chapter menu and on Ctrl+D (⌘D): "Title copy" right after the original, with the text in memory. This gives up nothing; it was missing from the M1 items.
+- **File › Show project folder is the one thing Hedgequill launches:** `Launcher.LaunchDirectoryInfoAsync` on the project folder, which opens Explorer or Finder. The network guard allows that one call and still fails on every other launcher, URL or file opener. Opening a local folder sends nothing anywhere. This gives up a guard that bans the launcher outright.
+- **End-to-end tests drive the real window on Windows CI,** with FlaUI through UI Automation, against the NativeAOT build. They cover the caption row's menus, typing and saving, Find, focus mode, dragging by the caption row, and closing straight after a keystroke. The macOS runner stands in for a Mac the owner doesn't have: it starts the app, reads its menu bar through System Events and takes screenshots, uploaded with each run. This gives up nothing in the app; FlaUI is a test-only dependency, and Windows 11's snap layouts stay a manual check.
+
+## Decisions (2026-11-14)
+
+- **Hedgequill catches up with the alternatives before 1.0,** at the owner's request, after comparing it with them.
+  - M2 gains spell check. M3 gains AO3's summary and notes, a mark on chapters changed since they were copied, and word counts that match AO3's.
+  - A new M4, Everyday writing, adds find and replace across the project, earlier versions of a scene, synced folders, text size and high contrast. 1.0 moves to M5, so "M4" in the decisions above means 1.0.
+  - None of these is in the prototype yet. Each is drawn there before it's built.
+  - This gives up an earlier 1.0.
+- **Word counts follow AO3's,** as otwarchive's `lib/word_counter.rb` counts them (checked 2026-11-14): `--` becomes an em dash, hyphens and apostrophes join a word, any other punctuation splits one, and Chinese and Japanese count by character. Exchanges and Big Bangs set minimums by AO3's count, and M1 counts runs between spaces, so "wait—no" is one word in Hedgequill and two on AO3. This gives up M1's simpler count; counts in existing projects change.
+- **AO3 HTML adds strikethrough, lists and links** to paragraphs, emphasis, headings, quotes and scene breaks. AO3's sanitizer (otwarchive's `sanitizer_config.rb`, checked 2026-11-14) keeps all three, and writers use links in author's notes and lists in letters and text messages. The old list called itself "what AO3 keeps" but was narrower. Everything else AO3 keeps, such as tables, alignment and images, still becomes plain text. The preview shows a link but never opens it, as AGENTS.md's launcher rule requires. AGENTS.md's AO3 rule and the README change with this. This gives up the smallest converter.
+- **Spell check uses the system's checker:** Windows' Spell Checking API and macOS's `NSSpellChecker`. It works offline, ships no dictionaries, and follows the writer's own languages and word list. Add to project dictionary keeps the word in `hedgequill.json`, so a fandom's names stop being flagged in that project only. The alternatives in the README all underline misspellings, and AvaloniaEdit doesn't. It needs COM on Windows and Objective-C on macOS, so a NativeAOT probe runs first, as in M0. This gives up identical suggestions on both platforms, and Linux will need another checker.
+- **Earlier versions stay in the project:** the first save of a scene in a session keeps its previous text in the project, as `Trash/` keeps deleted files, and Earlier versions… in the row menu brings one back. Never lose words covered crashes and failed saves, but not a rewrite the writer regrets, since Undo ends when the app closes. Scrivener has snapshots and Obsidian has File Recovery. This gives up disk space and a tidy project: the writer deletes old versions themselves.
+- **Synced folders get tested, not built.** Windows 11 often backs up Documents to OneDrive, and a writer can edit the same Markdown on a phone through OneDrive, iCloud Drive or Dropbox. M4 tests a save while another process holds the file, as a sync client does mid-upload, and adds the file watcher the 2026-11-13 decision left for later. This gives up nothing; sync stays Not planned.
 
 ## M0: Placeholder (as soon as possible)
 
@@ -69,11 +100,11 @@ What the design must protect, in this order when two conflict. Everything else g
 
 ## M1: Write
 
-- [ ] New project… creates a folder of Markdown files plus one small file for their order and details (its name and format are settled here). Open folder… opens one, and Recent lists the last few.
-- [ ] The navigator: acts › chapters › scenes, plus Notes and Research pages. Add, rename, reorder by drag or keyboard, and delete to the system trash.
-- [ ] The editor: AvaloniaEdit in Cardo, with Bold, Italic and Insert scene break adding plain Markdown markers, Find…, Focus mode and the chapter overview.
-- [ ] Autosave, and every save state from the prototype: Saving…, Saved, Couldn't save (the text stays, with Retry and Save a copy…), Changed on disk (reload, or keep and overwrite) and Read-only (edits stay in memory until you choose a writable folder).
-- [ ] Saves are atomic: write a temporary file, then replace, so a crash mid-save never leaves half a file.
+- [x] New project… creates a folder of Markdown files plus `hedgequill.json` for their order and details. Open folder… opens one, and Recent lists the last few.
+- [x] The navigator: acts › chapters › scenes, plus Notes and Research pages. Add, rename, reorder by drag or keyboard, and delete to the project's `Trash/` folder, with Undo.
+- [x] The editor: AvaloniaEdit in Cardo, with Bold, Italic and Insert scene break adding plain Markdown markers, Find…, Focus mode and the chapter overview.
+- [x] Autosave, and every save state from the prototype: Saving…, Saved, Couldn't save (the text stays, with Retry and Save a copy…), Changed on disk (reload, or keep and overwrite) and Read-only (edits stay in memory until you choose a writable folder).
+- [x] Saves are atomic: write a temporary file, then replace, so a crash mid-save never leaves half a file.
 
 **Done when:** tests on invented text pass, including one where the disk write fails and the text survives in memory and in Save a copy…; a project made in Hedgequill opens as plain Markdown in another editor; and the owner has written a scene in it.
 
@@ -82,19 +113,33 @@ What the design must protect, in this order when two conflict. Everything else g
 - [ ] Emphasis, strong and headings are styled in place, with their markers faded. Ctrl+B and Ctrl+I toggle them.
 - [ ] A scene break shows as a centred ornament; the file keeps a plain Markdown break.
 - [ ] Typing stays smooth in a long chapter.
+- [ ] Spell check, as decided above: misspellings underlined, suggestions in the context menu, and Add to project dictionary. The NativeAOT probe on Windows and macOS comes first.
 
-**Done when:** on a 10,000-word invented chapter, a keystroke shows within one frame at 60 Hz on the owner's PC, measured, and the styling matches the prototype. If AvaloniaEdit can't get there, reopen the stack decision before M3.
+**Done when:** on a 10,000-word invented chapter with spell check on, a keystroke shows within one frame at 60 Hz on the owner's PC, measured, and the styling matches the prototype. If AvaloniaEdit can't get there, reopen the stack decision before M3.
 
 ## M3: AO3
 
-- [ ] Markdown to AO3 HTML in `Hedgequill.Core`: paragraphs, emphasis, headings, quotes and scene breaks. Anything else becomes plain text.
-- [ ] The AO3 preview: it can be hidden and resized, and starts hidden when the window is narrower than 1,200 px.
-- [ ] Copy chapter HTML, Copy chapter title and Show HTML, with the note "Paste into AO3's HTML editor, not Rich Text."
-- [ ] Fixture tests: invented chapters in, expected HTML out, byte for byte.
+- [ ] Markdown to AO3 HTML in `Hedgequill.Core`: paragraphs, emphasis, strikethrough, headings, quotes, lists, links and scene breaks. Anything else becomes plain text.
+- [ ] The AO3 preview: it can be hidden and resized, and starts hidden when the window is narrower than 1,200 px. It shows links but never opens them.
+- [ ] Copy chapter HTML, Copy chapter title and Show HTML, with the note "Paste into AO3's HTML editor, not Rich Text." Copy warns when a chapter passes AO3's limit of 500,000 characters.
+- [ ] Summary and notes, for the work and each chapter, as AO3's posting form has them: a summary, beginning notes and end notes. Each has Copy, which gives AO3 HTML, and shows AO3's limit: 1,250 characters for a summary, 5,000 for notes. Settle first where they live; `hedgequill.json`, which holds a project's details, is the likely home.
+- [ ] Changed since copied: Copy chapter HTML records the chapter in `hedgequill.json`, and the navigator marks a chapter edited since, so a fix doesn't get left off AO3.
+- [ ] Every word count Hedgequill shows matches AO3's, as decided above.
+- [ ] Fixture tests: invented chapters in, expected HTML out, byte for byte, and expected word counts.
 
-**Done when:** the fixtures pass, and a chapter copied from Hedgequill and pasted into AO3's HTML editor looks the same in AO3's preview as in Hedgequill's.
+**Done when:** the fixtures pass, and a chapter copied from Hedgequill and pasted into AO3's HTML editor looks the same in AO3's preview as in Hedgequill's, with the same word count.
 
-## M4: 1.0
+## M4: Everyday writing
+
+- [ ] Find and replace across the project: every scene and page, each match listed under its scene.
+- [ ] Earlier versions, as decided above: Earlier versions… in the row menu lists a scene's kept versions and brings one back.
+- [ ] Synced folders: a save while another process holds the file, as a sync client does mid-upload, never loses or halves it. A file watcher reloads a scene another app changed when it has no unsaved edits, and shows Changed on disk at once when it has.
+- [ ] Text size: Ctrl+= and Ctrl+− (⌘= and ⌘−) make the page's text larger and smaller, remembered in `settings.json`.
+- [ ] High contrast: Hedgequill follows Windows' contrast themes and macOS's Increase Contrast.
+
+**Done when:** tests on invented text cover find and replace, bringing back an earlier version, a save while another process holds the file, and a reload after another app's change; the headless renders cover a larger text size and high contrast; and the owner has written in a project inside a synced folder.
+
+## M5: 1.0
 
 - [ ] Windows x64 Setup, signed, and macOS packages for Apple Silicon and Intel, ad-hoc signed.
 - [ ] Self-update as decided above, plus Help › Check for updates….
@@ -106,16 +151,30 @@ What the design must protect, in this order when two conflict. Everything else g
 
 ## Later
 
-- **Linux.** Avalonia and Velopack support it. Settle first who tests it.
+- **Linux.** Avalonia and Velopack support it. Settle first who tests it, and which spell checker it uses.
 - **A mascot,** the owner's call.
 - **A winget package.** Settle first who updates the install, since Velopack updates Hedgequill in place and a winget upgrade must not fight it.
+- **Export as a book:** a print-ready PDF at 5 × 8 in, laid out like an AO3 download.
+  - A title page with the byline and summary, and a Notes page with a dedication and ruled lines for a handwritten note.
+  - Each chapter on a new page under "Chapter N: Title", scene breaks as short rules, and curly quotes.
+  - A running title and page numbers, with margins that mirror for binding.
+  - Settle first how to write the PDF without a browser. The network guard forbids starting another program, and SkiaSharp, already in the app, can write PDFs. Test it on invented text, as always.
+- **Paste from Google Docs or Word keeps italics:** read the HTML on the clipboard and write Markdown markers. It's the easiest way to bring a work in progress over.
+- **Targets:** a word goal and a deadline per project, such as an exchange's minimum or a Big Bang's, plus the words written today, counted as AO3 counts them.
+- **Copy for a beta reader:** the chapter's HTML on the clipboard as rich text, so it pastes into Google Docs or an email with its italics.
+- **Notes beside the page:** a Notes or Research page in the right pane, in place of the AO3 preview.
+- **Comments to yourself:** Markdown's `<!-- -->` comments, shown faded and left out of AO3 HTML.
+- **Smart punctuation:** curly quotes as you type, and `--` turns into an em dash. Undo brings back what was typed.
+- **Read aloud** for proofreading, in the system's offline voices. Settle first that both systems' voices work under NativeAOT.
 
 ## Not planned
 
-- Tag syntax, build settings, compile formats (ePub, PDF, Word), templates, corkboards and labels. They are what made the alternatives feel heavy. Scrivener and novelWriter do them well.
+- Tag syntax, build settings, compile formats (ePub, Word, or a PDF other than the book in Later), templates, corkboards and labels. They are what made the alternatives feel heavy. Scrivener and novelWriter do them well.
 - Posting to AO3 from the app. Copy for AO3 and AO3's own editor keep your AO3 login out of Hedgequill.
 - Accounts, sync, telemetry, crash reports Hedgequill sends itself, or anything hosted.
 - A portable zip. It can't update itself.
+- AO3's tags: fandoms, rating, warnings, relationships, characters and the rest. AO3's form suggests its own tags as you type, which needs AO3. Hedgequill keeps the summary and notes.
+- Images in chapters, and work skins. AO3 shows only images hosted online, and a work skin is CSS the writer writes. The first breaks offline, the second simple.
 
 ## How we'll know it works
 

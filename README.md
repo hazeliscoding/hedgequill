@@ -29,7 +29,7 @@ Writing apps for long fiction tend to be paid, or busy with features a fic doesn
 
 - **One window:** a list of acts › chapters › scenes, plus Notes and Research pages; the page you're writing; and an AO3 preview you can hide.
 - **No markup to learn.** The files are Markdown, but Ctrl+B, Ctrl+I and the scene-break button add the markers for you.
-- **Copy for AO3:** puts a chapter on the clipboard as HTML for AO3's editor, limited to what AO3 keeps: paragraphs, emphasis, headings, quotes and scene breaks.
+- **Copy for AO3:** puts a chapter on the clipboard as HTML for AO3's editor, limited to what AO3 keeps: paragraphs, emphasis, strikethrough, headings, quotes, lists, links and scene breaks.
 - **Plain files:** a project is a folder of Markdown files plus one small file for their order. Any text editor can open them, with or without Hedgequill.
 
 ## The promise

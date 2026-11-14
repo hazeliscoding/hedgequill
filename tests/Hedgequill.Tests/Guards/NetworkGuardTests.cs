@@ -31,7 +31,8 @@ public sealed partial class NetworkGuardTests
         new("remote registry", @"\bOpenRemoteBaseKey\b"),
         // A child process can open a URL (xdg-open, open, start) or run curl.
         new("process", @"\bProcess(?:StartInfo)?\b|\bShellExecute\w*"),
-        new("URL opener", @"\bI?Launcher\b|\bLaunch\w*Async\b|\bOpenUr[il]\w*|\bHyperlinkButton\b|\bNavigateUri\b"),
+        // The one launcher call allowed is File › Show project folder: Launcher.LaunchDirectoryInfoAsync opens a local folder in Explorer or Finder.
+        new("URL opener", @"\bI?Launcher\b(?!\.LaunchDirectoryInfoAsync\b)|\bLaunch(?!DirectoryInfoAsync\b)\w*Async\b|\bOpenUr[il]\w*|\bHyperlinkButton\b|\bNavigateUri\b"),
         new("web view", @"\b\w*WebView\w*"),
         // Native code can call WinHTTP, libcurl or ShellExecute where this scan can't see it.
         new("native interop", @"\b(?:DllImport|LibraryImport|NativeLibrary|ComImport|GetTypeFromProgID|GetTypeFromCLSID)\b"),
@@ -57,6 +58,7 @@ public sealed partial class NetworkGuardTests
         ["Avalonia"] = "The UI framework.",
         ["Avalonia.Desktop"] = "Picks the Windows, macOS or X11 backend at startup.",
         ["Avalonia.Themes.Fluent"] = "Styles for the built-in controls.",
+        ["Avalonia.AvaloniaEdit"] = "The manuscript editor: text layout, typing, undo and Find. It depends only on Avalonia.",
         ["Avalonia.Skia"] = "Avalonia's renderer on Skia.",
         ["Avalonia.HarfBuzz"] = "Avalonia's text shaping on HarfBuzz.",
         ["Avalonia.Win32"] = "The Windows backend.",
@@ -190,6 +192,9 @@ public sealed partial class NetworkGuardTests
     [InlineData("Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });", "process")]
     [InlineData("using var open = System.Diagnostics.Process.Start(\"xdg-open\", url);", "process")]
     [InlineData("await TopLevel.GetTopLevel(this)!.Launcher.LaunchUriAsync(uri);", "URL opener")]
+    [InlineData("await TopLevel.GetTopLevel(this)!.Launcher.LaunchFileInfoAsync(new FileInfo(page));", "URL opener")]
+    [InlineData("var launcher = TopLevel.GetTopLevel(this)!.Launcher;", "URL opener")]
+    [InlineData("ILauncher open = launcher;", "URL opener")]
     [InlineData("<HyperlinkButton NavigateUri=\"{Binding Link}\" />", "URL opener")]
     [InlineData("<NativeWebView Source=\"{Binding Page}\" />", "web view")]
     [InlineData("[DllImport(\"winhttp.dll\")] private static extern nint WinHttpOpen();", "native interop")]
@@ -208,6 +213,7 @@ public sealed partial class NetworkGuardTests
     [InlineData("private static string Preprocess(string text) => text;")]
     [InlineData("var tip = \"Paste into AO3's HTML editor, not Rich Text.\";")]
     [InlineData("<TextBlock Text=\"Nothing leaves it unless you copy it out.\" />")]
+    [InlineData("await TopLevel.GetTopLevel(this)!.Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(folder));")]
     public void Lets_lookalikes_through(string code) =>
         Assert.Empty(Scan("src/Hedgequill.Desktop/Fine.cs", code));
 

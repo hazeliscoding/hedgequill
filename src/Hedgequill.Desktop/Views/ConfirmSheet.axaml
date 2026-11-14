@@ -1,0 +1,21 @@
+<!-- The prototype's confirmation sheet, used before Delete: a question, what will happen, Cancel and the action. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Hedgequill.Desktop.Views.ConfirmSheet">
+  <Panel>
+    <Border Background="{DynamicResource Scrim}" />
+    <Border Classes="sheet" Width="400" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,64,0,0"
+            KeyboardNavigation.TabNavigation="Cycle">
+      <StackPanel Spacing="14">
+        <StackPanel Spacing="4">
+          <TextBlock x:Name="Question" Classes="heading" TextWrapping="Wrap" AutomationProperties.HeadingLevel="2" />
+          <TextBlock x:Name="Detail" Classes="callout" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,6,0,0">
+          <Button x:Name="Cancel" Classes="medium" Content="Cancel" />
+          <Button x:Name="Confirm" Classes="medium danger" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+  </Panel>
+</UserControl>

@@ -3,6 +3,11 @@
              x:Class="Hedgequill.Desktop.App"
              Name="Hedgequill"
              RequestedThemeVariant="Default">
+  <!-- macOS's app menu. Without one of its own, Avalonia's default offers "About Avalonia"; About Hedgequill comes with Help in M5. -->
+  <NativeMenu.Menu>
+    <NativeMenu />
+  </NativeMenu.Menu>
+
   <Application.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
@@ -18,6 +23,7 @@
         <ColorPaletteResources x:Key="Dark" Accent="#A14A5C" RegionColor="#1A1917" />
       </FluentTheme.Palettes>
     </FluentTheme>
+    <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
     <StyleInclude Source="avares://Hedgequill/Themes/Styles.axaml" />
   </Application.Styles>
 </Application>

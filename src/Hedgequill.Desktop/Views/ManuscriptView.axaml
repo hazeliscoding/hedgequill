@@ -1,0 +1,80 @@
+<!-- The content pane: a scene or page in the editor, a chapter's overview, or an act's summary, as the prototype shows them. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ae="using:AvaloniaEdit"
+             xmlns:views="using:Hedgequill.Desktop.Views"
+             x:Class="Hedgequill.Desktop.Views.ManuscriptView">
+  <Panel>
+    <!-- A scene or page. The title rides above the text and scrolls with it. -->
+    <Panel x:Name="EditorPane" IsVisible="False">
+      <ae:TextEditor x:Name="Editor" Classes="manuscript" WordWrap="True" ShowLineNumbers="False"
+                     HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" />
+      <Panel x:Name="Overlay" IsHitTestVisible="False" VerticalAlignment="Top" ClipToBounds="False">
+        <Panel.RenderTransform>
+          <TranslateTransform />
+        </Panel.RenderTransform>
+        <StackPanel x:Name="DocHeader" VerticalAlignment="Top">
+          <TextBlock x:Name="Eyebrow" Classes="eyebrow" Margin="0,0,0,10" />
+          <TextBlock x:Name="DocTitle" Classes="doc-title" />
+        </StackPanel>
+        <TextBlock x:Name="EmptyHint" Classes="empty-hint" VerticalAlignment="Top" />
+      </Panel>
+      <StackPanel x:Name="Toolbar" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,18,0" Spacing="2">
+        <Button x:Name="BoldButton" Classes="tool" AutomationProperties.Name="Bold" Focusable="False">
+          <Path Data="M4.5 8H10a2.5 2.5 0 0 1 0 5H5.2a.7.7 0 0 1-.7-.7V3.7a.7.7 0 0 1 .7-.7H9.5a2.5 2.5 0 0 1 0 5" />
+        </Button>
+        <Button x:Name="ItalicButton" Classes="tool" AutomationProperties.Name="Italic" Focusable="False">
+          <Path Data="M12.5 3H7M9.5 13H4M10 3L6.5 13" />
+        </Button>
+        <Button x:Name="BreakButton" Classes="tool" AutomationProperties.Name="Scene break" Focusable="False">
+          <Path Data="M3.5 8H12.5" />
+        </Button>
+      </StackPanel>
+    </Panel>
+
+    <!-- A chapter: its scenes, with their word counts. -->
+    <ScrollViewer x:Name="ChapterPane" IsVisible="False">
+      <StackPanel MaxWidth="620" Margin="32,72,32,120">
+        <TextBlock x:Name="ChapterEyebrow" Classes="eyebrow" Margin="0,0,0,10" />
+        <TextBlock x:Name="ChapterTitle" Classes="doc-title" FontSize="34" Margin="0,0,0,8" />
+        <TextBlock x:Name="ChapterMeta" Classes="meta" Margin="0,0,0,28" />
+        <ItemsControl x:Name="ChapterScenes">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="views:SceneRow">
+              <Button Classes="scene-row" AutomationProperties.Name="{Binding Title}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                  <TextBlock Classes="row-number" MinWidth="14" Text="{Binding Number}" />
+                  <TextBlock Grid.Column="1" Classes="scene-title" Text="{Binding Title}" />
+                  <TextBlock Grid.Column="2" Classes="caption" VerticalAlignment="Center" Text="{Binding Words}" />
+                </Grid>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <StackPanel x:Name="ChapterEmpty" Spacing="14" Margin="0,8,0,0" HorizontalAlignment="Left">
+          <TextBlock Classes="manuscript-italic" FontSize="18" Text="This chapter has no scenes yet." />
+          <Button x:Name="AddSceneButton" Classes="medium" HorizontalAlignment="Left">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Path Classes="icon" Data="M6 2.5V9.5M2.5 6H9.5" Stroke="{Binding $self.(TextElement.Foreground)}" Width="12" Height="12" Stretch="None" />
+              <TextBlock Text="Add a scene" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- An act, or nothing selected. -->
+    <StackPanel x:Name="EmptyPane" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="320" Spacing="6">
+      <TextBlock x:Name="EmptyTitle" Classes="heading" HorizontalAlignment="Center" TextAlignment="Center" />
+      <TextBlock x:Name="EmptyDetail" Classes="callout" HorizontalAlignment="Center" TextAlignment="Center" />
+    </StackPanel>
+
+    <!-- Focus mode: the count, the save state and the way out, quietly in the corner. -->
+    <StackPanel x:Name="FocusFooter" Classes="focus-footer" Orientation="Horizontal" Spacing="14" IsVisible="False"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,20,14">
+      <TextBlock x:Name="FooterWords" Classes="caption" />
+      <TextBlock x:Name="FooterSave" Classes="caption" />
+      <Button x:Name="LeaveFocus" Classes="link" Content="Esc to leave focus" />
+    </StackPanel>
+  </Panel>
+</UserControl>

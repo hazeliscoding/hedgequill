@@ -1,0 +1,72 @@
+<!-- A project open: the navigator on the left and the content column, as the prototype lays them out. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Hedgequill.Desktop.Views"
+             x:Class="Hedgequill.Desktop.Views.WorkspaceView">
+  <Grid x:Name="Columns" ColumnDefinitions="236,*">
+    <DockPanel x:Name="NavigatorPane" Grid.Column="0">
+      <Button x:Name="ProjectMenu" DockPanel.Dock="Top" Classes="project-menu" Margin="8,8,8,6" AutomationProperties.Name="Project menu" ToolTip.Tip="Project menu">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+          <TextBlock x:Name="ProjectTitle" Classes="project-title" AutomationProperties.HeadingLevel="1" />
+          <Path Grid.Column="1" Data="M3 4.5L6 7.5L9 4.5" />
+        </Grid>
+      </Button>
+      <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Separator}" BorderThickness="0,1,0,0" Padding="8,8,8,10">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Button x:Name="NewScene" Classes="small tertiary" AutomationProperties.Name="New scene">
+            <StackPanel>
+              <Path Data="M6 2.5V9.5M2.5 6H9.5" />
+              <TextBlock Text="New scene" />
+            </StackPanel>
+          </Button>
+          <Button x:Name="More" Grid.Column="2" Classes="icon" AutomationProperties.Name="More" ToolTip.Tip="More">
+            <Path Data="M2.5 6H2.51M6 6H6.01M9.5 6H9.51" StrokeThickness="2" />
+          </Button>
+        </Grid>
+      </Border>
+      <Panel>
+        <ListBox x:Name="Navigator" Classes="navigator" AutomationProperties.Name="Manuscript">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="views:NavigatorRow">
+              <Grid Height="{Binding Height}" Margin="{Binding Indent}" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="4" Background="Transparent">
+                <Button Classes="chevron" Classes.empty="{Binding !HasChildren}" Classes.quiet="{Binding QuietChevron}" AutomationProperties.Name="Expand or collapse" Focusable="False">
+                  <Path Data="M4.5 3L7.5 6L4.5 9">
+                    <Path.RenderTransform>
+                      <RotateTransform Angle="{Binding ChevronAngle}" />
+                    </Path.RenderTransform>
+                  </Path>
+                </Button>
+                <TextBlock Grid.Column="1" Classes="row-number" IsVisible="{Binding IsChapter}" Text="{Binding Number}" />
+                <TextBlock Grid.Column="2" Classes="row-title" Classes.label="{Binding IsLabel}" Classes.chapter="{Binding IsChapter}" Text="{Binding Title}" IsVisible="{Binding !IsRenaming}" />
+                <TextBox Grid.Column="2" Classes="rename" IsVisible="{Binding IsRenaming}" Text="{Binding Title, Mode=OneTime}" AutomationProperties.Name="Rename" />
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+        <Canvas x:Name="DropLayer" IsHitTestVisible="False">
+          <Border x:Name="DropLine" Classes="drop-line" IsVisible="False" />
+          <Border x:Name="DropBox" Classes="drop-box" IsVisible="False" />
+        </Canvas>
+      </Panel>
+    </DockPanel>
+
+    <DockPanel Grid.Column="1">
+      <Grid x:Name="Header" DockPanel.Dock="Top" Height="40" Margin="10,0,12,0" ColumnDefinitions="Auto,*,Auto,Auto">
+        <Button x:Name="NavigatorToggle" Classes="tool selected" AutomationProperties.Name="Hide navigator" VerticalAlignment="Center">
+          <Path Data="M2.5 3.5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1ZM6 2.5v11" />
+        </Button>
+        <StackPanel x:Name="HeaderText" Grid.Column="1" Margin="6,0,0,0" VerticalAlignment="Center">
+          <TextBlock x:Name="HeaderTitle" Classes="header-title" />
+          <TextBlock x:Name="HeaderSub" Classes="caption" />
+        </StackPanel>
+        <ContentControl x:Name="SaveSlot" Grid.Column="2" VerticalAlignment="Center" Focusable="False" />
+        <Button x:Name="FocusButton" Grid.Column="3" Classes="tool" AutomationProperties.Name="Focus mode" VerticalAlignment="Center">
+          <Path Data="M2.5 5V3.5a1 1 0 0 1 1-1H5M11 2.5h1.5a1 1 0 0 1 1 1V5M13.5 11v1.5a1 1 0 0 1-1 1H11M5 13.5H3.5a1 1 0 0 1-1-1V11" />
+        </Button>
+      </Grid>
+      <Border x:Name="ContentPane" Classes="content-pane">
+        <views:ManuscriptView x:Name="Manuscript" />
+      </Border>
+    </DockPanel>
+  </Grid>
+</UserControl>

@@ -1,6 +1,8 @@
 <!-- Global styles: window colors, the focus outline, buttons, and the text styles the prototype uses. -->
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:Hedgequill.Desktop.Views"
+        xmlns:ae="using:AvaloniaEdit">
   <Style Selector="Window">
     <Setter Property="Background" Value="{DynamicResource BgWindow}" />
     <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
@@ -60,5 +62,462 @@
     <Setter Property="LineHeight" Value="14" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
+  </Style>
+  <Style Selector="TextBlock.caption">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="LineHeight" Value="14" />
+    <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+  <Style Selector="TextBlock.callout">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="LineHeight" Value="16" />
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+  <Style Selector="TextBlock.heading">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="LineHeight" Value="20" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="TextBlock.field-label">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="LineHeight" Value="16" />
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+  </Style>
+  <Style Selector="TextBlock.mono">
+    <Setter Property="FontFamily" Value="{StaticResource FontMono}" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+
+  <!-- Smaller buttons: 28 px in dialogs, 22 px inside fields and toasts. -->
+  <Style Selector="Button.medium">
+    <Setter Property="Height" Value="28" />
+    <Setter Property="Padding" Value="12,0" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button.small">
+    <Setter Property="Height" Value="22" />
+    <Setter Property="Padding" Value="8,0" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Path.icon">
+    <Setter Property="Width" Value="14" />
+    <Setter Property="Height" Value="14" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="StrokeThickness" Value="1.5" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="StrokeJoin" Value="Round" />
+    <Setter Property="Stroke" Value="{DynamicResource TextTertiary}" />
+  </Style>
+
+  <!-- Flat buttons that show a background only on hover: Recent rows, chevrons, the toast's close button. -->
+  <Style Selector="Button.recent, Button.chevron, Button.icon">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+  </Style>
+  <Style Selector="Button.recent:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.chevron:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.icon:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource StateHover}" />
+  </Style>
+  <Style Selector="Button.recent:pressed /template/ ContentPresenter#PART_ContentPresenter, Button.chevron:pressed /template/ ContentPresenter#PART_ContentPresenter, Button.icon:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource StateSelected}" />
+  </Style>
+  <Style Selector="Button.recent">
+    <Setter Property="Padding" Value="10" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+  </Style>
+  <Style Selector="Button.icon">
+    <Setter Property="Width" Value="22" />
+    <Setter Property="Height" Value="22" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+  </Style>
+  <!-- Icons are drawn on a 12 px grid, unscaled, so their strokes stay crisp. -->
+  <Style Selector="Button.icon Path, Button.chevron Path">
+    <Setter Property="Width" Value="12" />
+    <Setter Property="Height" Value="12" />
+    <Setter Property="Stretch" Value="None" />
+    <Setter Property="StrokeThickness" Value="1.5" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="StrokeJoin" Value="Round" />
+    <Setter Property="Stroke" Value="{Binding $self.(TextElement.Foreground)}" />
+  </Style>
+  <Style Selector="Button.recent Border.tile">
+    <Setter Property="Width" Value="34" />
+    <Setter Property="Height" Value="44" />
+    <Setter Property="CornerRadius" Value="3" />
+    <Setter Property="Background" Value="{DynamicResource BgInset}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderDefault}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="Button.recent Border.tile > TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource FontTitle}" />
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="TextBlock.recent-title">
+    <Setter Property="FontFamily" Value="{StaticResource FontManuscript}" />
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="LineHeight" Value="19" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+
+  <!-- A sheet over the window, the field it shows a folder in, and the toast. -->
+  <Style Selector="Border.sheet">
+    <Setter Property="Background" Value="{DynamicResource BgRaised}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderDefault}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusLarge}" />
+    <Setter Property="Padding" Value="20" />
+    <Setter Property="BoxShadow" Value="0 16 40 -8 #33000000, 0 4 10 0 #0F000000" />
+  </Style>
+  <Style Selector="Border.field">
+    <Setter Property="Height" Value="32" />
+    <Setter Property="Padding" Value="10,0,4,0" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+    <Setter Property="Background" Value="{DynamicResource BgInput}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+  <Style Selector="Border.toast">
+    <Setter Property="Background" Value="{DynamicResource BgRaised}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderDefault}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}" />
+    <Setter Property="Padding" Value="14,12,8,12" />
+    <Setter Property="BoxShadow" Value="0 6 16 -4 #1F000000, 0 2 4 0 #0D000000" />
+  </Style>
+  <Style Selector="TextBlock.toast-title">
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+
+  <!-- The workspace: the project's title, the navigator's rows and the content pane. -->
+  <Style Selector="TextBlock.project-title">
+    <Setter Property="FontFamily" Value="{StaticResource FontManuscript}" />
+    <Setter Property="FontSize" Value="16" />
+    <Setter Property="LineHeight" Value="20" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+  <Style Selector="TextBlock.header-title">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="LineHeight" Value="16" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+  <Style Selector="Border.content-pane">
+    <Setter Property="Background" Value="{DynamicResource BgPage}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderDefault}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}" />
+    <Setter Property="Margin" Value="0,0,8,8" />
+  </Style>
+  <Style Selector="ListBox.navigator">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="8,0,8,8" />
+  </Style>
+  <Style Selector="ListBox.navigator > ListBoxItem" x:DataType="views:NavigatorRow">
+    <!-- Without it, screen readers read each row as its class name. -->
+    <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Margin" Value="{Binding Gap}" />
+  </Style>
+  <Style Selector="ListBox.navigator > ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+  </Style>
+  <Style Selector="ListBox.navigator > ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource StateHover}" />
+  </Style>
+  <Style Selector="ListBox.navigator > ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource StateSelected}" />
+  </Style>
+  <Style Selector="Button.chevron">
+    <Setter Property="Width" Value="16" />
+    <Setter Property="Height" Value="16" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
+  </Style>
+  <Style Selector="Button.chevron Path">
+    <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+  </Style>
+  <!-- A row without children keeps the chevron's space, so titles line up by depth. -->
+  <Style Selector="Button.chevron.empty">
+    <Setter Property="Opacity" Value="0" />
+    <Setter Property="IsHitTestVisible" Value="False" />
+  </Style>
+  <Style Selector="Button.chevron.quiet">
+    <Setter Property="Opacity" Value="0" />
+  </Style>
+  <Style Selector="ListBox.navigator > ListBoxItem:pointerover Button.chevron.quiet">
+    <Setter Property="Opacity" Value="1" />
+  </Style>
+  <Style Selector="TextBlock.row-number">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="MinWidth" Value="12" />
+    <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="TextBlock.row-title">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+  <Style Selector="TextBlock.row-title.chapter">
+    <Setter Property="FontWeight" Value="Medium" />
+  </Style>
+  <Style Selector="TextBlock.row-title.label">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
+  </Style>
+  <Style Selector="ListBox.navigator > ListBoxItem:selected TextBlock.row-title">
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
+  </Style>
+
+  <!-- Destructive actions, and the quiet button in the navigator's footer. -->
+  <Style Selector="Button.danger">
+    <Setter Property="Background" Value="{DynamicResource DangerButton}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextOnAccent}" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.danger:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource DangerButtonHover}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextOnAccent}" />
+  </Style>
+  <Style Selector="MenuItem.danger">
+    <Setter Property="Foreground" Value="{DynamicResource DangerText}" />
+  </Style>
+  <Style Selector="Button.tertiary">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+  </Style>
+  <Style Selector="Button.tertiary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource StateHover}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+  </Style>
+  <Style Selector="Button.tertiary > StackPanel">
+    <Setter Property="Orientation" Value="Horizontal" />
+    <Setter Property="Spacing" Value="4" />
+  </Style>
+  <Style Selector="Button.tertiary Path">
+    <Setter Property="Width" Value="12" />
+    <Setter Property="Height" Value="12" />
+    <Setter Property="StrokeThickness" Value="1.5" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="Stroke" Value="{Binding $self.(TextElement.Foreground)}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- Renaming in the navigator, and where a dragged row will land. -->
+  <Style Selector="TextBox.rename">
+    <Setter Property="Height" Value="22" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Padding" Value="6,0" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+  </Style>
+  <Style Selector="Border.drop-line">
+    <Setter Property="Height" Value="2" />
+    <Setter Property="CornerRadius" Value="2" />
+    <Setter Property="Background" Value="{DynamicResource Accent}" />
+  </Style>
+  <Style Selector="Border.drop-box">
+    <Setter Property="BorderThickness" Value="1.5" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+  </Style>
+
+  <!-- The manuscript: Cardo at 19 px for scenes, the interface font at 15.5 px for pages, as the prototype sets them. -->
+  <Style Selector="ae|TextEditor.manuscript">
+    <Setter Property="FontFamily" Value="{StaticResource FontManuscript}" />
+    <Setter Property="FontSize" Value="19" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+  <Style Selector="ae|TextEditor.manuscript.page">
+    <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
+    <Setter Property="FontSize" Value="15.5" />
+  </Style>
+  <Style Selector="TextBlock.eyebrow">
+    <Setter Property="FontSize" Value="10" />
+    <Setter Property="LineHeight" Value="13" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="LetterSpacing" Value="0.6" />
+    <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
+  </Style>
+  <Style Selector="TextBlock.doc-title">
+    <Setter Property="FontFamily" Value="{StaticResource FontTitle}" />
+    <Setter Property="FontSize" Value="30" />
+    <Setter Property="LetterSpacing" Value="-0.2" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+  <Style Selector="TextBlock.empty-hint">
+    <Setter Property="FontFamily" Value="{StaticResource FontManuscript}" />
+    <Setter Property="FontSize" Value="19" />
+    <Setter Property="FontStyle" Value="Italic" />
+    <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
+  </Style>
+  <Style Selector="TextBlock.empty-hint.page">
+    <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
+    <Setter Property="FontSize" Value="15.5" />
+  </Style>
+  <Style Selector="TextBlock.meta">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="LineHeight" Value="18" />
+    <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
+  </Style>
+  <Style Selector="TextBlock.scene-title">
+    <Setter Property="FontFamily" Value="{StaticResource FontManuscript}" />
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="LineHeight" Value="22" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+  <Style Selector="Button.scene-row">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="12,10" />
+    <Setter Property="Margin" Value="-12,0" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+  </Style>
+  <Style Selector="Button.scene-row:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource StateHover}" />
+  </Style>
+
+  <!-- 28 px icon buttons over the page, and a text-only button for "Esc to leave focus". -->
+  <Style Selector="Button.tool">
+    <Setter Property="Width" Value="28" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+  </Style>
+  <Style Selector="Button.tool:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource StateHover}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+  </Style>
+  <Style Selector="Button.tool.selected /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource StateSelected}" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentText}" />
+  </Style>
+  <Style Selector="Button.tool Path">
+    <Setter Property="Width" Value="16" />
+    <Setter Property="Height" Value="16" />
+    <Setter Property="Stretch" Value="None" />
+    <Setter Property="StrokeThickness" Value="1.5" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="StrokeJoin" Value="Round" />
+    <Setter Property="Stroke" Value="{Binding $self.(TextElement.Foreground)}" />
+  </Style>
+  <Style Selector="Button.link">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
+  </Style>
+  <Style Selector="Button.link:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+  </Style>
+  <Style Selector="StackPanel.focus-footer">
+    <Setter Property="Opacity" Value="0.55" />
+  </Style>
+  <Style Selector="StackPanel.focus-footer:pointerover">
+    <Setter Property="Opacity" Value="1" />
+  </Style>
+
+  <!-- The save state in the header: quiet when saved, colored when it needs the writer. -->
+  <Style Selector="Button.save-status">
+    <Setter Property="Height" Value="28" />
+    <Setter Property="Padding" Value="8,0" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+  </Style>
+  <Style Selector="Button.save-status:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource StateHover}" />
+    <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
+  </Style>
+  <Style Selector="Button.save-status Path">
+    <Setter Property="Width" Value="16" />
+    <Setter Property="Height" Value="16" />
+    <Setter Property="Stretch" Value="None" />
+    <Setter Property="StrokeThickness" Value="1.5" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="StrokeJoin" Value="Round" />
+    <Setter Property="Stroke" Value="{Binding $self.(TextElement.Foreground)}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- The project's title over the navigator opens the project menu, as in the prototype. -->
+  <Style Selector="Button.project-menu">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="8,4" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+  </Style>
+  <Style Selector="Button.project-menu:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource StateHover}" />
+  </Style>
+  <Style Selector="Button.project-menu Path">
+    <Setter Property="Width" Value="12" />
+    <Setter Property="Height" Value="12" />
+    <Setter Property="StrokeThickness" Value="1.5" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="StrokeJoin" Value="Round" />
+    <Setter Property="Stroke" Value="{DynamicResource TextTertiary}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- The caption row's menu bar and title, as the prototype draws them: 12 px items, 24 px tall, with a 4 px corner. -->
+  <Style Selector="NativeMenuBar Menu">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Height" Value="24" />
+  </Style>
+  <Style Selector="NativeMenuBar Menu > MenuItem">
+    <Setter Property="Height" Value="24" />
+    <Setter Property="Padding" Value="8,0" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="CornerRadius" Value="4" />
+  </Style>
+  <Style Selector="TextBlock.caption-title">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="LineHeight" Value="16" />
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+  </Style>
+
+  <!--
+    On Windows, Avalonia draws the window buttons once the caption row extends into the title bar. The caption row shows
+    the title itself, and the prototype has no full-screen button. The title's panel binds its own visibility, so the text inside is hidden.
+  -->
+  <Style Selector="WindowDrawnDecorations /template/ Panel#PART_TitleTextPanel > TextBlock">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+  <Style Selector="WindowDrawnDecorations /template/ Button#PART_FullScreenButton">
+    <Setter Property="IsVisible" Value="False" />
   </Style>
 </Styles>

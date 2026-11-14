@@ -11,6 +11,8 @@
   <!-- radius -->
   <CornerRadius x:Key="RadiusSmall">5</CornerRadius>
   <CornerRadius x:Key="RadiusMedium">7</CornerRadius>
+  <CornerRadius x:Key="RadiusLarge">12</CornerRadius>
+  <FontFamily x:Key="FontMono">Cascadia Mono, Consolas, Menlo, monospace</FontFamily>
 
   <ResourceDictionary.ThemeDictionaries>
     <ResourceDictionary x:Key="Light">
@@ -26,6 +28,7 @@
       <SolidColorBrush x:Key="BgRaised" Color="#FFFDF8" />
       <SolidColorBrush x:Key="BgSunken" Color="#F5F2EB" />
       <SolidColorBrush x:Key="BgToolbar" Color="#F3F0E9" />
+      <SolidColorBrush x:Key="BgInset" Color="#E9E5DC" />
 
       <SolidColorBrush x:Key="TextPrimary" Color="#231F1C" />
       <SolidColorBrush x:Key="TextSecondary" Color="#5F5852" />
@@ -36,6 +39,15 @@
       <SolidColorBrush x:Key="BorderDefault" Color="#1A28241E" />
       <SolidColorBrush x:Key="Separator" Color="#1428241E" />
       <SolidColorBrush x:Key="StateHover" Color="#0B28241E" />
+      <SolidColorBrush x:Key="StateSelected" Color="#1C6E2633" />
+      <SolidColorBrush x:Key="SelectionManuscript" Color="#296E2633" />
+      <SolidColorBrush x:Key="Scrim" Color="#52000000" />
+      <SolidColorBrush x:Key="DangerText" Color="#B1362D" />
+      <SolidColorBrush x:Key="WarningText" Color="#83560A" />
+      <SolidColorBrush x:Key="InfoText" Color="#2353AD" />
+      <!-- White on the prototype's danger red is about 4:1, so the button uses the darker red in both themes. -->
+      <SolidColorBrush x:Key="DangerButton" Color="#B1362D" />
+      <SolidColorBrush x:Key="DangerButtonHover" Color="#9A2E26" />
 
       <!-- Fluent's button resources, set to the prototype's -->
       <StaticResource x:Key="AccentButtonBackground" ResourceKey="Accent" />
@@ -50,6 +62,25 @@
       <SolidColorBrush x:Key="ButtonBorderBrush" Color="#2428241E" />
       <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#3828241E" />
       <StaticResource x:Key="ButtonForeground" ResourceKey="TextPrimary" />
+
+      <!-- The title bar Avalonia draws on Windows, behind the caption row -->
+      <StaticResource x:Key="TitleBarBackgroundBrush" ResourceKey="BgWindow" />
+
+      <!-- Text fields, and Fluent's TextBox resources set to them -->
+      <SolidColorBrush x:Key="BgInput" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="InputBorder" Color="#2428241E" />
+      <StaticResource x:Key="TextControlBackground" ResourceKey="BgInput" />
+      <StaticResource x:Key="TextControlBackgroundPointerOver" ResourceKey="BgInput" />
+      <StaticResource x:Key="TextControlBackgroundFocused" ResourceKey="BgInput" />
+      <StaticResource x:Key="TextControlBorderBrush" ResourceKey="InputBorder" />
+      <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="InputBorder" />
+      <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="FocusRing" />
+      <StaticResource x:Key="TextControlForeground" ResourceKey="TextPrimary" />
+      <StaticResource x:Key="TextControlForegroundPointerOver" ResourceKey="TextPrimary" />
+      <StaticResource x:Key="TextControlForegroundFocused" ResourceKey="TextPrimary" />
+      <StaticResource x:Key="TextControlPlaceholderForeground" ResourceKey="TextTertiary" />
+      <StaticResource x:Key="TextControlPlaceholderForegroundPointerOver" ResourceKey="TextTertiary" />
+      <StaticResource x:Key="TextControlPlaceholderForegroundFocused" ResourceKey="TextTertiary" />
     </ResourceDictionary>
 
     <ResourceDictionary x:Key="Dark">
@@ -66,6 +97,7 @@
       <SolidColorBrush x:Key="BgRaised" Color="#2B2927" />
       <SolidColorBrush x:Key="BgSunken" Color="#1A1917" />
       <SolidColorBrush x:Key="BgToolbar" Color="#1D1C1A" />
+      <SolidColorBrush x:Key="BgInset" Color="#2B2927" />
 
       <SolidColorBrush x:Key="TextPrimary" Color="#ECE6DA" />
       <SolidColorBrush x:Key="TextSecondary" Color="#AAA399" />
@@ -76,6 +108,15 @@
       <SolidColorBrush x:Key="BorderDefault" Color="#1CFFF6E6" />
       <SolidColorBrush x:Key="Separator" Color="#14FFF6E6" />
       <SolidColorBrush x:Key="StateHover" Color="#0EFFF6E6" />
+      <SolidColorBrush x:Key="StateSelected" Color="#3DA14A5C" />
+      <SolidColorBrush x:Key="SelectionManuscript" Color="#4DA14A5C" />
+      <SolidColorBrush x:Key="Scrim" Color="#52000000" />
+      <SolidColorBrush x:Key="DangerText" Color="#F0968F" />
+      <SolidColorBrush x:Key="WarningText" Color="#EDBB66" />
+      <SolidColorBrush x:Key="InfoText" Color="#9AB8F4" />
+      <!-- White on the prototype's danger red is about 4:1, so the button uses the darker red in both themes. -->
+      <SolidColorBrush x:Key="DangerButton" Color="#B1362D" />
+      <SolidColorBrush x:Key="DangerButtonHover" Color="#9A2E26" />
 
       <StaticResource x:Key="AccentButtonBackground" ResourceKey="Accent" />
       <StaticResource x:Key="AccentButtonBackgroundPointerOver" ResourceKey="AccentHover" />
@@ -89,6 +130,25 @@
       <SolidColorBrush x:Key="ButtonBorderBrush" Color="#1CFFF6E6" />
       <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#2EFFF6E6" />
       <StaticResource x:Key="ButtonForeground" ResourceKey="TextPrimary" />
+
+      <!-- The title bar Avalonia draws on Windows, behind the caption row -->
+      <StaticResource x:Key="TitleBarBackgroundBrush" ResourceKey="BgWindow" />
+
+      <!-- Text fields, and Fluent's TextBox resources set to them -->
+      <SolidColorBrush x:Key="BgInput" Color="#161514" />
+      <SolidColorBrush x:Key="InputBorder" Color="#1FFFFFFF" />
+      <StaticResource x:Key="TextControlBackground" ResourceKey="BgInput" />
+      <StaticResource x:Key="TextControlBackgroundPointerOver" ResourceKey="BgInput" />
+      <StaticResource x:Key="TextControlBackgroundFocused" ResourceKey="BgInput" />
+      <StaticResource x:Key="TextControlBorderBrush" ResourceKey="InputBorder" />
+      <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="InputBorder" />
+      <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="FocusRing" />
+      <StaticResource x:Key="TextControlForeground" ResourceKey="TextPrimary" />
+      <StaticResource x:Key="TextControlForegroundPointerOver" ResourceKey="TextPrimary" />
+      <StaticResource x:Key="TextControlForegroundFocused" ResourceKey="TextPrimary" />
+      <StaticResource x:Key="TextControlPlaceholderForeground" ResourceKey="TextTertiary" />
+      <StaticResource x:Key="TextControlPlaceholderForegroundPointerOver" ResourceKey="TextTertiary" />
+      <StaticResource x:Key="TextControlPlaceholderForegroundFocused" ResourceKey="TextTertiary" />
     </ResourceDictionary>
   </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>

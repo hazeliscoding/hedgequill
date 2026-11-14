@@ -12,11 +12,12 @@ These are the working rules for agents in this repo. Hedgequill is a desktop app
 ## Hard rules
 
 - **Never lose words.** Autosave. Write a file atomically (temporary file, then replace), so a crash never leaves half of it. When a save fails, the text stays in the editor and the user gets Retry and Save a copy…, as the prototype shows. Never discard unsaved text without the user choosing to: not on close, not on reload, not on update. A writer who loses a chapter once won't come back.
-- **The update check is the only network code.** Velopack makes it, from one file in `Hedgequill.Desktop`. No telemetry, no analytics, no crash reports the app sends itself, no fonts or images fetched at runtime, and no other network use. `Hedgequill.Core` never references Velopack or networking. Tests fail on both. The privacy promise in the README depends on this.
+- **The update check is the only network code.** Velopack makes it, from one file in `Hedgequill.Desktop`. No telemetry, no analytics, no crash reports the app sends itself, no fonts or images fetched at runtime, and no other network use. `Hedgequill.Core` never references Velopack or networking. Tests fail on both. The privacy promise in the README depends on this. The one launcher call allowed is `Launcher.LaunchDirectoryInfoAsync` for File › Show project folder, which opens a local folder; never launch a URL or a file.
 - **Never restart into an update on your own.** A downloaded update installs when the user closes Hedgequill, or when they choose to restart. An unprompted restart can interrupt a sentence.
-- **The user's files stay plain Markdown** that any text editor can open. Hedgequill's own data in a project is one small file for order and details. Never write a format only Hedgequill can read.
+- **The user's files stay plain Markdown** that any text editor can open. Hedgequill's own data in a project is `hedgequill.json`, for order and details. Never write a format only Hedgequill can read.
+- **Delete never erases.** It moves the file or folder into the project's `Trash/` folder, and Undo moves it back. A Markdown file Hedgequill can't place in the outline stays on disk untouched.
 - **Tests and fixtures use invented sample text, never a real fic.** The owner's writing is private, and this repo is public.
-- **AO3 HTML stays within what AO3 keeps:** paragraphs, emphasis, headings, quotes and scene breaks. Anything else becomes plain text, so the preview matches what gets posted.
+- **AO3 HTML stays within what AO3 keeps:** paragraphs, emphasis, strikethrough, headings, quotes, lists, links and scene breaks. Anything else becomes plain text, so the preview matches what gets posted.
 - **Velopack's package ID stays `hazeliscoding.Hedgequill`,** never `Hedgequill`. Setup empties `%LOCALAPPDATA%\<packId>` on every install, and `%LOCALAPPDATA%\Hedgequill` holds settings and the recent-projects list.
 
 ## Code
@@ -42,8 +43,9 @@ These are the working rules for agents in this repo. Hedgequill is a desktop app
 
 One meaning per term. Use these words in code, docs and commits.
 
-- **Project:** a folder of Markdown files plus Hedgequill's small file for their order and details.
-- **Act, chapter, scene:** the three levels of the story, in that order. A scene is the smallest part the navigator moves. A chapter is what Copy for AO3 copies. How they map to files is settled in M1.
+- **Project:** a folder of Markdown files plus `hedgequill.json`, which holds their order and details.
+- **Act, chapter, scene:** the three levels of the story, in that order. Acts and chapters are folders, a scene is a Markdown file, and acts are optional. A scene is the smallest part the navigator moves. A chapter is what Copy for AO3 copies.
+- **Index:** `hedgequill.json` at the project root: each folder's order, which folders are acts, and titles a file name can't hold.
 - **Page:** a Markdown file in Notes or Research, outside the story.
 - **Navigator:** the list on the left that shows the project's acts, chapters, scenes and pages.
 - **Scene break:** the marker between scenes inside a chapter. It's a plain Markdown break in the file.
@@ -54,10 +56,12 @@ One meaning per term. Use these words in code, docs and commits.
 ## Commands
 
 - `dotnet build` builds everything. `dotnet test --project tests/Hedgequill.Tests` runs the tests, the privacy guards among them. `dotnet format --verify-no-changes` checks style, as CI does.
+- `tests/Hedgequill.UiTests` drives the published app's real window on Windows with FlaUI. Set `HEDGEQUILL_APP` to the NativeAOT `Hedgequill.exe` and `HEDGEQUILL_UI_SHOTS` to a folder for its screenshots, then `dotnet test --project tests/Hedgequill.UiTests`. It moves the real mouse and types, so leave the PC alone while it runs; without `HEDGEQUILL_APP` it skips. CI runs it on Windows and uploads the screenshots, with the macOS runner's.
+- `HEDGEQUILL_SETTINGS` points the app at another folder for its Recent list and `settings.json`, so tests never touch the writer's.
 - `global.json` pins .NET SDK 10.0.404 or later, because older 10.0 SDKs bring a NativeAOT compiler with a known vulnerability. It looks in a repo-local `.dotnet/` first (git-ignored), then the system install.
 - `dotnet publish src/Hedgequill.Desktop -c Release -r win-x64 -warnaserror` builds the NativeAOT app (`osx-arm64` on a Mac; NativeAOT can't build for another OS). On Windows with Visual Studio 18, put `%ProgramFiles(x86)%\Microsoft Visual Studio\Installer` on `PATH` first, or the link step fails because `vswhere.exe` isn't found.
 - `tools/Hedgequill.AotProbe`, published the same way and run, opens AvaloniaEdit under NativeAOT, types, undoes, selects and styles Markdown markers, and exits 0 only if every check passed. CI runs it on Windows and macOS. It opens a window for about a second.
-- `dotnet run --project tools/Hedgequill.Screenshots -- docs/screenshots` renders the README's Welcome screenshots headlessly, in light and dark. Rerun it when the Welcome screen changes.
+- `dotnet run --project tools/Hedgequill.Screenshots -- docs/screenshots` renders the Welcome screen and an invented project's workspace headlessly, in light and dark, with an empty Recent list rather than yours. Rerun it when either changes.
 - `uv run --no-project --with resvg-py --with pillow python -I scripts/make_icons.py docs/brand` rebuilds the app icons from `app-icon.svg`.
 - `uv run --no-project --with fonttools --with uharfbuzz python -I scripts/make_lockup.py <Gloock-Regular.ttf> docs/brand` rebuilds the lockups. Its header says where to get the font.
 

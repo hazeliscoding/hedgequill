@@ -89,6 +89,59 @@ jobs:
           fi
           kill "$pid"
 
+      # The real NativeAOT window, through UI Automation: the caption row's menus, typing and saving, Find, focus mode,
+      # dragging by the caption row, and closing straight after a keystroke. Screenshots go with the run.
+      - name: End-to-end test the window (Windows)
+        if: runner.os == 'Windows'
+        timeout-minutes: 5
+        env:
+          HEDGEQUILL_APP: ${{ github.workspace }}/artifacts/aot/Hedgequill.exe
+          HEDGEQUILL_UI_SHOTS: ${{ github.workspace }}/artifacts/ui
+        run: dotnet test --project tests/Hedgequill.UiTests --configuration Release --no-build
+
+      # GitHub's macOS runner stands in for a Mac: it starts the app, reads the menu bar at the top of the screen through
+      # System Events, and takes screenshots, which go with the run. A separator reads as "missing value".
+      - name: Look at the app (macOS)
+        if: runner.os == 'macOS'
+        timeout-minutes: 3
+        run: |
+          mkdir -p artifacts/ui
+          HEDGEQUILL_SETTINGS="$RUNNER_TEMP/hedgequill-settings" artifacts/aot/Hedgequill &
+          pid=$!
+          sleep 8
+          app="first process whose unix id is $pid"
+          menu() { osascript -e "tell application \"System Events\" to get name of every menu item of menu 1 of menu bar item \"$1\" of menu bar 1 of ($app)" 2>&1; }
+          osascript -e "tell application \"System Events\" to set frontmost of ($app) to true"
+          sleep 1
+          screencapture -x artifacts/ui/macos-welcome.png
+          bar=$(osascript -e "tell application \"System Events\" to get name of every menu bar item of menu bar 1 of ($app)" 2>&1)
+          about=$(menu Hedgequill)
+          osascript -e "tell application \"System Events\" to tell ($app) to click menu bar item \"File\" of menu bar 1"
+          sleep 1
+          screencapture -x artifacts/ui/macos-file-menu.png
+          file=$(menu File)
+          osascript -e 'tell application "System Events" to key code 53'
+          kill "$pid"
+          {
+            echo "### Hedgequill on the macOS runner"
+            echo "- Menu bar: $bar"
+            echo "- App menu: $about"
+            echo "- File menu: $file"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          status=0
+          [ "$bar" = "Apple, Hedgequill, File, Edit, View, Chapter" ] || { echo "::error::The menu bar reads: $bar"; status=1; }
+          [ "$file" = "New project…, Open folder…, Open recent, missing value, New scene, New chapter, missing value, Show project folder, Close project" ] || { echo "::error::The File menu reads: $file"; status=1; }
+          case "$about" in *Avalonia*|*rror*) echo "::error::The app menu reads: $about"; status=1 ;; esac
+          exit $status
+
+      - name: Upload UI screenshots
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ui-${{ matrix.rid }}
+          path: artifacts/ui
+          if-no-files-found: ignore
+
       # To the run's summary page, and to the log, where `gh run view --log` can read it.
       - name: Record the probe and the sizes
         if: ${{ !cancelled() }}

@@ -9,14 +9,16 @@ namespace Hedgequill.Tests.Desktop;
 public partial class ContrastTests
 {
     private static readonly string[] Text = ["TextPrimary", "TextSecondary", "TextTertiary", "AccentText"];
-    private static readonly string[] Surfaces = ["BgWindow", "BgPage", "BgRaised"];
+    private static readonly string[] Surfaces = ["BgWindow", "BgPage", "BgRaised", "BgInset", "BgInput"];
 
     // (foreground, background, minimum ratio): 4.5 for text (SC 1.4.3), 3 for focus indicators (SC 1.4.11).
     // MarkerFaded is left out on purpose: faded Markdown markers recede, and the text they wrap stays full contrast.
     private static readonly (string Fg, string Bg, double Min)[] Pairs =
     [
         .. Text.SelectMany(fg => Surfaces.Select(bg => (fg, bg, 4.5))),
-        .. new[] { "Accent", "AccentHover", "AccentPressed" }.Select(bg => ("TextOnAccent", bg, 4.5)),
+        .. new[] { "Accent", "AccentHover", "AccentPressed", "DangerButton", "DangerButtonHover" }.Select(bg => ("TextOnAccent", bg, 4.5)),
+        .. new[] { "BgRaised", "BgPage" }.Select(bg => ("DangerText", bg, 4.5)),
+        .. new[] { "WarningText", "InfoText" }.SelectMany(fg => new[] { "BgWindow", "BgRaised" }.Select(bg => (fg, bg, 4.5))),
         .. new[] { "ButtonBackground", "ButtonBackgroundPointerOver", "ButtonBackgroundPressed" }.Select(bg => ("TextPrimary", bg, 4.5)),
         .. Surfaces.Select(bg => ("FocusRing", bg, 3.0)),
     ];
