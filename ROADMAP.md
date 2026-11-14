@@ -58,6 +58,7 @@ What the design must protect, in this order when two conflict. Everything else g
 - **View › Appearance offers Match system, Light and Dark,** remembered in `settings.json` beside the Recent list. The prototype shows Light and Dark only, but the app follows the system until the writer picks. This gives up nothing the prototype shows.
 - **Duplicate is built now,** as the prototype draws it in the row menus, the Chapter menu and on Ctrl+D (⌘D): "Title copy" right after the original, with the text in memory. This gives up nothing; it was missing from the M1 items.
 - **File › Show project folder is the one thing Hedgequill launches:** `Launcher.LaunchDirectoryInfoAsync` on the project folder, which opens Explorer or Finder. The network guard allows that one call and still fails on every other launcher, URL or file opener. Opening a local folder sends nothing anywhere. This gives up a guard that bans the launcher outright.
+- **End-to-end tests drive the real window on Windows CI,** with FlaUI through UI Automation, against the NativeAOT build. They cover the caption row's menus, typing and saving, Find, focus mode, dragging by the caption row, and closing straight after a keystroke. The macOS runner stands in for a Mac the owner doesn't have: it starts the app, reads its menu bar through System Events and takes screenshots, uploaded with each run. This gives up nothing in the app; FlaUI is a test-only dependency, and Windows 11's snap layouts stay a manual check.
 
 ## M0: Placeholder (as soon as possible)
 
