@@ -50,8 +50,10 @@ public sealed partial class RealWindowTests : IDisposable
             window.Focus();
             Capture.Element(window).ToFile(Path.Combine(_shots, "windows-welcome.png"));
 
-            // The caption row carries the prototype's menu bar.
-            Assert.Equal(["File", "Edit", "View", "Chapter"], window.FindAllDescendants(cf => cf.ByControlType(ControlType.MenuItem)).Select(item => item.Name));
+            // The caption row carries the prototype's menu bar. Windows adds the title bar's own System menu.
+            Assert.Equal(
+                ["File", "Edit", "View", "Chapter"],
+                window.FindAllDescendants(cf => cf.ByControlType(ControlType.MenuItem)).Select(item => item.Name).Where(name => name != "System"));
 
             // Recent opens the project.
             Wait(() => window.FindFirstDescendant(cf => cf.ByName("Tides").And(cf.ByControlType(ControlType.Button))), "Recent's Tides").Click();
