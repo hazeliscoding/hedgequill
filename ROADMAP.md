@@ -72,7 +72,7 @@ What the design must protect, in this order when two conflict. Everything else g
 
 ## M1: Write
 
-- [ ] New project… creates a folder of Markdown files plus `hedgequill.json` for their order and details. Open folder… opens one, and Recent lists the last few.
+- [x] New project… creates a folder of Markdown files plus `hedgequill.json` for their order and details. Open folder… opens one, and Recent lists the last few.
 - [ ] The navigator: acts › chapters › scenes, plus Notes and Research pages. Add, rename, reorder by drag or keyboard, and delete to the project's `Trash/` folder, with Undo.
 - [ ] The editor: AvaloniaEdit in Cardo, with Bold, Italic and Insert scene break adding plain Markdown markers, Find…, Focus mode and the chapter overview.
 - [ ] Autosave, and every save state from the prototype: Saving…, Saved, Couldn't save (the text stays, with Retry and Save a copy…), Changed on disk (reload, or keep and overwrite) and Read-only (edits stay in memory until you choose a writable folder).
