@@ -80,9 +80,9 @@ What the design must protect, in this order when two conflict. Everything else g
 
 - [x] New project… creates a folder of Markdown files plus `hedgequill.json` for their order and details. Open folder… opens one, and Recent lists the last few.
 - [x] The navigator: acts › chapters › scenes, plus Notes and Research pages. Add, rename, reorder by drag or keyboard, and delete to the project's `Trash/` folder, with Undo.
-- [ ] The editor: AvaloniaEdit in Cardo, with Bold, Italic and Insert scene break adding plain Markdown markers, Find…, Focus mode and the chapter overview.
-- [ ] Autosave, and every save state from the prototype: Saving…, Saved, Couldn't save (the text stays, with Retry and Save a copy…), Changed on disk (reload, or keep and overwrite) and Read-only (edits stay in memory until you choose a writable folder).
-- [ ] Saves are atomic: write a temporary file, then replace, so a crash mid-save never leaves half a file.
+- [x] The editor: AvaloniaEdit in Cardo, with Bold, Italic and Insert scene break adding plain Markdown markers, Find…, Focus mode and the chapter overview.
+- [x] Autosave, and every save state from the prototype: Saving…, Saved, Couldn't save (the text stays, with Retry and Save a copy…), Changed on disk (reload, or keep and overwrite) and Read-only (edits stay in memory until you choose a writable folder).
+- [x] Saves are atomic: write a temporary file, then replace, so a crash mid-save never leaves half a file.
 
 **Done when:** tests on invented text pass, including one where the disk write fails and the text survives in memory and in Save a copy…; a project made in Hedgequill opens as plain Markdown in another editor; and the owner has written a scene in it.
 
