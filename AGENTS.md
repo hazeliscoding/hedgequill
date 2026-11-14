@@ -59,7 +59,7 @@ One meaning per term. Use these words in code, docs and commits.
 - `global.json` pins .NET SDK 10.0.404 or later, because older 10.0 SDKs bring a NativeAOT compiler with a known vulnerability. It looks in a repo-local `.dotnet/` first (git-ignored), then the system install.
 - `dotnet publish src/Hedgequill.Desktop -c Release -r win-x64 -warnaserror` builds the NativeAOT app (`osx-arm64` on a Mac; NativeAOT can't build for another OS). On Windows with Visual Studio 18, put `%ProgramFiles(x86)%\Microsoft Visual Studio\Installer` on `PATH` first, or the link step fails because `vswhere.exe` isn't found.
 - `tools/Hedgequill.AotProbe`, published the same way and run, opens AvaloniaEdit under NativeAOT, types, undoes, selects and styles Markdown markers, and exits 0 only if every check passed. CI runs it on Windows and macOS. It opens a window for about a second.
-- `dotnet run --project tools/Hedgequill.Screenshots -- docs/screenshots` renders the README's Welcome screenshots headlessly, in light and dark. Rerun it when the Welcome screen changes.
+- `dotnet run --project tools/Hedgequill.Screenshots -- docs/screenshots` renders the Welcome screen and an invented project's workspace headlessly, in light and dark, with an empty Recent list rather than yours. Rerun it when either changes.
 - `uv run --no-project --with resvg-py --with pillow python -I scripts/make_icons.py docs/brand` rebuilds the app icons from `app-icon.svg`.
 - `uv run --no-project --with fonttools --with uharfbuzz python -I scripts/make_lockup.py <Gloock-Regular.ttf> docs/brand` rebuilds the lockups. Its header says where to get the font.
 

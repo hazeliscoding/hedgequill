@@ -40,6 +40,11 @@ Interface type scale: caption 11/14, callout 12/16, body 13/18, heading 15/20, d
 | Raised (menus, dialogs) | `#fffdf8` | `#2b2927` |
 | Sunken | `#f5f2eb` | `#1a1917` |
 | Toolbar | `#f3f0e9` | `#1d1c1a` |
+| Inset (Recent's tiles) | `#e9e5dc` | `#2b2927` |
+| Text field, and its border | `#ffffff`, `rgba(40,36,30,.14)` | `#161514`, `rgba(255,255,255,.12)` |
+| Hovered row | `rgba(40,36,30,.045)` | `rgba(255,246,230,.055)` |
+| Selected row, with accent text | `rgba(110,38,51,.11)` | `rgba(161,74,92,.24)` |
+| Scrim behind a sheet | `rgba(0,0,0,.32)` | `rgba(0,0,0,.32)` |
 | Text | `#231f1c` | `#ece6da` |
 | Text, secondary | `#5f5852` | `#aaa399` |
 | Text, tertiary | `#6c655f` | `#968f86` |

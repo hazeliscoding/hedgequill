@@ -11,6 +11,8 @@
     <PublishAot>true</PublishAot>
     <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- Views take their project in the constructor. AVLN3001 warns that the runtime XAML loader then can't build them, and the app never uses that loader. -->
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);AVLN3001</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
   <ItemGroup>

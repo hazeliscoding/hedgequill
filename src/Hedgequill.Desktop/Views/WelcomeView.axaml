@@ -1,0 +1,67 @@
+<!-- The Welcome screen from the prototype: New project…, Open folder… and Recent. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Hedgequill.Desktop.Views"
+             x:Class="Hedgequill.Desktop.Views.WelcomeView">
+  <Grid ColumnDefinitions="*,*">
+    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="96,0,72,64" Spacing="28">
+      <StackPanel Spacing="2">
+        <TextBlock Classes="title" Text="Hedgequill" AutomationProperties.HeadingLevel="1" />
+        <TextBlock Classes="manuscript-italic" FontSize="19" LineHeight="27" Text="A quiet place to write." />
+      </StackPanel>
+
+      <WrapPanel ItemSpacing="8" LineSpacing="8">
+        <Button x:Name="NewProject" Classes="large accent" AutomationProperties.Name="New project…">
+          <StackPanel>
+            <Path Data="M8 3.5V12.5M3.5 8H12.5" />
+            <TextBlock Text="New project…" />
+          </StackPanel>
+        </Button>
+        <Button x:Name="OpenFolder" Classes="large" AutomationProperties.Name="Open folder…">
+          <StackPanel>
+            <Path Data="M2 4.5A1 1 0 0 1 3 3.5H6L7.5 5H13A1 1 0 0 1 14 6V12A1 1 0 0 1 13 13H3A1 1 0 0 1 2 12Z" />
+            <TextBlock Text="Open folder…" />
+          </StackPanel>
+        </Button>
+      </WrapPanel>
+
+      <TextBlock Classes="note" MaxWidth="360" HorizontalAlignment="Left"
+                 Text="A project is a folder of Markdown files on your computer. Nothing leaves it unless you copy it out." />
+    </StackPanel>
+
+    <Border Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Stretch" MaxWidth="440" Margin="48,0,96,64"
+            Background="{DynamicResource BgPage}" CornerRadius="{StaticResource RadiusMedium}"
+            BorderBrush="{DynamicResource BorderDefault}" BorderThickness="1" BoxShadow="0 1 2 0 #0F000000">
+      <StackPanel>
+        <Border Height="36" Padding="14,0" BorderBrush="{DynamicResource Separator}" BorderThickness="0,0,0,1">
+          <TextBlock Classes="label" Text="Recent" VerticalAlignment="Center" AutomationProperties.HeadingLevel="2" />
+        </Border>
+        <ItemsControl x:Name="RecentList" Margin="6">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="views:RecentRow">
+              <Button Classes="recent" AutomationProperties.Name="{Binding Title}" ToolTip.Tip="{Binding Location}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                  <Border Classes="tile">
+                    <TextBlock Text="{Binding Initial}" />
+                  </Border>
+                  <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                    <TextBlock Classes="recent-title" Text="{Binding Title}" />
+                    <TextBlock Classes="caption" Text="{Binding Location}" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                    <TextBlock Classes="caption" HorizontalAlignment="Right" Text="{Binding When}" />
+                    <TextBlock Classes="caption" HorizontalAlignment="Right" Text="{Binding Words}" />
+                  </StackPanel>
+                </Grid>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <StackPanel x:Name="NoRecent" Margin="24,36" Spacing="6">
+          <TextBlock Classes="manuscript-italic" FontSize="17" LineHeight="24" HorizontalAlignment="Center" Text="Nothing here yet." />
+          <TextBlock Classes="note" LineHeight="16" HorizontalAlignment="Center" TextAlignment="Center" Text="Projects you open will be listed here." />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>

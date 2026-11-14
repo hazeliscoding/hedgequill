@@ -1,44 +1,32 @@
-using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Data;
-using Avalonia.Headless;
 using Avalonia.Input;
-using Avalonia.Logging;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
-using Avalonia.Platform;
 using Avalonia.Styling;
-using Avalonia.Threading;
 using Avalonia.VisualTree;
-using Hedgequill.Desktop;
+using Hedgequill.Core.Projects;
 using Hedgequill.Desktop.Views;
+using Hedgequill.Tests.Core;
+using static Hedgequill.Tests.Desktop.Ui;
 
 namespace Hedgequill.Tests.Desktop;
 
-public class WelcomeTests
+public sealed class WelcomeTests : IDisposable
 {
-    private static readonly BindingErrors Errors = new();
-
-    private static readonly HeadlessUnitTestSession Session = Start();
-
-    public static AppBuilder BuildAvaloniaApp() =>
-        AppBuilder.Configure<App>()
-            .UseSkia()
-            .UseHarfBuzz()
-            .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
+    private readonly TempFolder _temp = new();
 
     [Fact]
-    public Task The_welcome_screen_shows_the_prototypes_copy() => OnWindow(ThemeVariant.Light, window =>
+    public Task The_welcome_screen_shows_the_prototypes_copy() => OnWindow(ThemeVariant.Light, _temp["settings"], window =>
     {
-        var text = window.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text).ToList();
         Assert.Equal(
             ["Hedgequill", "A quiet place to write.", "New project…", "Open folder…",
              "A project is a folder of Markdown files on your computer. Nothing leaves it unless you copy it out.",
              "Recent", "Nothing here yet.", "Projects you open will be listed here."],
-            text);
+            VisibleText(window));
+        Assert.Equal("Hedgequill", window.Title);
         Assert.Empty(Errors.Messages);
     });
 
@@ -54,7 +42,7 @@ public class WelcomeTests
     public Task The_window_paints_its_theme_tokens(string variant)
     {
         var theme = variant == "Dark" ? ThemeVariant.Dark : ThemeVariant.Light;
-        return OnWindow(theme, window =>
+        return OnWindow(theme, _temp["settings"], window =>
         {
             var frame = Render(window);
             Assert.Equal(Token(window, "BgWindow", theme), Pixel(frame, new Point(8, 8)));
@@ -67,100 +55,89 @@ public class WelcomeTests
 
     // Avalonia falls back to the system font without a word when an embedded one fails to load.
     [Fact]
-    public Task The_title_and_tagline_use_the_bundled_fonts() => OnWindow(ThemeVariant.Light, window =>
+    public Task The_title_and_tagline_use_the_bundled_fonts() => OnWindow(ThemeVariant.Light, _temp["settings"], window =>
     {
-        var blocks = window.GetVisualDescendants().OfType<TextBlock>().ToDictionary(t => t.Text ?? "");
+        var blocks = window.GetVisualDescendants().OfType<TextBlock>().Where(t => t.IsEffectivelyVisible).ToDictionary(t => t.Text ?? "");
         Assert.Equal(("Gloock", FontStyle.Normal), Face(blocks["Hedgequill"]));
         Assert.Equal(("Cardo", FontStyle.Italic), Face(blocks["A quiet place to write."]));
         Assert.Equal(("Cardo", FontStyle.Italic), Face(blocks["Nothing here yet."]));
     });
 
     [Fact]
-    public Task Tab_reaches_New_project_then_Open_folder() => OnWindow(ThemeVariant.Light, window =>
+    public Task Tab_reaches_New_project_then_Open_folder() => OnWindow(ThemeVariant.Light, _temp["settings"], window =>
     {
         var order = new List<string?>();
         for (var i = 0; i < 2; i++)
         {
-            window.KeyPressQwerty(PhysicalKey.Tab, RawInputModifiers.None);
-            window.KeyReleaseQwerty(PhysicalKey.Tab, RawInputModifiers.None);
-            Dispatcher.UIThread.RunJobs();
+            Press(window, PhysicalKey.Tab);
             order.Add(window.FocusManager?.GetFocusedElement() is Control focused ? AutomationProperties.GetName(focused) : null);
         }
 
         Assert.Equal(["New project…", "Open folder…"], order);
     });
 
+    [Fact]
+    public Task Recent_lists_projects_that_still_exist_newest_first()
+    {
+        var recent = new RecentProjects(_temp["settings"]);
+        var older = Project.Create(_temp["stories"], "Small Hours");
+        older.Scenes.Single().Text = "Three invented words";
+        recent.Add(older, DateTimeOffset.Now.AddDays(-1));
+        var opened = DateTimeOffset.Now;
+        recent.Add(Project.Create(_temp["stories"], "After the Last Train"), opened);
+        var gone = Project.Create(_temp["stories"], "Gone Astray");
+        recent.Add(gone, DateTimeOffset.Now);
+        Directory.Delete(gone.Folder, recursive: true);
+
+        return OnWindow(ThemeVariant.Light, _temp["settings"], window =>
+        {
+            var text = VisibleText(window);
+            var start = text.IndexOf("Recent") + 1;
+            Assert.Equal(
+                ["A", "After the Last Train", _temp["stories/After the Last Train"], $"Today, {opened.ToString("HH:mm", CultureInfo.InvariantCulture)}", "0 words",
+                 "S", "Small Hours", _temp["stories/Small Hours"], "Yesterday", "3 words"],
+                text[start..]);
+            Assert.Equal(("Cardo", FontStyle.Normal), Face(window.GetVisualDescendants().OfType<TextBlock>().First(t => t.Text == "Small Hours")));
+        });
+    }
+
+    [Fact]
+    public Task Choosing_a_recent_project_opens_it()
+    {
+        var project = Project.Create(_temp["stories"], "Small Hours");
+        new RecentProjects(_temp["settings"]).Add(project, DateTimeOffset.Now.AddDays(-3));
+
+        return OnWindow(ThemeVariant.Light, _temp["settings"], window =>
+        {
+            Click(window, Visible<Button>(window).Single(b => AutomationProperties.GetName(b) == "Small Hours"));
+
+            Assert.Equal(project.Folder, window.Project?.Folder);
+            Assert.Equal("Small Hours — Hedgequill", window.Title);
+            Assert.True(new RecentProjects(_temp["settings"]).Load().Single().Opened > DateTimeOffset.Now.AddMinutes(-1));
+        });
+    }
+
+    [Fact]
+    public Task A_project_that_cant_open_leaves_the_welcome_screen_with_a_notice()
+    {
+        _temp.Write("stories/From the Future/hedgequill.json", """{ "format": 99 }""");
+
+        return OnWindow(ThemeVariant.Light, _temp["settings"], window =>
+        {
+            Assert.False(window.Open(_temp["stories/From the Future"]));
+
+            Assert.Null(window.Project);
+            Assert.IsType<WelcomeView>(Find<ContentControl>(window, "Screen").Content);
+            Assert.Contains("Couldn't open the project", VisibleText(window));
+            Assert.Contains("A newer version of Hedgequill made this project. Update Hedgequill to open it.", VisibleText(window));
+        });
+    }
+
+    public void Dispose() => _temp.Dispose();
+
     private static (string Family, FontStyle Style) Face(TextBlock block)
     {
         var glyphs = new Typeface(block.FontFamily, block.FontStyle, block.FontWeight).GlyphTypeface;
         return (glyphs.FamilyName, glyphs.Style);
-    }
-
-    private static Color Token(Window window, string key, ThemeVariant theme) =>
-        window.TryFindResource(key, theme, out var brush) && brush is ISolidColorBrush solid
-            ? solid.Color
-            : throw new KeyNotFoundException($"{key} isn't a brush in {theme}.");
-
-    private static HeadlessUnitTestSession Start()
-    {
-        // Binding errors are only logged, so the sink is what turns them into a failure.
-        Logger.Sink = Errors;
-        return HeadlessUnitTestSession.StartNew(typeof(WelcomeTests));
-    }
-
-    private static Task OnWindow(ThemeVariant theme, Action<Window> test, Func<Window>? create = null) => Session.Dispatch(() =>
-    {
-        Application.Current!.RequestedThemeVariant = theme;
-        Errors.Messages.Clear();
-        var window = create?.Invoke() ?? new MainWindow { Width = 1280, Height = 800 };
-        window.Show();
-        Dispatcher.UIThread.RunJobs();
-        try
-        {
-            test(window);
-        }
-        finally
-        {
-            window.Close();
-        }
-    }, TestContext.Current.CancellationToken);
-
-    private static Bitmap Render(Window window)
-    {
-        Dispatcher.UIThread.RunJobs();
-        return window.CaptureRenderedFrame() ?? throw new InvalidOperationException("No frame was rendered.");
-    }
-
-    private static Color Pixel(Bitmap frame, Point at)
-    {
-        var bytes = new byte[4];
-        var pinned = GCHandle.Alloc(bytes, GCHandleType.Pinned);
-        try
-        {
-            frame.CopyPixels(new PixelRect((int)at.X, (int)at.Y, 1, 1), pinned.AddrOfPinnedObject(), 4, 4);
-        }
-        finally
-        {
-            pinned.Free();
-        }
-
-        return frame.Format == PixelFormats.Rgba8888 ? Color.FromRgb(bytes[0], bytes[1], bytes[2]) : Color.FromRgb(bytes[2], bytes[1], bytes[0]);
-    }
-
-    private sealed class BindingErrors : ILogSink
-    {
-        public ConcurrentQueue<string> Messages { get; } = new();
-
-        public bool IsEnabled(LogEventLevel level, string area) => level >= LogEventLevel.Warning && area == LogArea.Binding;
-
-        public void Log(LogEventLevel level, string area, object? source, string messageTemplate) => Log(level, area, source, messageTemplate, []);
-
-        public void Log(LogEventLevel level, string area, object? source, string messageTemplate, params object?[] propertyValues)
-        {
-            if (IsEnabled(level, area))
-            {
-                Messages.Enqueue($"{source}: {messageTemplate} {string.Join(", ", propertyValues)}");
-            }
-        }
     }
 }
