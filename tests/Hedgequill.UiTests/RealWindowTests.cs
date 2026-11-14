@@ -77,8 +77,9 @@ public sealed partial class RealWindowTests : IDisposable
             Keyboard.Type(VirtualKeyShort.ESCAPE);
 
             // View › Focus mode, from the caption row's menu, hides the navigator; Escape in the editor brings it back.
+            // Clicking View must open the menu, not start dragging the window by its caption row.
             Wait(() => window.FindFirstDescendant(cf => cf.ByName("View").And(cf.ByControlType(ControlType.MenuItem))), "the View menu").Click();
-            var focus = Wait(() => InApp(app, automation, "Focus mode"), "View › Focus mode");
+            var focus = Wait(() => InApp(app, automation, window, "Focus mode"), "View › Focus mode in an open View menu");
             Capture.Screen().ToFile(Path.Combine(_shots, "windows-view-menu.png"));
             focus.Click();
             Assert.True(Retry.WhileFalse(() => Navigator(window) is null, Patience).Result, "Focus mode left the navigator showing.");
@@ -146,11 +147,15 @@ public sealed partial class RealWindowTests : IDisposable
     private static AutomationElement Wait(Func<AutomationElement?> find, string what) =>
         Retry.WhileNull(find, Patience).Result ?? throw new InvalidOperationException($"Couldn't find {what}.");
 
-    /// <summary>A menu item in any of the app's windows: Avalonia opens a submenu in a popup window of its own.</summary>
-    private static AutomationElement? InApp(Application app, UIA3Automation automation, string name) =>
-        app.GetAllTopLevelWindows(automation)
-            .Select(window => window.FindFirstDescendant(cf => cf.ByName(name).And(cf.ByControlType(ControlType.MenuItem))))
-            .FirstOrDefault(item => item is not null);
+    /// <summary>
+    /// A menu item that's showing: inside the window when UI Automation lists the open popup under its menu, or in the
+    /// popup's own top-level window, which Avalonia opens for a submenu.
+    /// </summary>
+    private static AutomationElement? InApp(Application app, UIA3Automation automation, Window window, string name) =>
+        new[] { window }
+            .Concat(automation.GetDesktop().FindAllChildren(cf => cf.ByProcessId(app.ProcessId)))
+            .Select(root => root.FindFirstDescendant(cf => cf.ByName(name).And(cf.ByControlType(ControlType.MenuItem))))
+            .FirstOrDefault(item => item is not null && !item.IsOffscreen);
 
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
