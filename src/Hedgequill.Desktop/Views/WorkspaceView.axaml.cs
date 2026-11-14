@@ -26,6 +26,7 @@ public partial class WorkspaceView : UserControl
     private (Node Node, Point Start)? _press;
     private bool _dragging;
     private bool _navigatorWanted = true;
+    private NavigatorRow? _contextRow;
     private (Node Target, Placement Where)? _drop;
 
     public WorkspaceView(Project project)
@@ -57,19 +58,22 @@ public partial class WorkspaceView : UserControl
                 StartRename(row.Node);
             }
         };
-        Navigator.ContextRequested += (_, e) =>
-        {
-            if (Row(e.Source) is { } row && e.Source is Control control)
+        // The row menus, as the prototype has them. The tunnel notes which row before the flyout opens, so a right-click,
+        // Shift+F10 and the Menu key all get the menu for that row; empty space gets the add menu.
+        Navigator.AddHandler(
+            ContextRequestedEvent,
+            (_, e) =>
             {
-                if (row.Node.Kind is not (NodeKind.Notes or NodeKind.Research))
+                _contextRow = Row(e.Source);
+                if (_contextRow is { Node.Kind: not (NodeKind.Notes or NodeKind.Research) } row)
                 {
                     Select(row.Node);
                 }
-
-                new MenuFlyout { ItemsSource = MenuFor(row.Node) }.ShowAt(control, showAtPointer: true);
-                e.Handled = true;
-            }
-        };
+            },
+            RoutingStrategies.Tunnel);
+        var rowMenu = new MenuFlyout();
+        rowMenu.Opening += (_, _) => rowMenu.ItemsSource = _contextRow is { } row ? MenuFor(row.Node) : AddMenu();
+        Navigator.ContextFlyout = rowMenu;
         Navigator.AddHandler(PointerPressedEvent, OnPress, RoutingStrategies.Tunnel);
         Navigator.AddHandler(PointerMovedEvent, OnDrag, RoutingStrategies.Tunnel);
         Navigator.AddHandler(PointerReleasedEvent, OnRelease, RoutingStrategies.Tunnel);
@@ -84,7 +88,9 @@ public partial class WorkspaceView : UserControl
         Manuscript.Edited += node => Edited?.Invoke(node);
         AddHandler(KeyDownEvent, OnWorkspaceKey, RoutingStrategies.Tunnel);
         ToolTip.SetTip(FocusButton, $"Focus mode ({Shortcut("Shift+F")})");
-        More.Click += (_, _) => new MenuFlyout { ItemsSource = AddMenu(), Placement = PlacementMode.TopEdgeAlignedRight }.ShowAt(More);
+        var addMenu = new MenuFlyout { Placement = PlacementMode.TopEdgeAlignedRight };
+        addMenu.Opening += (_, _) => addMenu.ItemsSource = AddMenu();
+        More.Flyout = addMenu;
 
         Refresh();
         Select(project.Scenes.FirstOrDefault());
