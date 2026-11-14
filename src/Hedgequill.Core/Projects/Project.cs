@@ -5,7 +5,7 @@ using Hedgequill.Core.Files;
 namespace Hedgequill.Core.Projects;
 
 /// <summary>A folder of Markdown files whose folders mirror the outline, plus hedgequill.json for order and details.</summary>
-public sealed class Project
+public sealed partial class Project
 {
     public const string IndexFile = "hedgequill.json";
     public const string TrashFolder = "Trash";
