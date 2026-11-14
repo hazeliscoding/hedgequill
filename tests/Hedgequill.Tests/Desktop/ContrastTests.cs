@@ -18,6 +18,7 @@ public partial class ContrastTests
         .. Text.SelectMany(fg => Surfaces.Select(bg => (fg, bg, 4.5))),
         .. new[] { "Accent", "AccentHover", "AccentPressed", "DangerButton", "DangerButtonHover" }.Select(bg => ("TextOnAccent", bg, 4.5)),
         .. new[] { "BgRaised", "BgPage" }.Select(bg => ("DangerText", bg, 4.5)),
+        .. new[] { "WarningText", "InfoText" }.SelectMany(fg => new[] { "BgWindow", "BgRaised" }.Select(bg => (fg, bg, 4.5))),
         .. new[] { "ButtonBackground", "ButtonBackgroundPointerOver", "ButtonBackgroundPressed" }.Select(bg => ("TextPrimary", bg, 4.5)),
         .. Surfaces.Select(bg => ("FocusRing", bg, 3.0)),
     ];

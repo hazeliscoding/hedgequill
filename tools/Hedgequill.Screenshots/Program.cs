@@ -61,7 +61,15 @@ internal static class Program
         var project = Project.Create(location, "The Lantern Keeper");
         var folder = project.Folder;
         Directory.Delete(Path.Combine(folder, "Chapter 1"), recursive: true);
-        Write(folder, "Prologue/Fog on the water.md", "The fog came in before the boats did.");
+        Write(folder, "Prologue/Fog on the water.md", """
+            The fog came in before the boats did. It rolled over the harbour wall in one long breath, and by the time Mara reached the lantern room the far shore had gone.
+
+            She lit the lamp anyway. *Someone is always out there*, her mother used to say, *even when you can't see them.*
+
+            ---
+
+            The bell rang at half past nine. Twice, then nothing.
+            """);
         Write(folder, "Act One/The Letter/A knock at dusk.md", "Mara heard the knock twice before she believed it.");
         Write(folder, "Act One/The Letter/What the seal said.md", "The wax was green, which meant the harbour office.");
         Write(folder, "Act One/Low Tide/The causeway.md", "At low tide the island was not an island at all.");

@@ -7,6 +7,8 @@ namespace Hedgequill.Desktop.Views;
 public partial class MainWindow : Window
 {
     private readonly RecentProjects _recent;
+    private Saver? _saver;
+    private bool _closeAnyway;
 
     public MainWindow()
         : this(new RecentProjects(RecentProjects.DefaultFolder))
@@ -29,8 +31,33 @@ public partial class MainWindow : Window
 
     public Project? Project { get; private set; }
 
+    public Saver? Saver => _saver;
+
+    /// <summary>Writes what's unsaved first. Text that still can't be written stops the close until the writer chooses to lose it.</summary>
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        _saver?.Flush();
+        if (_saver is { HasUnsaved: true } && !_closeAnyway)
+        {
+            e.Cancel = true;
+            Confirmation.Show(
+                "Close without saving?",
+                "Some changes couldn't be written to disk. Save a copy first, or close and lose them.",
+                "Close anyway",
+                () =>
+                {
+                    _closeAnyway = true;
+                    Close();
+                });
+        }
+
+        base.OnClosing(e);
+    }
+
     public void ShowWelcome()
     {
+        _saver?.Flush();
+        _saver = null;
         Project = null;
         Title = "Hedgequill";
         var now = DateTimeOffset.Now;
@@ -61,6 +88,19 @@ public partial class MainWindow : Window
         var workspace = new WorkspaceView(project);
         workspace.ConfirmRequested += Confirmation.Show;
         workspace.NoticeRequested += (title, detail, label, action) => Notice.Show(title, detail, label, action);
+
+        var saver = new Saver(project, workspace.Commit, TimeSpan.FromMilliseconds(700));
+        workspace.Edited += saver.Edited;
+        workspace.FlushRequested += saver.Flush;
+        saver.Reloaded += workspace.Reload;
+        var status = new SaveStatus();
+        status.Attach(saver, () => workspace.OpenPath);
+        saver.Changed += () => workspace.SaveLabel = status.Text;
+        workspace.SaveLabel = status.Text;
+        status.SaveCopyRequested += node => _ = SaveCopyAsync(node);
+        status.ChooseFolderRequested += () => _ = ChooseFolderAsync(project);
+        workspace.SaveSlot.Content = status;
+        _saver = saver;
         Screen.Content = workspace;
     }
 
@@ -76,6 +116,39 @@ public partial class MainWindow : Window
         {
             Notice.Show(failure, error.Message);
             return false;
+        }
+    }
+
+    private async Task SaveCopyAsync(Node node)
+    {
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions { Title = "Save a copy", SuggestedFileName = node.Name, DefaultExtension = "md" });
+        if (file?.TryGetLocalPath() is { } path)
+        {
+            _saver?.Flush();
+            if (Attempt("Couldn't save a copy", () => Project.SaveCopy(node, path)))
+            {
+                Notice.Show("Saved a copy", path);
+            }
+        }
+    }
+
+    /// <summary>Read-only: copies the project, with the text in memory, into a folder the writer picks, and carries on there.</summary>
+    private async Task ChooseFolderAsync(Project project)
+    {
+        var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Choose a writable folder" });
+        if (folders.Count > 0 && folders[0].TryGetLocalPath() is { } folder)
+        {
+            if (Screen.Content is WorkspaceView workspace)
+            {
+                workspace.Commit();
+            }
+
+            Project? copy = null;
+            if (Attempt("Couldn't save the project there", () => copy = project.SaveAs(folder)) && copy is not null)
+            {
+                Show(copy);
+                Notice.Show("Saved the project in a new folder", copy.Folder);
+            }
         }
     }
 
