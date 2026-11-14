@@ -3,7 +3,7 @@
              x:Class="Hedgequill.Desktop.App"
              Name="Hedgequill"
              RequestedThemeVariant="Default">
-  <!-- macOS's app menu. Without one of its own, Avalonia's default offers "About Avalonia"; About Hedgequill comes with Help in M4. -->
+  <!-- macOS's app menu. Without one of its own, Avalonia's default offers "About Avalonia"; About Hedgequill comes with Help in M5. -->
   <NativeMenu.Menu>
     <NativeMenu />
   </NativeMenu.Menu>

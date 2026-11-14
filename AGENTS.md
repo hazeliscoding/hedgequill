@@ -17,7 +17,7 @@ These are the working rules for agents in this repo. Hedgequill is a desktop app
 - **The user's files stay plain Markdown** that any text editor can open. Hedgequill's own data in a project is `hedgequill.json`, for order and details. Never write a format only Hedgequill can read.
 - **Delete never erases.** It moves the file or folder into the project's `Trash/` folder, and Undo moves it back. A Markdown file Hedgequill can't place in the outline stays on disk untouched.
 - **Tests and fixtures use invented sample text, never a real fic.** The owner's writing is private, and this repo is public.
-- **AO3 HTML stays within what AO3 keeps:** paragraphs, emphasis, headings, quotes and scene breaks. Anything else becomes plain text, so the preview matches what gets posted.
+- **AO3 HTML stays within what AO3 keeps:** paragraphs, emphasis, strikethrough, headings, quotes, lists, links and scene breaks. Anything else becomes plain text, so the preview matches what gets posted.
 - **Velopack's package ID stays `hazeliscoding.Hedgequill`,** never `Hedgequill`. Setup empties `%LOCALAPPDATA%\<packId>` on every install, and `%LOCALAPPDATA%\Hedgequill` holds settings and the recent-projects list.
 
 ## Code
