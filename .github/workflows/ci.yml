@@ -99,8 +99,8 @@ jobs:
           HEDGEQUILL_UI_SHOTS: ${{ github.workspace }}/artifacts/ui
         run: dotnet test --project tests/Hedgequill.UiTests --configuration Release --no-build
 
-      # GitHub's macOS runner stands in for a Mac: it starts the app, reads its menu bar through System Events and takes
-      # screenshots, which go with the run. Each step reports rather than fails until we know what the runner allows.
+      # GitHub's macOS runner stands in for a Mac: it starts the app, reads the menu bar at the top of the screen through
+      # System Events, and takes screenshots, which go with the run. A separator reads as "missing value".
       - name: Look at the app (macOS)
         if: runner.os == 'macOS'
         timeout-minutes: 3
@@ -110,23 +110,28 @@ jobs:
           pid=$!
           sleep 8
           app="first process whose unix id is $pid"
-          osascript -e "tell application \"System Events\" to set frontmost of ($app) to true" || echo "Couldn't bring Hedgequill to the front."
+          menu() { osascript -e "tell application \"System Events\" to get name of every menu item of menu 1 of menu bar item \"$1\" of menu bar 1 of ($app)" 2>&1; }
+          osascript -e "tell application \"System Events\" to set frontmost of ($app) to true"
           sleep 1
-          screencapture -x artifacts/ui/macos-welcome.png || echo "screencapture failed."
-          osascript -e "tell application \"System Events\" to get name of every menu bar item of menu bar 1 of ($app)" > artifacts/ui/macos-menu-bar.txt 2>&1 || true
-          if osascript -e "tell application \"System Events\" to tell ($app) to click menu bar item \"File\" of menu bar 1"; then
-            sleep 1
-            screencapture -x artifacts/ui/macos-file-menu.png || true
-            osascript -e "tell application \"System Events\" to get name of every menu item of menu 1 of menu bar item \"File\" of menu bar 1 of ($app)" > artifacts/ui/macos-file-menu.txt 2>&1 || true
-            osascript -e 'tell application "System Events" to key code 53' || true
-          fi
+          screencapture -x artifacts/ui/macos-welcome.png
+          bar=$(osascript -e "tell application \"System Events\" to get name of every menu bar item of menu bar 1 of ($app)" 2>&1)
+          about=$(menu Hedgequill)
+          osascript -e "tell application \"System Events\" to tell ($app) to click menu bar item \"File\" of menu bar 1"
+          sleep 1
+          screencapture -x artifacts/ui/macos-file-menu.png
+          file=$(menu File)
+          osascript -e 'tell application "System Events" to key code 53'
           kill "$pid"
           {
             echo "### Hedgequill on the macOS runner"
-            echo "Menu bar: $(cat artifacts/ui/macos-menu-bar.txt)"
-            echo
-            echo "File menu: $(cat artifacts/ui/macos-file-menu.txt 2>/dev/null || echo 'not read')"
+            echo "- Menu bar: $bar"
+            echo "- App menu: $about"
+            echo "- File menu: $file"
           } | tee -a "$GITHUB_STEP_SUMMARY"
+          status=0
+          [ "$bar" = "Apple, Hedgequill, File, Edit, View, Chapter" ] || { echo "::error::The menu bar reads: $bar"; status=1; }
+          [ "$file" = "New project…, Open folder…, Open recent, missing value, New scene, New chapter, missing value, Show project folder, Close project" ] || { echo "::error::The File menu reads: $file"; status=1; }
+          exit $status
 
       - name: Upload UI screenshots
         if: ${{ !cancelled() }}
