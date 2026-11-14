@@ -151,7 +151,8 @@ public sealed partial class Project
     {
         foreach (var name in Ordered(MarkdownFiles(folder), index, parent.RelativePath))
         {
-            parent.Add(new Node(kind, name, "") { Text = File.ReadAllText(Path.Combine(folder, name)) });
+            var text = File.ReadAllText(Path.Combine(folder, name)).ReplaceLineEndings("\n");
+            parent.Add(new Node(kind, name, "") { Text = text, SavedText = text });
         }
     }
 

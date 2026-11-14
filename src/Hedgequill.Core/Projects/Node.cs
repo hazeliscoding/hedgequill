@@ -27,8 +27,11 @@ public sealed class Node(NodeKind kind, string name, string title)
 
     public ObservableCollection<Node> Children { get; } = [];
 
-    /// <summary>A scene's or page's Markdown. Empty for folders.</summary>
+    /// <summary>A scene's or page's Markdown, with LF line endings. Empty for folders.</summary>
     public string Text { get; set; } = "";
+
+    /// <summary>The text last read from or written to the file, to tell a change made in another app from one made here.</summary>
+    public string SavedText { get; internal set; } = "";
 
     public bool IsFile => Kind is NodeKind.Scene or NodeKind.Page;
 
