@@ -5,6 +5,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Hedgequill.Tests/Hedgequill.Tests.csproj" />
+    <Project Path="tests/Hedgequill.UiTests/Hedgequill.UiTests.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/Hedgequill.AotProbe/Hedgequill.AotProbe.csproj" />
