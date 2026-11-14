@@ -5,7 +5,12 @@
              x:Class="Hedgequill.Desktop.Views.WorkspaceView">
   <Grid x:Name="Columns" ColumnDefinitions="236,*">
     <DockPanel x:Name="NavigatorPane" Grid.Column="0">
-      <TextBlock x:Name="ProjectTitle" DockPanel.Dock="Top" Classes="project-title" Margin="16,12,16,6" AutomationProperties.HeadingLevel="1" />
+      <Button x:Name="ProjectMenu" DockPanel.Dock="Top" Classes="project-menu" Margin="8,8,8,6" AutomationProperties.Name="Project menu" ToolTip.Tip="Project menu">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+          <TextBlock x:Name="ProjectTitle" Classes="project-title" AutomationProperties.HeadingLevel="1" />
+          <Path Grid.Column="1" Data="M3 4.5L6 7.5L9 4.5" />
+        </Grid>
+      </Button>
       <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Separator}" BorderThickness="0,1,0,0" Padding="8,8,8,10">
         <Grid ColumnDefinitions="Auto,*,Auto">
           <Button x:Name="NewScene" Classes="small tertiary" AutomationProperties.Name="New scene">

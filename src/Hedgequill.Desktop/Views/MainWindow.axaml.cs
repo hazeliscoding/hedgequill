@@ -54,6 +54,22 @@ public partial class MainWindow : Window
         base.OnClosing(e);
     }
 
+    /// <summary>Close project: writes what's unsaved, then shows the Welcome screen. Text that can't be written keeps the project open, with its state showing why.</summary>
+    public void CloseProject()
+    {
+        if (_saver is { } saver)
+        {
+            saver.Flush();
+            if (saver.HasUnsaved)
+            {
+                Notice.Show("The project is still open", "Some changes couldn't be written to disk yet. Retry, or save a copy, from the save state at the top.");
+                return;
+            }
+        }
+
+        ShowWelcome();
+    }
+
     public void ShowWelcome()
     {
         _saver?.Flush();
@@ -92,6 +108,7 @@ public partial class MainWindow : Window
         var saver = new Saver(project, workspace.Commit, TimeSpan.FromMilliseconds(700));
         workspace.Edited += saver.Edited;
         workspace.FlushRequested += saver.Flush;
+        workspace.CloseRequested += CloseProject;
         saver.Reloaded += workspace.Reload;
         var status = new SaveStatus();
         status.Attach(saver, () => workspace.OpenPath);

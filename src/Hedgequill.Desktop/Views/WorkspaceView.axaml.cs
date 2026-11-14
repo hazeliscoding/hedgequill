@@ -75,6 +75,7 @@ public partial class WorkspaceView : UserControl
         Navigator.AddHandler(PointerReleasedEvent, OnRelease, RoutingStrategies.Tunnel);
         Navigator.AddHandler(PointerCaptureLostEvent, (_, _) => EndDrag());
         NewScene.Click += (_, _) => AddScene();
+        ProjectMenu.Click += (_, _) => new MenuFlyout { ItemsSource = new List<Control> { Item("Close project", () => CloseRequested?.Invoke()) } }.ShowAt(ProjectMenu);
         NavigatorToggle.Click += (_, _) => ToggleNavigator();
         FocusButton.Click += (_, _) => ToggleFocus();
         Manuscript.OpenRequested += Select;
@@ -97,6 +98,9 @@ public partial class WorkspaceView : UserControl
 
     /// <summary>The open scene's or page's text changed in the editor.</summary>
     public event Action<Node>? Edited;
+
+    /// <summary>Close project, from the project menu: back to the Welcome screen.</summary>
+    public event Action? CloseRequested;
 
     /// <summary>Before anything moves or closes a file: write what's in the editor.</summary>
     public event Action? FlushRequested;

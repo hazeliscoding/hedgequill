@@ -231,6 +231,18 @@ public sealed class EditorTests : IDisposable
     });
 
     [Fact]
+    public Task Close_project_saves_and_goes_back_to_Welcome() => OnEditor((window, workspace, editor) =>
+    {
+        window.KeyTextInput("Last words. ");
+
+        window.CloseProject();
+
+        Assert.IsType<WelcomeView>(Find<ContentControl>(window, "Screen").Content);
+        Assert.Equal("Last words. Invented fog rolled in.", File.ReadAllText(_temp["stories/Tides/Chapter 1/Fog.md"]));
+        Assert.Contains("Tides", VisibleText(window));
+    });
+
+    [Fact]
     public Task An_empty_scene_says_Begin_here() => OnEditor((window, workspace, editor) =>
     {
         workspace.Select(workspace.Rows.Single(row => row.Title == "Ferry").Node);
