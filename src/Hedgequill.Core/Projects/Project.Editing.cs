@@ -83,6 +83,45 @@ public sealed partial class Project
         SaveIndex();
     }
 
+    /// <summary>Copies a scene, page or chapter, with the text in memory, to "… copy" right after it, as the prototype does.</summary>
+    public Node Duplicate(Node node)
+    {
+        Require(node.Parent is not null && node.Kind is NodeKind.Scene or NodeKind.Page or NodeKind.Chapter, "Only scenes, pages and chapters can be duplicated.");
+        var parent = node.Parent!;
+        var title = node.Title + " copy";
+        var name = UniqueName(parent, title, Extension(node), Untitled(node.Kind), except: null);
+        var path = Path.Combine(PathOf(parent), name);
+        if (node.IsFile)
+        {
+            AtomicFile.Write(path, node.Text.ReplaceLineEndings("\n"));
+        }
+        else
+        {
+            CopyFolder(PathOf(node), path);
+            foreach (var scene in node.Children)
+            {
+                AtomicFile.Write(Path.Combine(path, scene.Name), scene.Text.ReplaceLineEndings("\n"));
+            }
+        }
+
+        var copy = Clone(node, name, title);
+        parent.Insert(parent.Children.IndexOf(node) + 1, copy);
+        SaveIndex();
+        return copy;
+
+        static Node Clone(Node source, string name, string title)
+        {
+            var text = source.Text.ReplaceLineEndings("\n");
+            var clone = new Node(source.Kind, name, title) { Text = text, SavedText = text };
+            foreach (var child in source.Children)
+            {
+                clone.Add(Clone(child, child.Name, child.Title));
+            }
+
+            return clone;
+        }
+    }
+
     /// <summary>Moves a node's file or folder into Trash/, under the same folders it sat in, and takes it out of the outline.</summary>
     public Deleted Delete(Node node)
     {

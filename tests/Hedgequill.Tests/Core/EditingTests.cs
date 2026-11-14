@@ -191,6 +191,50 @@ public sealed class EditingTests : IDisposable
         Assert.Equal("Deleted words.", File.ReadAllText(_temp["Chapter 1/Scene 2.md"]));
     }
 
+    [Fact]
+    public void Duplicate_copies_a_scene_with_its_unsaved_text_right_after_it()
+    {
+        _temp.Write("Chapter 1/Fog.md", "Saved fog.");
+        _temp.Write("Chapter 1/Rain.md", "Rain.");
+        var project = Project.Open(_temp.Path);
+        var fog = project.Scenes.First();
+        fog.Text = "Fog not saved yet.";
+
+        var copy = project.Duplicate(fog);
+
+        Assert.Equal("Fog copy", copy.Title);
+        Assert.Equal("Fog not saved yet.", File.ReadAllText(_temp["Chapter 1/Fog copy.md"]));
+        Assert.Equal("Saved fog.", File.ReadAllText(_temp["Chapter 1/Fog.md"]));
+        Assert.Equal(["Chapter 1 [Chapter]", "  Fog [Scene]", "  Fog copy [Scene]", "  Rain [Scene]", "Notes [Notes]", "Research [Research]"], Outline(Project.Open(_temp.Path)));
+    }
+
+    [Fact]
+    public void Duplicating_a_chapter_copies_its_folder_and_scenes()
+    {
+        _temp.Write("Chapter 1/Fog.md", "Fog.");
+        _temp.Write("Chapter 1/Rain.md", "Rain.");
+        var project = Project.Open(_temp.Path);
+
+        project.Duplicate(Child(project.Root, "Chapter 1"));
+        project.Duplicate(Child(project.Root, "Chapter 1"));
+
+        Assert.Equal("Rain.", File.ReadAllText(_temp["Chapter 1 copy/Rain.md"]));
+        Assert.Equal(
+            ["Chapter 1 [Chapter]", "  Fog [Scene]", "  Rain [Scene]", "Chapter 1 copy [Chapter]", "  Fog [Scene]", "  Rain [Scene]",
+             "Chapter 1 copy [Chapter]", "  Fog [Scene]", "  Rain [Scene]", "Notes [Notes]", "Research [Research]"],
+            Outline(Project.Open(_temp.Path)));
+        Assert.True(Directory.Exists(_temp["Chapter 1 copy 2"]));
+    }
+
+    [Fact]
+    public void Acts_and_groups_dont_duplicate()
+    {
+        var project = Project.Create(_temp.Path, "Small Hours");
+
+        Assert.Throws<InvalidOperationException>(() => project.Duplicate(project.Add(project.Root, NodeKind.Act)));
+        Assert.Throws<InvalidOperationException>(() => project.Duplicate(Child(project.Root, "Notes")));
+    }
+
     public void Dispose() => _temp.Dispose();
 
     private static Node Child(Node parent, string title) => parent.Children.Single(node => node.Title == title && node.Name.StartsWith(title, StringComparison.Ordinal));

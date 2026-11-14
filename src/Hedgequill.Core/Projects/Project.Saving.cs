@@ -45,7 +45,7 @@ public sealed partial class Project
     {
         Directory.CreateDirectory(location);
         var target = Path.Combine(location, FileNames.Unique(Path.GetFileName(Folder), "", candidate => Path.Exists(Path.Combine(location, candidate))));
-        Copy(Folder, target);
+        CopyFolder(Folder, target);
         foreach (var node in Root.Descendants().Where(node => node.IsFile))
         {
             AtomicFile.Write(Path.Combine([target, .. node.RelativePath.Split('/')]), node.Text.ReplaceLineEndings("\n"));
@@ -55,19 +55,19 @@ public sealed partial class Project
         copy.Root.Title = Title;
         copy.SaveIndex();
         return copy;
+    }
 
-        static void Copy(string from, string to)
+    private static void CopyFolder(string from, string to)
+    {
+        Directory.CreateDirectory(to);
+        foreach (var file in Directory.EnumerateFiles(from))
         {
-            Directory.CreateDirectory(to);
-            foreach (var file in Directory.EnumerateFiles(from))
-            {
-                File.Copy(file, Path.Combine(to, Path.GetFileName(file)));
-            }
+            File.Copy(file, Path.Combine(to, Path.GetFileName(file)));
+        }
 
-            foreach (var folder in Directory.EnumerateDirectories(from))
-            {
-                Copy(folder, Path.Combine(to, Path.GetFileName(folder)));
-            }
+        foreach (var folder in Directory.EnumerateDirectories(from))
+        {
+            CopyFolder(folder, Path.Combine(to, Path.GetFileName(folder)));
         }
     }
 }
