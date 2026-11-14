@@ -1,4 +1,4 @@
-<!-- The one window: the Welcome screen or a project's workspace, with the sheets and a toast over them. -->
+<!-- The one window: the caption row with the menu bar, then the Welcome screen or a project's workspace, with the sheets and a toast over them. -->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="using:Hedgequill.Desktop.Views"
@@ -7,10 +7,20 @@
         Icon="avares://Hedgequill/Assets/app-icon.ico"
         Width="1280" Height="800" MinWidth="900" MinHeight="560"
         WindowStartupLocation="CenterScreen">
-  <Panel>
-    <ContentControl x:Name="Screen" Focusable="False" />
-    <views:NewProjectSheet x:Name="Sheet" IsVisible="False" />
-    <views:ConfirmSheet x:Name="Confirmation" IsVisible="False" />
-    <views:Toast x:Name="Notice" IsVisible="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16" />
-  </Panel>
+  <DockPanel>
+    <!-- The prototype's Windows caption row: the app icon, File Edit View Chapter, then the title; the system draws the window buttons on the right. -->
+    <Grid x:Name="CaptionRow" DockPanel.Dock="Top" Height="32" ColumnDefinitions="Auto,Auto,*"
+          WindowDecorationProperties.ElementRole="TitleBar" KeyboardNavigation.TabNavigation="None">
+      <Image Source="avares://Hedgequill/Assets/app-icon.png" Width="16" Height="16" Margin="12,0,10,0" VerticalAlignment="Center"
+             RenderOptions.BitmapInterpolationMode="HighQuality" />
+      <NativeMenuBar Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0" />
+      <TextBlock Grid.Column="2" Classes="caption-title" Text="{Binding $parent[Window].Title}" Margin="0,0,150,0" VerticalAlignment="Center" />
+    </Grid>
+    <Panel>
+      <ContentControl x:Name="Screen" Focusable="False" />
+      <views:NewProjectSheet x:Name="Sheet" IsVisible="False" />
+      <views:ConfirmSheet x:Name="Confirmation" IsVisible="False" />
+      <views:Toast x:Name="Notice" IsVisible="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16" />
+    </Panel>
+  </DockPanel>
 </Window>

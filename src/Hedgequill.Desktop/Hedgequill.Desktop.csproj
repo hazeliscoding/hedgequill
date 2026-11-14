@@ -18,6 +18,7 @@
   <ItemGroup>
     <AvaloniaResource Include="Assets\Fonts\**\*.ttf;Assets\Fonts\**\OFL.txt" />
     <AvaloniaResource Include="..\..\docs\brand\app-icon.ico" Link="Assets\app-icon.ico" />
+    <AvaloniaResource Include="..\..\docs\brand\app-icon.png" Link="Assets\app-icon.png" />
   </ItemGroup>
 
   <ItemGroup>

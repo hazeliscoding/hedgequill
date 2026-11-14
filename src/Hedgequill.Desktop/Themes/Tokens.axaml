@@ -63,6 +63,9 @@
       <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#3828241E" />
       <StaticResource x:Key="ButtonForeground" ResourceKey="TextPrimary" />
 
+      <!-- The title bar Avalonia draws on Windows, behind the caption row -->
+      <StaticResource x:Key="TitleBarBackgroundBrush" ResourceKey="BgWindow" />
+
       <!-- Text fields, and Fluent's TextBox resources set to them -->
       <SolidColorBrush x:Key="BgInput" Color="#FFFFFF" />
       <SolidColorBrush x:Key="InputBorder" Color="#2428241E" />
@@ -127,6 +130,9 @@
       <SolidColorBrush x:Key="ButtonBorderBrush" Color="#1CFFF6E6" />
       <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#2EFFF6E6" />
       <StaticResource x:Key="ButtonForeground" ResourceKey="TextPrimary" />
+
+      <!-- The title bar Avalonia draws on Windows, behind the caption row -->
+      <StaticResource x:Key="TitleBarBackgroundBrush" ResourceKey="BgWindow" />
 
       <!-- Text fields, and Fluent's TextBox resources set to them -->
       <SolidColorBrush x:Key="BgInput" Color="#161514" />
