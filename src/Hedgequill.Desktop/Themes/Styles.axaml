@@ -226,6 +226,8 @@
     <Setter Property="Padding" Value="8,0,8,8" />
   </Style>
   <Style Selector="ListBox.navigator > ListBoxItem" x:DataType="views:NavigatorRow">
+    <!-- Without it, screen readers read each row as its class name. -->
+    <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
     <Setter Property="Padding" Value="0" />
     <Setter Property="MinHeight" Value="0" />
     <Setter Property="Margin" Value="{Binding Gap}" />
