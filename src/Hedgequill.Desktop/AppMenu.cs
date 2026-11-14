@@ -9,7 +9,7 @@ namespace Hedgequill.Desktop;
 
 /// <summary>
 /// The prototype's menu bar: File, Edit, View and Chapter. It's one NativeMenu: macOS shows it at the top of the screen,
-/// and Windows in the window's caption row. Help and the AO3 commands arrive with M3 and M4, when they do something.
+/// and Windows in the window's caption row. Help and the AO3 commands arrive with M3 and M5, when they do something.
 /// </summary>
 public sealed class AppMenu
 {
