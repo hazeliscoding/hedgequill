@@ -59,9 +59,10 @@ public sealed partial class RealWindowTests : IDisposable
             Wait(() => window.FindFirstDescendant(cf => cf.ByName("Tides").And(cf.ByControlType(ControlType.Button))), "Recent's Tides").Click();
             Assert.True(Retry.WhileFalse(() => window.Title == "Tides — Hedgequill", Patience).Result, $"The title is {window.Title}.");
 
-            // Typing in the editor reaches the file within the autosave's second.
-            var editor = Wait(() => window.FindFirstDescendant(cf => cf.ByAutomationId("Editor")), "the editor");
-            editor.Click();
+            // Typing in the editor reaches the file within the autosave's second. The editor fills the pane right of the
+            // 236 px navigator and below the 32 px caption row and 40 px header; a click below the text puts the caret at the end.
+            Point Page() => new(window.BoundingRectangle.Left + 236 + ((window.BoundingRectangle.Width - 236) / 2), window.BoundingRectangle.Top + 32 + 40 + 300);
+            Mouse.Click(Page());
             Keyboard.TypeSimultaneously(VirtualKeyShort.CONTROL, VirtualKeyShort.END);
             Keyboard.Type(" Typed in the real window.");
             Assert.True(
@@ -80,9 +81,9 @@ public sealed partial class RealWindowTests : IDisposable
             var focus = Wait(() => InApp(app, automation, "Focus mode"), "View › Focus mode");
             Capture.Screen().ToFile(Path.Combine(_shots, "windows-view-menu.png"));
             focus.Click();
-            Assert.True(Retry.WhileFalse(() => window.FindFirstDescendant(cf => cf.ByAutomationId("Navigator")) is null, Patience).Result, "Focus mode left the navigator showing.");
+            Assert.True(Retry.WhileFalse(() => Navigator(window) is null, Patience).Result, "Focus mode left the navigator showing.");
             Keyboard.Type(VirtualKeyShort.ESCAPE);
-            Assert.True(Retry.WhileFalse(() => window.FindFirstDescendant(cf => cf.ByAutomationId("Navigator")) is not null, Patience).Result, "Escape didn't leave focus mode.");
+            Assert.True(Retry.WhileFalse(() => Navigator(window) is not null, Patience).Result, "Escape didn't leave focus mode.");
 
             // The caption row moves the window, as a title bar does.
             var before = window.BoundingRectangle;
@@ -93,7 +94,7 @@ public sealed partial class RealWindowTests : IDisposable
                 $"The window went from {before} to {window.BoundingRectangle}.");
 
             // Closing straight after a keystroke still saves it.
-            editor.Click();
+            Mouse.Click(Page());
             Keyboard.TypeSimultaneously(VirtualKeyShort.CONTROL, VirtualKeyShort.END);
             Keyboard.Type(" Last words.");
             window.Close();
@@ -103,6 +104,11 @@ public sealed partial class RealWindowTests : IDisposable
         catch
         {
             Capture.Screen().ToFile(Path.Combine(_shots, "windows-failure.png"));
+            if (app.GetMainWindow(automation, TimeSpan.FromSeconds(2)) is { } shown)
+            {
+                File.WriteAllLines(Path.Combine(_shots, "windows-uia-tree.txt"), Tree(automation, shown));
+            }
+
             throw;
         }
         finally
@@ -115,6 +121,27 @@ public sealed partial class RealWindowTests : IDisposable
     }
 
     public void Dispose() => Directory.Delete(_root, recursive: true);
+
+    private static AutomationElement? Navigator(Window window) =>
+        window.FindFirstDescendant(cf => cf.ByName("Manuscript").And(cf.ByControlType(ControlType.List)));
+
+    /// <summary>The window's raw UI Automation tree, one element a line, for working out what a failed search missed.</summary>
+    private static IEnumerable<string> Tree(UIA3Automation automation, AutomationElement root)
+    {
+        var walker = automation.TreeWalkerFactory.GetRawViewWalker();
+        var lines = new List<string>();
+        Walk(root, 0);
+        return lines;
+
+        void Walk(AutomationElement element, int depth)
+        {
+            lines.Add($"{new string(' ', depth * 2)}{element.Properties.ControlType.ValueOrDefault} name=\"{element.Properties.Name.ValueOrDefault}\" id=\"{element.Properties.AutomationId.ValueOrDefault}\" class=\"{element.Properties.ClassName.ValueOrDefault}\"");
+            for (var child = walker.GetFirstChild(element); child is not null && depth < 40; child = walker.GetNextSibling(child))
+            {
+                Walk(child, depth + 1);
+            }
+        }
+    }
 
     private static AutomationElement Wait(Func<AutomationElement?> find, string what) =>
         Retry.WhileNull(find, Patience).Result ?? throw new InvalidOperationException($"Couldn't find {what}.");
