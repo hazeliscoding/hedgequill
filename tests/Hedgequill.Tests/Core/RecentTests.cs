@@ -62,6 +62,21 @@ public class RecentTests
     }
 
     [Fact]
+    public void Appearance_is_remembered_and_starts_as_Match_system()
+    {
+        using var temp = new TempFolder();
+        Assert.Equal(Appearance.System, new Preferences(temp["settings"]).Appearance);
+
+        new Preferences(temp["settings"]).Appearance = Appearance.Dark;
+
+        Assert.Equal(Appearance.Dark, new Preferences(temp["settings"]).Appearance);
+        Assert.Contains("\"appearance\": \"Dark\"", File.ReadAllText(temp["settings/settings.json"]));
+
+        temp.Write("settings/settings.json", "{ \"appearance\": ");
+        Assert.Equal(Appearance.System, new Preferences(temp["settings"]).Appearance);
+    }
+
+    [Fact]
     public void Settings_live_in_a_Hedgequill_folder_under_local_app_data() =>
         Assert.Equal(
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Hedgequill"),

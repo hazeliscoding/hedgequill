@@ -27,8 +27,10 @@ internal sealed class ProjectIndex
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     PropertyNameCaseInsensitive = true,
     AllowTrailingCommas = true,
-    ReadCommentHandling = JsonCommentHandling.Skip)]
+    ReadCommentHandling = JsonCommentHandling.Skip,
+    UseStringEnumConverter = true)]
 [JsonSerializable(typeof(ProjectIndex))]
+[JsonSerializable(typeof(PreferencesFile))]
 [JsonSerializable(typeof(List<RecentProject>))]
 internal sealed partial class CoreJson : JsonSerializerContext
 {
