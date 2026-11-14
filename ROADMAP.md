@@ -50,6 +50,7 @@ What the design must protect, in this order when two conflict. Everything else g
 - **Changed on disk is noticed when Hedgequill next saves that file:** before writing, it compares the file with what it last read or wrote. It never overwrites the other app's change without Keep mine. This gives up a warning the moment another app saves; a file watcher can add one later.
 - **Choose folder… copies the whole project,** with the text in memory, into the folder the writer picks, and carries on there. A read-only folder can't take a single scene, and splitting a project across folders would break it. This gives up writing just the one scene elsewhere; Save a copy… still does that when a save fails.
 - **Closing with unsaved text asks first:** "Close without saving?", with Close anyway. The prototype doesn't draw it, but AGENTS.md's first rule is never to lose words without the writer choosing to. This gives up a window that always closes at once.
+- **A printed book moves from Not planned to Later,** at the owner's request: a PDF to print and bind, like the gift edition the owner already makes with a script. Not planned keeps ePub, Word and other compile formats. This gives up part of the line that kept Hedgequill out of compiling.
 
 ## M0: Placeholder (as soon as possible)
 
@@ -118,10 +119,15 @@ What the design must protect, in this order when two conflict. Everything else g
 - **Linux.** Avalonia and Velopack support it. Settle first who tests it.
 - **A mascot,** the owner's call.
 - **A winget package.** Settle first who updates the install, since Velopack updates Hedgequill in place and a winget upgrade must not fight it.
+- **Export as a book:** a print-ready PDF at 5 × 8 in, laid out like an AO3 download.
+  - A title page with the byline and summary, and a Notes page with a dedication and ruled lines for a handwritten note.
+  - Each chapter on a new page under "Chapter N: Title", scene breaks as short rules, and curly quotes.
+  - A running title and page numbers, with margins that mirror for binding.
+  - Settle first how to write the PDF without a browser. The network guard forbids starting another program, and SkiaSharp, already in the app, can write PDFs. Test it on invented text, as always.
 
 ## Not planned
 
-- Tag syntax, build settings, compile formats (ePub, PDF, Word), templates, corkboards and labels. They are what made the alternatives feel heavy. Scrivener and novelWriter do them well.
+- Tag syntax, build settings, compile formats (ePub, Word, or a PDF other than the book in Later), templates, corkboards and labels. They are what made the alternatives feel heavy. Scrivener and novelWriter do them well.
 - Posting to AO3 from the app. Copy for AO3 and AO3's own editor keep your AO3 login out of Hedgequill.
 - Accounts, sync, telemetry, crash reports Hedgequill sends itself, or anything hosted.
 - A portable zip. It can't update itself.
