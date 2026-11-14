@@ -13,7 +13,7 @@
           WindowDecorationProperties.ElementRole="TitleBar" KeyboardNavigation.TabNavigation="None">
       <Image Source="avares://Hedgequill/Assets/app-icon.png" Width="16" Height="16" Margin="12,0,10,0" VerticalAlignment="Center"
              RenderOptions.BitmapInterpolationMode="HighQuality" />
-      <NativeMenuBar Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0" />
+      <NativeMenuBar x:Name="MenuBar" Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0" />
       <TextBlock Grid.Column="2" Classes="caption-title" Text="{Binding $parent[Window].Title}" Margin="0,0,150,0" VerticalAlignment="Center" />
     </Grid>
     <Panel>
