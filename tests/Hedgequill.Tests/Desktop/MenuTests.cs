@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Chrome;
 using Avalonia.Input;
 using Avalonia.Styling;
 using Hedgequill.Core.Projects;
@@ -170,6 +171,19 @@ public sealed class MenuTests : IDisposable
             Assert.Equal(["File", "Edit", "View", "Chapter", "Tides — Hedgequill"], VisibleText(caption));
         }
     });
+
+    [Fact]
+    public Task The_menu_bar_takes_its_own_clicks_inside_the_draggable_caption_row() => OnWindow(ThemeVariant.Light, _temp["settings"], window =>
+    {
+        Assert.Equal(WindowDecorationsElementRole.TitleBar, WindowDecorationProperties.GetElementRole(Find<Grid>(window, "CaptionRow")));
+        Assert.Equal(WindowDecorationsElementRole.User, WindowDecorationProperties.GetElementRole(Find<NativeMenuBar>(window, "MenuBar")));
+    });
+
+    [Fact]
+    public Task Navigator_rows_have_their_titles_as_accessible_names() => OnProject((window, workspace) =>
+        Assert.Equal(
+            ["Chapter 1", "Fog", "Notes", "Mara", "Research"],
+            Visible<ListBoxItem>(workspace).Select(item => Avalonia.Automation.AutomationProperties.GetName(item))));
 
     public void Dispose() => _temp.Dispose();
 
