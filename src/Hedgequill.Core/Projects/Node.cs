@@ -38,11 +38,22 @@ public sealed class Node(NodeKind kind, string name, string title)
     /// <summary>The title a node gets when the index names none: its file name without ".md".</summary>
     internal string DefaultTitle => IsFile ? Path.GetFileNameWithoutExtension(Name) : Name;
 
-    internal void Add(Node child)
+    internal void Add(Node child) => Insert(Children.Count, child);
+
+    internal void Insert(int index, Node child)
     {
         child.Parent = this;
-        Children.Add(child);
+        Children.Insert(index, child);
     }
 
-    internal IEnumerable<Node> Descendants() => Children.SelectMany(child => child.Descendants().Prepend(child));
+    internal int Detach()
+    {
+        var index = Parent!.Children.IndexOf(this);
+        Parent.Children.RemoveAt(index);
+        Parent = null;
+        return index;
+    }
+
+    /// <summary>Every node under this one, in outline order.</summary>
+    public IEnumerable<Node> Descendants() => Children.SelectMany(child => child.Descendants().Prepend(child));
 }
