@@ -6,23 +6,43 @@
   <Grid ColumnDefinitions="236,*">
     <DockPanel Grid.Column="0">
       <TextBlock x:Name="ProjectTitle" DockPanel.Dock="Top" Classes="project-title" Margin="16,12,16,6" AutomationProperties.HeadingLevel="1" />
-      <ListBox x:Name="Navigator" Classes="navigator" AutomationProperties.Name="Manuscript">
-        <ListBox.ItemTemplate>
-          <DataTemplate x:DataType="views:NavigatorRow">
-            <Grid Height="{Binding Height}" Margin="{Binding Indent}" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="4" Background="Transparent">
-              <Button Classes="chevron" Classes.empty="{Binding !HasChildren}" Classes.quiet="{Binding QuietChevron}" AutomationProperties.Name="Expand or collapse" Focusable="False">
-                <Path Data="M4.5 3L7.5 6L4.5 9">
-                  <Path.RenderTransform>
-                    <RotateTransform Angle="{Binding ChevronAngle}" />
-                  </Path.RenderTransform>
-                </Path>
-              </Button>
-              <TextBlock Grid.Column="1" Classes="row-number" IsVisible="{Binding IsChapter}" Text="{Binding Number}" />
-              <TextBlock Grid.Column="2" Classes="row-title" Classes.label="{Binding IsLabel}" Classes.chapter="{Binding IsChapter}" Text="{Binding Title}" />
-            </Grid>
-          </DataTemplate>
-        </ListBox.ItemTemplate>
-      </ListBox>
+      <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Separator}" BorderThickness="0,1,0,0" Padding="8,8,8,10">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Button x:Name="NewScene" Classes="small tertiary" AutomationProperties.Name="New scene">
+            <StackPanel>
+              <Path Data="M6 2.5V9.5M2.5 6H9.5" />
+              <TextBlock Text="New scene" />
+            </StackPanel>
+          </Button>
+          <Button x:Name="More" Grid.Column="2" Classes="icon" AutomationProperties.Name="More" ToolTip.Tip="More">
+            <Path Data="M2.5 6H2.51M6 6H6.01M9.5 6H9.51" StrokeThickness="2" />
+          </Button>
+        </Grid>
+      </Border>
+      <Panel>
+        <ListBox x:Name="Navigator" Classes="navigator" AutomationProperties.Name="Manuscript">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="views:NavigatorRow">
+              <Grid Height="{Binding Height}" Margin="{Binding Indent}" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="4" Background="Transparent">
+                <Button Classes="chevron" Classes.empty="{Binding !HasChildren}" Classes.quiet="{Binding QuietChevron}" AutomationProperties.Name="Expand or collapse" Focusable="False">
+                  <Path Data="M4.5 3L7.5 6L4.5 9">
+                    <Path.RenderTransform>
+                      <RotateTransform Angle="{Binding ChevronAngle}" />
+                    </Path.RenderTransform>
+                  </Path>
+                </Button>
+                <TextBlock Grid.Column="1" Classes="row-number" IsVisible="{Binding IsChapter}" Text="{Binding Number}" />
+                <TextBlock Grid.Column="2" Classes="row-title" Classes.label="{Binding IsLabel}" Classes.chapter="{Binding IsChapter}" Text="{Binding Title}" IsVisible="{Binding !IsRenaming}" />
+                <TextBox Grid.Column="2" Classes="rename" IsVisible="{Binding IsRenaming}" Text="{Binding Title, Mode=OneTime}" AutomationProperties.Name="Rename" />
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+        <Canvas x:Name="DropLayer" IsHitTestVisible="False">
+          <Border x:Name="DropLine" Classes="drop-line" IsVisible="False" />
+          <Border x:Name="DropBox" Classes="drop-box" IsVisible="False" />
+        </Canvas>
+      </Panel>
     </DockPanel>
 
     <DockPanel Grid.Column="1">

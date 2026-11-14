@@ -10,7 +10,7 @@
         <Button x:Name="ActionButton" Classes="small" IsVisible="False" Margin="0,8,0,0" />
       </StackPanel>
       <Button x:Name="Close" Grid.Column="1" Classes="icon" VerticalAlignment="Top" AutomationProperties.Name="Dismiss">
-        <Path Data="M4 4L12 12M12 4L4 12" />
+        <Path Data="M3 3L9 9M9 3L3 9" />
       </Button>
     </Grid>
   </Border>

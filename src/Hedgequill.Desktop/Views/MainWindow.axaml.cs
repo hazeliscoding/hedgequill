@@ -58,7 +58,10 @@ public partial class MainWindow : Window
         }
 
         Title = $"{project.Title} — Hedgequill";
-        Screen.Content = new WorkspaceView(project);
+        var workspace = new WorkspaceView(project);
+        workspace.ConfirmRequested += Confirmation.Show;
+        workspace.NoticeRequested += (title, detail, label, action) => Notice.Show(title, detail, label, action);
+        Screen.Content = workspace;
     }
 
     private bool Attempt(string failure, Action action)

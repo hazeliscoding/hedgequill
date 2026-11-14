@@ -41,6 +41,10 @@
       <SolidColorBrush x:Key="StateHover" Color="#0B28241E" />
       <SolidColorBrush x:Key="StateSelected" Color="#1C6E2633" />
       <SolidColorBrush x:Key="Scrim" Color="#52000000" />
+      <SolidColorBrush x:Key="DangerText" Color="#B1362D" />
+      <!-- White on the prototype's danger red is about 4:1, so the button uses the darker red in both themes. -->
+      <SolidColorBrush x:Key="DangerButton" Color="#B1362D" />
+      <SolidColorBrush x:Key="DangerButtonHover" Color="#9A2E26" />
 
       <!-- Fluent's button resources, set to the prototype's -->
       <StaticResource x:Key="AccentButtonBackground" ResourceKey="Accent" />
@@ -100,6 +104,10 @@
       <SolidColorBrush x:Key="StateHover" Color="#0EFFF6E6" />
       <SolidColorBrush x:Key="StateSelected" Color="#3DA14A5C" />
       <SolidColorBrush x:Key="Scrim" Color="#52000000" />
+      <SolidColorBrush x:Key="DangerText" Color="#F0968F" />
+      <!-- White on the prototype's danger red is about 4:1, so the button uses the darker red in both themes. -->
+      <SolidColorBrush x:Key="DangerButton" Color="#B1362D" />
+      <SolidColorBrush x:Key="DangerButtonHover" Color="#9A2E26" />
 
       <StaticResource x:Key="AccentButtonBackground" ResourceKey="Accent" />
       <StaticResource x:Key="AccentButtonBackgroundPointerOver" ResourceKey="AccentHover" />
