@@ -13,7 +13,9 @@
           WindowDecorationProperties.ElementRole="TitleBar" KeyboardNavigation.TabNavigation="None">
       <Image Source="avares://Hedgequill/Assets/app-icon.png" Width="16" Height="16" Margin="12,0,10,0" VerticalAlignment="Center"
              RenderOptions.BitmapInterpolationMode="HighQuality" />
-      <NativeMenuBar x:Name="MenuBar" Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0" />
+      <!-- The rest of the row drags the window; the menu bar must take clicks itself. In Avalonia 12 an element takes its
+           nearest role, so without User a click on File would start a window drag instead of opening the menu. -->
+      <NativeMenuBar x:Name="MenuBar" Grid.Column="1" VerticalAlignment="Center" Margin="0,0,10,0" WindowDecorationProperties.ElementRole="User" />
       <TextBlock Grid.Column="2" Classes="caption-title" Text="{Binding $parent[Window].Title}" Margin="0,0,150,0" VerticalAlignment="Center" />
     </Grid>
     <Panel>
