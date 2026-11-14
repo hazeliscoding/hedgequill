@@ -41,6 +41,9 @@ What the design must protect, in this order when two conflict. Everything else g
 - **The dark focus ring is the accent text color** (`#dc98a4`), because the dark accent (`#a14a5c`) is only 2.86:1 on the page. This gives up one focus color for both themes.
 - **The app icon is the light mark on a paper tile**, edge to edge on every platform, because the ink nib disappears on a dark taskbar. This gives up macOS's inset icon grid until M4's packaging.
 - **gitleaks runs on the Windows leg only,** as in Staypaw. It scans the history, and one scan per run is enough.
+- **A project's folders mirror its outline,** as the prototype draws them. Acts and chapters are folders, a scene is a Markdown file named after its title, and pages sit in `Notes/` and `Research/`. Acts are optional, so a chapter can sit at the top. A new project is a folder named after its title, holding `Chapter 1/Scene 1.md`, `Notes/` and `Research/`. Another editor sees the outline in the folder tree. This gives up file names that stay put: renaming a scene renames its file.
+- **`hedgequill.json` holds the order and details,** at the project root: the order of each folder's contents, which folders are acts, and any title a file name can't hold, such as "What now?" on Windows. Files it doesn't list still show, sorted by name, and deleting it loses only the order. JSON, because .NET reads and writes it NativeAOT-safe without another library. Acts are listed so an empty act doesn't reopen as an empty chapter. This gives up a project folder that looks untouched.
+- **Delete moves to the project's `Trash/` folder,** with Undo, as the prototype shows, not to the system trash the M1 item first named. A move works the same on Windows, macOS and drives without a trash, needs no native code, and keeps every word inside the project. This gives up a tidy project: the writer empties `Trash/` themselves.
 
 ## M0: Placeholder (as soon as possible)
 
@@ -69,8 +72,8 @@ What the design must protect, in this order when two conflict. Everything else g
 
 ## M1: Write
 
-- [ ] New project… creates a folder of Markdown files plus one small file for their order and details (its name and format are settled here). Open folder… opens one, and Recent lists the last few.
-- [ ] The navigator: acts › chapters › scenes, plus Notes and Research pages. Add, rename, reorder by drag or keyboard, and delete to the system trash.
+- [ ] New project… creates a folder of Markdown files plus `hedgequill.json` for their order and details. Open folder… opens one, and Recent lists the last few.
+- [ ] The navigator: acts › chapters › scenes, plus Notes and Research pages. Add, rename, reorder by drag or keyboard, and delete to the project's `Trash/` folder, with Undo.
 - [ ] The editor: AvaloniaEdit in Cardo, with Bold, Italic and Insert scene break adding plain Markdown markers, Find…, Focus mode and the chapter overview.
 - [ ] Autosave, and every save state from the prototype: Saving…, Saved, Couldn't save (the text stays, with Retry and Save a copy…), Changed on disk (reload, or keep and overwrite) and Read-only (edits stay in memory until you choose a writable folder).
 - [ ] Saves are atomic: write a temporary file, then replace, so a crash mid-save never leaves half a file.
