@@ -131,6 +131,7 @@ jobs:
           status=0
           [ "$bar" = "Apple, Hedgequill, File, Edit, View, Chapter" ] || { echo "::error::The menu bar reads: $bar"; status=1; }
           [ "$file" = "New project…, Open folder…, Open recent, missing value, New scene, New chapter, missing value, Show project folder, Close project" ] || { echo "::error::The File menu reads: $file"; status=1; }
+          case "$about" in *Avalonia*|*rror*) echo "::error::The app menu reads: $about"; status=1 ;; esac
           exit $status
 
       - name: Upload UI screenshots
