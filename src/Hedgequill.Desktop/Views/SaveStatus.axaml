@@ -1,0 +1,24 @@
+<!-- The save state in the header, and the details it opens: what happened, the file, and what the writer can do. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Hedgequill.Desktop.Views.SaveStatus">
+  <Button x:Name="Label" Classes="save-status" AutomationProperties.Name="Save details" AutomationProperties.LiveSetting="Polite">
+    <StackPanel Orientation="Horizontal" Spacing="6">
+      <Path x:Name="Icon" />
+      <TextBlock x:Name="LabelText" VerticalAlignment="Center" />
+    </StackPanel>
+    <Button.Flyout>
+      <Flyout Placement="BottomEdgeAlignedRight">
+        <StackPanel Width="300" Spacing="6" Margin="2">
+          <TextBlock x:Name="DetailTitle" Classes="toast-title" FontSize="12" />
+          <TextBlock x:Name="DetailText" Classes="callout" />
+          <TextBlock x:Name="DetailPath" Classes="mono" FontSize="11" Foreground="{DynamicResource TextTertiary}" TextWrapping="Wrap" />
+          <StackPanel x:Name="Actions" Orientation="Horizontal" Spacing="6" Margin="0,2,0,0">
+            <Button x:Name="Primary" Classes="small accent" />
+            <Button x:Name="Secondary" Classes="small" />
+          </StackPanel>
+        </StackPanel>
+      </Flyout>
+    </Button.Flyout>
+  </Button>
+</UserControl>

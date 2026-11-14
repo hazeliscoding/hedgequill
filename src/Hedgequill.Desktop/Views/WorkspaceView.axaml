@@ -3,8 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:views="using:Hedgequill.Desktop.Views"
              x:Class="Hedgequill.Desktop.Views.WorkspaceView">
-  <Grid ColumnDefinitions="236,*">
-    <DockPanel Grid.Column="0">
+  <Grid x:Name="Columns" ColumnDefinitions="236,*">
+    <DockPanel x:Name="NavigatorPane" Grid.Column="0">
       <TextBlock x:Name="ProjectTitle" DockPanel.Dock="Top" Classes="project-title" Margin="16,12,16,6" AutomationProperties.HeadingLevel="1" />
       <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Separator}" BorderThickness="0,1,0,0" Padding="8,8,8,10">
         <Grid ColumnDefinitions="Auto,*,Auto">
@@ -46,12 +46,21 @@
     </DockPanel>
 
     <DockPanel Grid.Column="1">
-      <StackPanel DockPanel.Dock="Top" Height="40" Margin="16,0" VerticalAlignment="Center" Spacing="0">
-        <TextBlock x:Name="HeaderTitle" Classes="header-title" Margin="0,5,0,0" />
-        <TextBlock x:Name="HeaderSub" Classes="caption" />
-      </StackPanel>
-      <Border Classes="content-pane">
-        <TextBlock x:Name="Placeholder" Classes="manuscript-italic" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" MaxWidth="320" TextWrapping="Wrap" />
+      <Grid x:Name="Header" DockPanel.Dock="Top" Height="40" Margin="10,0,12,0" ColumnDefinitions="Auto,*,Auto,Auto">
+        <Button x:Name="NavigatorToggle" Classes="tool selected" AutomationProperties.Name="Hide navigator" VerticalAlignment="Center">
+          <Path Data="M2.5 3.5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1ZM6 2.5v11" />
+        </Button>
+        <StackPanel x:Name="HeaderText" Grid.Column="1" Margin="6,0,0,0" VerticalAlignment="Center">
+          <TextBlock x:Name="HeaderTitle" Classes="header-title" />
+          <TextBlock x:Name="HeaderSub" Classes="caption" />
+        </StackPanel>
+        <ContentControl x:Name="SaveSlot" Grid.Column="2" VerticalAlignment="Center" Focusable="False" />
+        <Button x:Name="FocusButton" Grid.Column="3" Classes="tool" AutomationProperties.Name="Focus mode" VerticalAlignment="Center">
+          <Path Data="M2.5 5V3.5a1 1 0 0 1 1-1H5M11 2.5h1.5a1 1 0 0 1 1 1V5M13.5 11v1.5a1 1 0 0 1-1 1H11M5 13.5H3.5a1 1 0 0 1-1-1V11" />
+        </Button>
+      </Grid>
+      <Border x:Name="ContentPane" Classes="content-pane">
+        <views:ManuscriptView x:Name="Manuscript" />
       </Border>
     </DockPanel>
   </Grid>

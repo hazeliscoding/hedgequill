@@ -18,6 +18,7 @@
         <ColorPaletteResources x:Key="Dark" Accent="#A14A5C" RegionColor="#1A1917" />
       </FluentTheme.Palettes>
     </FluentTheme>
+    <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
     <StyleInclude Source="avares://Hedgequill/Themes/Styles.axaml" />
   </Application.Styles>
 </Application>

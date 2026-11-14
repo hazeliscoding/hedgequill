@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -24,6 +25,7 @@ public partial class WorkspaceView : UserControl
     private Node? _renaming;
     private (Node Node, Point Start)? _press;
     private bool _dragging;
+    private bool _navigatorWanted = true;
     private (Node Target, Placement Where)? _drop;
 
     public WorkspaceView(Project project)
@@ -73,6 +75,14 @@ public partial class WorkspaceView : UserControl
         Navigator.AddHandler(PointerReleasedEvent, OnRelease, RoutingStrategies.Tunnel);
         Navigator.AddHandler(PointerCaptureLostEvent, (_, _) => EndDrag());
         NewScene.Click += (_, _) => AddScene();
+        NavigatorToggle.Click += (_, _) => ToggleNavigator();
+        FocusButton.Click += (_, _) => ToggleFocus();
+        Manuscript.OpenRequested += Select;
+        Manuscript.AddSceneRequested += AddScene;
+        Manuscript.FocusExitRequested += ToggleFocus;
+        Manuscript.Edited += node => Edited?.Invoke(node);
+        AddHandler(KeyDownEvent, OnWorkspaceKey, RoutingStrategies.Tunnel);
+        ToolTip.SetTip(FocusButton, $"Focus mode ({Shortcut("Shift+F")})");
         More.Click += (_, _) => new MenuFlyout { ItemsSource = AddMenu(), Placement = PlacementMode.TopEdgeAlignedRight }.ShowAt(More);
 
         Refresh();
@@ -84,6 +94,30 @@ public partial class WorkspaceView : UserControl
 
     /// <summary>Asks the window for a notice: a title, a line of detail, and an optional action with its label.</summary>
     public event Action<string, string, string?, Action?>? NoticeRequested;
+
+    /// <summary>The open scene's or page's text changed in the editor.</summary>
+    public event Action<Node>? Edited;
+
+    /// <summary>Before anything moves or closes a file: write what's in the editor.</summary>
+    public event Action? FlushRequested;
+
+    public bool FocusMode { get; private set; }
+
+    /// <summary>The open scene's or page's file, or empty.</summary>
+    public string OpenPath => Manuscript.Node is { IsFile: true } node && node.Parent is not null ? _project.PathOf(node) : "";
+
+    public string SaveLabel
+    {
+        get => Manuscript.SaveLabel;
+        set => Manuscript.SaveLabel = value;
+    }
+
+    /// <summary>Copies the editor's text into its scene or page.</summary>
+    public void Commit() => Manuscript.Commit();
+
+    public void Reload(Node node) => Manuscript.Reload(node);
+
+    public bool NavigatorShown => NavigatorPane.IsVisible;
 
     public IReadOnlyList<NavigatorRow> Rows => (IReadOnlyList<NavigatorRow>?)Navigator.ItemsSource ?? [];
 
@@ -98,6 +132,31 @@ public partial class WorkspaceView : UserControl
     {
         Navigator.UpdateLayout();
         (Navigator.ContainerFromItem(Navigator.SelectedItem ?? new object()) ?? Navigator.ContainerFromIndex(0))?.Focus();
+    }
+
+    /// <summary>Focus mode hides the navigator and the header and centres the page lower, as the prototype does; it restores the navigator as it was.</summary>
+    public void ToggleFocus()
+    {
+        FocusMode = !FocusMode;
+        Header.Opacity = FocusMode ? 0 : 1;
+        Header.IsHitTestVisible = !FocusMode;
+        Columns.ColumnDefinitions[0].Width = new GridLength(!FocusMode && _navigatorWanted ? 236 : 0);
+        NavigatorPane.IsVisible = !FocusMode && _navigatorWanted;
+        ContentPane.Classes.Set("focus", FocusMode);
+        Manuscript.FocusMode = FocusMode;
+        if (Manuscript.Node?.IsFile == true)
+        {
+            Manuscript.TextEditor.TextArea.Focus();
+        }
+    }
+
+    public void ToggleNavigator()
+    {
+        _navigatorWanted = !_navigatorWanted;
+        Columns.ColumnDefinitions[0].Width = new GridLength(_navigatorWanted ? 236 : 0);
+        NavigatorPane.IsVisible = _navigatorWanted;
+        NavigatorToggle.Classes.Set("selected", _navigatorWanted);
+        AutomationProperties.SetName(NavigatorToggle, _navigatorWanted ? "Hide navigator" : "Show navigator");
     }
 
     public void Toggle(Node node)
@@ -164,6 +223,7 @@ public partial class WorkspaceView : UserControl
         }
 
         _renaming = null;
+        FlushRequested?.Invoke();
         Attempt($"Couldn't rename “{node.Title}”", () => _project.Rename(node, title));
         AfterChange(node);
     }
@@ -200,6 +260,7 @@ public partial class WorkspaceView : UserControl
         var selected = Selected;
         var fallback = rows.Take(at).Reverse().FirstOrDefault(row => !IsGroup(row.Node))?.Node
             ?? rows.Skip(at + 1).FirstOrDefault(row => !IsGroup(row.Node) && !IsWithin(row.Node, node))?.Node;
+        FlushRequested?.Invoke();
         Attempt($"Couldn't delete “{node.Title}”", () =>
         {
             var deleted = _project.Delete(node);
@@ -239,6 +300,7 @@ public partial class WorkspaceView : UserControl
 
     public void Move(Node node, Node parent, int index) => Attempt($"Couldn't move “{node.Title}”", () =>
     {
+        FlushRequested?.Invoke();
         _project.Move(node, parent, index);
         _collapsed.Remove(parent);
         AfterChange(node);
@@ -556,11 +618,28 @@ public partial class WorkspaceView : UserControl
             NodeKind.Act => "Act",
             _ => "",
         };
-        Placeholder.Text = node?.Kind switch
+        if (node != Manuscript.Node)
         {
-            NodeKind.Act => $"{node.Children.Count} chapter{(node.Children.Count == 1 ? "" : "s")}. Acts only group chapters; select a scene to write.",
-            null => "Select a scene to write.",
-            _ => "",
-        };
+            FlushRequested?.Invoke();
+        }
+
+        Manuscript.Show(_project, node);
+    }
+
+    private static string Shortcut(string keys) => OperatingSystem.IsMacOS() ? "⌘" + keys.Replace("Shift+", "⇧", StringComparison.Ordinal) : "Ctrl+" + keys;
+
+    private void OnWorkspaceKey(object? sender, KeyEventArgs e)
+    {
+        var command = OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control;
+        if (e.Key == Key.F && e.KeyModifiers == (command | KeyModifiers.Shift))
+        {
+            ToggleFocus();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.OemPipe && e.KeyModifiers == command && !FocusMode)
+        {
+            ToggleNavigator();
+            e.Handled = true;
+        }
     }
 }

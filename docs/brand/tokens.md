@@ -52,7 +52,8 @@ Interface type scale: caption 11/14, callout 12/16, body 13/18, heading 15/20, d
 | Selection in the manuscript | `rgba(110,38,51,.16)` | `rgba(161,74,92,.3)` |
 | Danger | `#d9453b`, text `#b1362d` | text `#f0968f` |
 | Danger button, with white text | `#b1362d`, hover `#9a2e26` | the same (white on `#d9453b` is only about 4:1) |
-| Warning | `#c9830f`, text `#83560a` | |
+| Warning | `#c9830f`, text `#83560a` | text `#edbb66` |
+| Info (Changed on disk) | text `#2353ad` | text `#9ab8f4` |
 | Success | `#2f9a5a`, text `#1f6f41` | |
 
 Every text color keeps 4.5:1 on the backgrounds it sits on. The prototype's tertiary text (`#7d756d` light, `#8a837a` dark) fell to 3.9–4.4:1, so it's darkened and lightened here. Faded Markdown markers are the one exception: they're meant to recede (2.9:1 light, 4.0:1 dark), and the text they wrap stays full contrast.

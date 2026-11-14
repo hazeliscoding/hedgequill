@@ -57,6 +57,7 @@ public sealed partial class NetworkGuardTests
         ["Avalonia"] = "The UI framework.",
         ["Avalonia.Desktop"] = "Picks the Windows, macOS or X11 backend at startup.",
         ["Avalonia.Themes.Fluent"] = "Styles for the built-in controls.",
+        ["Avalonia.AvaloniaEdit"] = "The manuscript editor: text layout, typing, undo and Find. It depends only on Avalonia.",
         ["Avalonia.Skia"] = "Avalonia's renderer on Skia.",
         ["Avalonia.HarfBuzz"] = "Avalonia's text shaping on HarfBuzz.",
         ["Avalonia.Win32"] = "The Windows backend.",
