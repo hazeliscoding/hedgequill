@@ -108,6 +108,12 @@ What the design must protect, in this order when two conflict. Everything else g
 
 **Done when:** tests on invented text pass, including one where the disk write fails and the text survives in memory and in Save a copy…; a project made in Hedgequill opens as plain Markdown in another editor; and the owner has written a scene in it.
 
+**Done** (2026-11-15), in [#3](https://github.com/hazeliscoding/hedgequill/pull/3):
+- CI is green on win-x64 and osx-arm64 ([run](https://github.com/hazeliscoding/hedgequill/actions/runs/43571486039)): 216 tests on invented text, among them `A_failed_write_keeps_the_text_in_memory_and_Save_a_copy_writes_it_elsewhere`.
+- On the Windows runner, `RealWindowTests` drives the NativeAOT app's real window: it types into a scene, closes the app, and reads the words back from the `.md` file as plain text. The macOS runner reads the app's menu bar and File menu. Both upload screenshots.
+- `Any_folder_opens_with_acts_chapters_scenes_and_pages_in_name_order` opens a folder of Markdown files that has no `hedgequill.json`, and `Saving_writes_the_text_with_LF_line_endings` checks a scene's file holds only its text.
+- The owner wrote an invented scene in a new project, with italics, bold and a scene break, then reopened it from Recent.
+
 ## M2: Styled Markdown
 
 - [ ] Emphasis, strong and headings are styled in place, with their markers faded. Ctrl+B and Ctrl+I toggle them.
