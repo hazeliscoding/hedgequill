@@ -86,9 +86,11 @@ public sealed partial class ProbeApp : Application
             Console.WriteLine(e);
         }
 
-        const string Misspelled = "The keeper saw teh boat.";
+        const string Misspelled = "The keeper saw teh boat, and the lantern stayed lit.";
         Check("the system spell checker opened", speller is not null);
-        Check("it flagged the misspelling, and only that", speller?.Check(Misspelled) is [{ Start: 15, Length: 3 }]);
+        var flagged = speller?.Check(Misspelled) ?? [];
+        Console.WriteLine($"      flagged: {string.Join(", ", flagged.Select(word => $"\"{Misspelled.Substring(word.Start, word.Length)}\" at {word.Start}"))}");
+        Check("it flagged the misspelling, and only that", flagged is [{ Start: 15, Length: 3 }]);
         Check("it suggested the word", speller?.Suggest("teh").Contains("the") == true);
         Check("it passed a correct line", speller?.Check("The keeper saw the boat.") is []);
 
