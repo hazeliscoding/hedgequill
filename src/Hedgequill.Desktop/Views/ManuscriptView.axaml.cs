@@ -24,6 +24,7 @@ public partial class ManuscriptView : UserControl
     private Project? _project;
     private Node? _node;
     private readonly SearchPanel _search;
+    private readonly MarkdownStyles _styles;
     private bool _loading;
 
     public ManuscriptView()
@@ -40,6 +41,11 @@ public partial class ManuscriptView : UserControl
         area.Bind(TextArea.SelectionForegroundProperty, area.GetResourceObservable("TextPrimary"));
         area.SelectionBorder = null;
         area.SelectionCornerRadius = 2;
+        _styles = new MarkdownStyles { Faded = Brushes.Gray, Quote = Brushes.Gray, Title = FontFamily.Default };
+        area.TextView.LineTransformers.Add(_styles);
+        area.TextView.ElementGenerators.Add(new SceneBreaks(area));
+        AttachedToVisualTree += (_, _) => Restyle();
+        ActualThemeVariantChanged += (_, _) => Restyle();
         Editor.TextArea.TextView.ScrollOffsetChanged += (_, _) => ((TranslateTransform)Overlay.RenderTransform!).Y = -Editor.TextArea.TextView.ScrollOffset.Y;
         Editor.SizeChanged += (_, _) => Layout();
         Editor.PropertyChanged += (_, e) =>
@@ -282,6 +288,18 @@ public partial class ManuscriptView : UserControl
         ChapterScenes.IsVisible = scenes.Count > 0;
         ChapterEmpty.IsVisible = scenes.Count == 0;
     }
+
+    // The colorizer's brushes follow light and dark.
+    private void Restyle()
+    {
+        _styles.Faded = Resource<IBrush>("MarkerFaded") ?? _styles.Faded;
+        _styles.Quote = Resource<IBrush>("TextSecondary") ?? _styles.Quote;
+        _styles.Title = Resource<FontFamily>("FontTitle") ?? _styles.Title;
+        Editor.TextArea.TextView.Redraw();
+    }
+
+    private T? Resource<T>(string key)
+        where T : class => this.TryFindResource(key, ActualThemeVariant, out var value) ? value as T : null;
 
     /// <summary>The prototype's line heights: 1.7 for the manuscript, 1.65 for pages. AvaloniaEdit scales the font's own line spacing, so start from that.</summary>
     private void UpdateLineHeight()
