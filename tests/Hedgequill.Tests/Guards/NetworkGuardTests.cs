@@ -41,6 +41,50 @@ public sealed partial class NetworkGuardTests
         new("Velopack update check", @"\bUpdateManager\b|\bVelopack\.Sources\b"),
     ];
 
+    // Spell check calls the system's checker through native code. These two files may, and only with the names listed: every
+    // string literal in them must be here, and the Objective-C runtime only takes a class or selector written out as one.
+    private static readonly Dictionary<string, HashSet<string>> SpellCheckNames = new()
+    {
+        ["src/Hedgequill.Desktop/Spelling/WindowsSpellChecker.cs"] =
+        [
+            "windows",
+            "ole32.dll",
+            "en-US",
+            "7AB36653-1796-484B-BDFA-E74F1DB7C1DC", // SpellCheckerFactory
+            "8E018A9D-2415-4677-BF08-794EA61F94BB", // ISpellCheckerFactory
+            "B6FD0B71-E2BC-4653-8D05-F197E412770B", // ISpellChecker
+            "803E3BD4-2828-4410-8290-418D1D73C762", // IEnumSpellingError
+            "B7C82D61-FBE8-4B47-9B27-6C0D2E0DE0A3", // ISpellingError
+            "00000101-0000-0000-C000-000000000046", // IEnumString
+        ],
+        ["src/Hedgequill.Desktop/Spelling/MacSpellChecker.cs"] =
+        [
+            "macos",
+            "/usr/lib/libobjc.A.dylib",
+            "/System/Library/Frameworks/AppKit.framework/AppKit",
+            "objc_getClass",
+            "sel_registerName",
+            "objc_msgSend",
+            "NSSpellChecker",
+            "sharedSpellChecker",
+            "checkSpellingOfString:startingAt:language:wrap:inSpellDocumentWithTag:wordCount:",
+            "guessesForWordRange:inString:language:inSpellDocumentWithTag:",
+            "NSString",
+            "alloc",
+            "initWithCharacters:length:",
+            "length",
+            "getCharacters:range:",
+            "count",
+            "objectAtIndex:",
+            "release",
+        ],
+    };
+
+    private static readonly Ban NameNotWrittenOut = new("Objective-C name not written out", @"(?<!nint )\b(?:Class|Selector)\((?!"")");
+
+    [GeneratedRegex(@"""((?:[^""\\\r\n]|\\.)*)""")]
+    private static partial Regex StringLiteral();
+
     // Any scheme but avares://, and UNC paths, which Windows opens over SMB.
     private static readonly Ban RemoteAsset = new("URI outside the app", @"\b(?!avares://)[A-Za-z][\w+.-]*://|\\\\[^\\\s""']+\\");
 
@@ -94,6 +138,15 @@ public sealed partial class NetworkGuardTests
         if (file == Updater)
         {
             return [];
+        }
+
+        if (SpellCheckNames.TryGetValue(file, out var names))
+        {
+            return SourceScan.Find(file, text, [.. Apis.Where(ban => ban.Name != "native interop"), NameNotWrittenOut])
+                .Concat(StringLiteral().Matches(text)
+                    .Where(literal => !names.Contains(literal.Groups[1].Value))
+                    .Select(literal => new Hit(file, text.AsSpan(0, literal.Index).Count('\n') + 1, "native name outside the list")))
+                .OrderBy(hit => hit.Line);
         }
 
         var hits = SourceScan.Find(file, text, Apis);
@@ -237,6 +290,30 @@ public sealed partial class NetworkGuardTests
         Assert.NotEmpty(Scan("src/Hedgequill.Desktop/Updates/Updates.cs", code));
         Assert.NotEmpty(Scan("src/Hedgequill.Core/Updates/Updater.cs", code));
     }
+
+    private const string MacSpelling = "src/Hedgequill.Desktop/Spelling/MacSpellChecker.cs";
+    private const string WindowsSpelling = "src/Hedgequill.Desktop/Spelling/WindowsSpellChecker.cs";
+
+    [Fact]
+    public void Allows_native_calls_in_the_spell_checker_with_the_listed_names_only()
+    {
+        const string ole = "[LibraryImport(\"ole32.dll\")] private static partial int CoCreateInstance();";
+
+        Assert.Empty(Scan(MacSpelling, "[LibraryImport(Runtime)] private static partial nint Class(string name);\nvar checker = Send(Class(\"NSSpellChecker\"), Selector(\"sharedSpellChecker\"));"));
+        Assert.Empty(Scan(WindowsSpelling, ole));
+        Assert.NotEmpty(Scan("src/Hedgequill.Desktop/Spelling/SpellChecker.cs", ole));
+    }
+
+    [Theory]
+    [InlineData(MacSpelling, "var session = Send(Class(\"NSURLSession\"), Selector(\"sharedSession\"));", "native name outside the list")]
+    [InlineData(MacSpelling, "var call = Selector(name);", "Objective-C name not written out")]
+    [InlineData(MacSpelling, "var call = Selector(\"NSURL\" + \"Session\");", "native name outside the list")]
+    [InlineData(MacSpelling, "var call = Selector($\"{scheme}Session\");", "native name outside the list")]
+    [InlineData(WindowsSpelling, "[LibraryImport(\"winhttp.dll\")] private static partial nint WinHttpOpen();", "native name outside the list")]
+    [InlineData(WindowsSpelling, "private static readonly Guid Browser = new(\"0002DF01-0000-0000-C000-000000000046\");", "native name outside the list")]
+    [InlineData(WindowsSpelling, "private readonly HttpClient _client = new();", "HTTP client")]
+    public void Flags_anything_else_in_the_spell_checker(string file, string code, string ban) =>
+        Assert.Contains(ban, Scan(file, code).Select(hit => hit.Name));
 
     private const string Window = """
         <Window xmlns="https://github.com/avaloniaui"
