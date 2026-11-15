@@ -73,6 +73,17 @@ What the design must protect, in this order when two conflict. Everything else g
 - **Earlier versions stay in the project:** the first save of a scene in a session keeps its previous text in the project, as `Trash/` keeps deleted files, and Earlier versions… in the row menu brings one back. Never lose words covered crashes and failed saves, but not a rewrite the writer regrets, since Undo ends when the app closes. Scrivener has snapshots and Obsidian has File Recovery. This gives up disk space and a tidy project: the writer deletes old versions themselves.
 - **Synced folders get tested, not built.** Windows 11 often backs up Documents to OneDrive, and a writer can edit the same Markdown on a phone through OneDrive, iCloud Drive or Dropbox. M4 tests a save while another process holds the file, as a sync client does mid-upload, and adds the file watcher the 2026-11-13 decision left for later. This gives up nothing; sync stays Not planned.
 
+## Decisions (2026-11-15)
+
+- **The editor reads Markdown by CommonMark's rules, one line at a time,** in `Hedgequill.Core`, so M3's AO3 HTML can read it the same way and the preview matches.
+  - `*` and `_` both make emphasis, `2 * 3 * 4` stays plain, and `snake_case` isn't italic. Headings take one to six `#`, and quotes one or more `>`.
+  - Emphasis can't span a hard line break. Each paragraph is one line in Hedgequill, and AvaloniaEdit styles a line at a time, so typing restyles only the line that changed.
+  - This gives up emphasis across a hard line break, which some pasted text has.
+- **A scene break is any Markdown thematic break:** a line of three or more `-`, `*` or `_`, with spaces allowed between. Writers coming from other apps type `* * *` or `***`, and every Markdown reader breaks there. A `---` straight under a line of text stays a scene break, where CommonMark would make that line a heading. This gives up underlined (setext) headings; `#` headings still work.
+- **The line holding the caret shows a scene break as plain text,** as Obsidian's Live Preview does, so the writer can edit it; on every other line it's the ornament. Bold on an empty line types `****`, which is a thematic break until the first letter goes in, and an ornament there would hide the caret. This gives up an ornament that stays put while the caret passes.
+- **Bold and Italic unwrap the text they style:** selecting a bold word without its markers and pressing Ctrl+B removes them, since the markers fade and a writer selects the word they see. This gives up nothing.
+- **Quotes are italic and secondary as the prototype draws them, but not indented.** AvaloniaEdit can't indent a line without replacing its `>` with something the caret can't enter. This gives up the prototype's 1.6 em indent.
+
 ## M0: Placeholder (as soon as possible)
 
 - [x] Add `LICENSE` (Apache-2.0), `.gitignore` and `.gitattributes`.
@@ -116,8 +127,8 @@ What the design must protect, in this order when two conflict. Everything else g
 
 ## M2: Styled Markdown
 
-- [ ] Emphasis, strong and headings are styled in place, with their markers faded. Ctrl+B and Ctrl+I toggle them.
-- [ ] A scene break shows as a centred ornament; the file keeps a plain Markdown break.
+- [x] Emphasis, strong and headings are styled in place, with their markers faded. Ctrl+B and Ctrl+I toggle them.
+- [x] A scene break shows as a centred ornament; the file keeps a plain Markdown break.
 - [ ] Typing stays smooth in a long chapter.
 - [ ] Spell check, as decided above: misspellings underlined, suggestions in the context menu, and Add to project dictionary. The NativeAOT probe on Windows and macOS comes first.
 

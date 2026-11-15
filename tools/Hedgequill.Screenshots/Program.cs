@@ -68,7 +68,7 @@ internal static class Program
 
             ---
 
-            The bell rang at half past nine. Twice, then nothing.
+            The bell rang at half past nine. Twice, then **nothing**.
             """);
         Write(folder, "Act One/The Letter/A knock at dusk.md", "Mara heard the knock twice before she believed it.");
         Write(folder, "Act One/The Letter/What the seal said.md", "The wax was green, which meant the harbour office.");
