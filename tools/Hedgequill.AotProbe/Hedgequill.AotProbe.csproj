@@ -9,7 +9,13 @@
     <RootNamespace>Hedgequill.AotProbe</RootNamespace>
     <PublishAot>true</PublishAot>
     <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <!-- M2's spell check probe runs the app's own spell checker files. -->
+  <ItemGroup>
+    <Compile Include="..\..\src\Hedgequill.Desktop\Spelling\*.cs" LinkBase="Spelling" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia" />
