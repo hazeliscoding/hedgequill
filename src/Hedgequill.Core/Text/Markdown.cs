@@ -7,7 +7,7 @@ public readonly record struct Change(int Offset, int Length, string Insert, int 
 }
 
 /// <summary>The plain Markdown markers Bold, Italic and Insert scene break add, as the prototype does.</summary>
-public static class Markdown
+public static partial class Markdown
 {
     public const string Bold = "**";
     public const string Italic = "*";
