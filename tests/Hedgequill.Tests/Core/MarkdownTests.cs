@@ -13,6 +13,13 @@ public class MarkdownTests
     [InlineData("She ran[] home.", "*", "She ran*|* home.")]
     [InlineData("[]", "**", "**|**")]
     [InlineData("A [**] b", "**", "A ****|** b")]
+    [InlineData("She **[ran]** home.", "**", "She |ran home.")]
+    [InlineData("She *[ran]* home.", "*", "She |ran home.")]
+    [InlineData("Line one.\n*[Two]*", "*", "Line one.\n|Two")]
+    [InlineData("She **[ran]** home.", "*", "She ***ran|*** home.")]
+    [InlineData("She *[ran]* home.", "**", "She ***ran|*** home.")]
+    [InlineData("She **[ran home]**.", "**", "She |ran home.")]
+    [InlineData("She **r[an]** home.", "**", "She **r**an|**** home.")]
     public void Bold_and_Italic_wrap_or_unwrap_the_selection(string before, string marker, string after) =>
         Assert.Equal(after, Apply(before, (text, start, end) => Markdown.Wrap(text, start, end, marker)));
 
