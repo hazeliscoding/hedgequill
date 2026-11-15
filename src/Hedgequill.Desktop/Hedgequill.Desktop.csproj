@@ -10,6 +10,8 @@
     <ApplicationIcon>..\..\docs\brand\app-icon.ico</ApplicationIcon>
     <PublishAot>true</PublishAot>
     <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
+    <!-- The spell checker's source-generated COM and Objective-C calls need it. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <!-- Views take their project in the constructor. AVLN3001 warns that the runtime XAML loader then can't build them, and the app never uses that loader. -->
     <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);AVLN3001</MSBuildWarningsAsMessages>
