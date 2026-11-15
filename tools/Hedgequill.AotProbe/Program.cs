@@ -8,6 +8,7 @@ using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
+using Hedgequill.Desktop.Spelling;
 
 namespace Hedgequill.AotProbe;
 
@@ -73,6 +74,23 @@ public sealed partial class ProbeApp : Application
         editor.SelectAll();
         editor.TextArea.Selection.ReplaceSelectionWithText("Fresh page.");
         Check("replacing a selection edits the document", editor.Text == "Fresh page." && editor.Undo() && editor.Text == Sample + Typed);
+
+        // M2: the system's spell checker, through COM on Windows and the Objective-C runtime on macOS.
+        SpellChecker? speller = null;
+        try
+        {
+            speller = OperatingSystem.IsWindows() ? WindowsSpellChecker.Open() : OperatingSystem.IsMacOS() ? MacSpellChecker.Open() : null;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+
+        const string Misspelled = "The keeper saw teh boat.";
+        Check("the system spell checker opened", speller is not null);
+        Check("it flagged the misspelling, and only that", speller?.Check(Misspelled) is [{ Start: 15, Length: 3 }]);
+        Check("it suggested the word", speller?.Suggest("teh").Contains("the") == true);
+        Check("it passed a correct line", speller?.Check("The keeper saw the boat.") is []);
 
         Console.WriteLine($"Working set after the checks: {Environment.WorkingSet / 1_048_576} MB");
         Console.WriteLine(failures == 0 ? "All checks passed." : $"{failures} check(s) failed.");
