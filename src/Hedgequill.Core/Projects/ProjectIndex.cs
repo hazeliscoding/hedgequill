@@ -7,7 +7,8 @@ namespace Hedgequill.Core.Projects;
 /// <summary>The contents of hedgequill.json.</summary>
 internal sealed class ProjectIndex
 {
-    public const int CurrentFormat = 1;
+    // 2 added summaries and notes: an older Hedgequill would drop them the next time it saved the index, so it refuses instead.
+    public const int CurrentFormat = 2;
 
     public int Format { get; set; } = CurrentFormat;
 
@@ -22,6 +23,20 @@ internal sealed class ProjectIndex
 
     /// <summary>Words spell check accepts in this project only, such as its fandom's names.</summary>
     public List<string>? Dictionary { get; set; }
+
+    /// <summary>AO3's summary and notes, and what was last copied, keyed by path; "" is the work.</summary>
+    public Dictionary<string, Details>? Details { get; set; }
+}
+
+internal sealed class Details
+{
+    public string? Summary { get; set; }
+
+    public string? BeginningNotes { get; set; }
+
+    public string? EndNotes { get; set; }
+
+    public string? Copied { get; set; }
 }
 
 [JsonSourceGenerationOptions(

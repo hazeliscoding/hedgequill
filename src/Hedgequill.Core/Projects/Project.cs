@@ -1,5 +1,8 @@
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
+using Hedgequill.Core.Ao3;
 using Hedgequill.Core.Files;
 
 namespace Hedgequill.Core.Projects;
@@ -102,10 +105,33 @@ public sealed partial class Project
         foreach (var node in root.Descendants().Prepend(root).Where(node => node.Kind is not (NodeKind.Notes or NodeKind.Research)))
         {
             node.Title = index.Titles?.GetValueOrDefault(node.RelativePath) ?? node.DefaultTitle;
+            if (index.Details?.GetValueOrDefault(node.RelativePath) is { } details)
+            {
+                node.Summary = details.Summary ?? "";
+                node.BeginningNotes = details.BeginningNotes ?? "";
+                node.EndNotes = details.EndNotes ?? "";
+                node.Copied = details.Copied;
+            }
         }
 
         return new Project(folder, root, index.Dictionary ?? []);
     }
+
+    /// <summary>Copy chapter HTML gave this HTML for the chapter: kept in the index, to tell an edit made since.</summary>
+    public void MarkCopied(Node chapter, string html)
+    {
+        chapter.Copied = Fingerprint(html);
+        SaveIndex();
+    }
+
+    /// <summary>Whether the chapter's AO3 HTML differs from what was last copied, so the copy on AO3 is out of date.</summary>
+    public static bool ChangedSinceCopied(Node chapter) =>
+        chapter.Copied is { } copied && copied != Fingerprint(Ao3Text.ChapterHtml(chapter.Children.Select(scene => scene.Text)));
+
+    // A short hash of the HTML: enough to tell a change, without keeping the chapter twice.
+    private static string Fingerprint(string html) => Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(html)))[..16];
+
+    private static string? NullIfEmpty(string text) => text.Length > 0 ? text : null;
 
     /// <summary>Whether Add to project dictionary has taken this word, in any case.</summary>
     public bool Knows(string word) => _dictionary.Contains(word);
@@ -134,6 +160,15 @@ public sealed partial class Project
             Acts = Root.Children.Where(node => node.Kind == NodeKind.Act).Select(node => node.Name).ToList() is { Count: > 0 } acts ? acts : null,
             Titles = titles.Count > 0 ? titles : null,
             Dictionary = _dictionary.Count > 0 ? [.. _dictionary.Order(StringComparer.Ordinal)] : null,
+            Details = nodes
+                .Where(node => node.Summary.Length + node.BeginningNotes.Length + node.EndNotes.Length > 0 || node.Copied is not null)
+                .ToDictionary(node => node.RelativePath, node => new Details
+                {
+                    Summary = NullIfEmpty(node.Summary),
+                    BeginningNotes = NullIfEmpty(node.BeginningNotes),
+                    EndNotes = NullIfEmpty(node.EndNotes),
+                    Copied = node.Copied,
+                }) is { Count: > 0 } details ? details : null,
         };
         AtomicFile.Write(Path.Combine(Folder, IndexFile), JsonSerializer.Serialize(index, CoreJson.Readable.ProjectIndex) + "\n");
     }

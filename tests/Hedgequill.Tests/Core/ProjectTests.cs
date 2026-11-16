@@ -1,3 +1,4 @@
+using Hedgequill.Core.Ao3;
 using Hedgequill.Core.Projects;
 
 namespace Hedgequill.Tests.Core;
@@ -92,7 +93,7 @@ public class ProjectTests
         temp.Write("hedgequill.json", """
             {
               // Edited by hand, so comments and a trailing comma are fine.
-              "format": 1,
+              "format": 2,
               "order": {
                 "": ["Chapter 2", "Chapter 1", "Notes", "Research"],
                 "Chapter 1": ["gamma.md", "Gone.md", "Alpha.md",],
@@ -135,7 +136,7 @@ public class ProjectTests
     public void A_project_from_a_newer_Hedgequill_doesnt_open()
     {
         using var temp = new TempFolder();
-        temp.Write("hedgequill.json", """{ "format": 2 }""");
+        temp.Write("hedgequill.json", """{ "format": 3 }""");
 
         var error = Assert.Throws<InvalidDataException>(() => Project.Open(temp.Path));
         Assert.Contains("newer version of Hedgequill", error.Message);
@@ -147,6 +148,51 @@ public class ProjectTests
         using var temp = new TempFolder();
 
         Assert.Throws<DirectoryNotFoundException>(() => Project.Open(temp["Gone"]));
+    }
+
+    [Fact]
+    public void Summaries_and_notes_live_in_the_index_and_follow_their_chapter()
+    {
+        using var temp = new TempFolder();
+        var project = Project.Create(temp.Path, "Tides");
+        var chapter = project.Root.Children.First(node => node.Kind == NodeKind.Chapter);
+        project.Root.Summary = "A keeper and a lantern.";
+        chapter.Summary = "The fog comes in.";
+        chapter.EndNotes = "Thanks for *reading*.";
+        project.Rename(chapter, "The Fog");
+
+        var reopened = Project.Open(project.Folder);
+        var fog = reopened.Root.Children.Single(node => node.Title == "The Fog");
+        Assert.Equal(("A keeper and a lantern.", "The fog comes in.", "", "Thanks for *reading*."), (reopened.Root.Summary, fog.Summary, fog.BeginningNotes, fog.EndNotes));
+
+        var copy = reopened.Duplicate(fog);
+        Assert.Equal("The fog comes in.", copy.Summary);
+
+        var deleted = reopened.Delete(fog);
+        reopened.Restore(deleted);
+        Assert.Equal("The fog comes in.", Project.Open(project.Folder).Root.Children.Single(node => node.Title == "The Fog").Summary);
+    }
+
+    [Fact]
+    public void A_chapter_edited_since_it_was_copied_is_marked_until_it_matches_again()
+    {
+        using var temp = new TempFolder();
+        temp.Write("Chapter 1/Fog.md", "The fog came in.");
+        var project = Project.Open(temp.Path);
+        var chapter = project.Root.Children.Single(node => node.Kind == NodeKind.Chapter);
+        Assert.False(Project.ChangedSinceCopied(chapter));
+
+        project.MarkCopied(chapter, Ao3Text.ChapterHtml(chapter.Children.Select(scene => scene.Text)));
+        Assert.False(Project.ChangedSinceCopied(chapter));
+
+        chapter.Children[0].Text = "The fog came in fast.";
+        Assert.True(Project.ChangedSinceCopied(chapter));
+
+        var reopened = Project.Open(temp.Path);
+        Assert.False(Project.ChangedSinceCopied(reopened.Root.Children.Single(node => node.Kind == NodeKind.Chapter)));
+
+        chapter.Children[0].Text = "The fog came in.";
+        Assert.False(Project.ChangedSinceCopied(chapter));
     }
 
     [Fact]
@@ -185,7 +231,7 @@ public class ProjectTests
         Assert.Equal(
             """
             {
-              "format": 1,
+              "format": 2,
               "order": {
                 "": [
                   "Prologue",
