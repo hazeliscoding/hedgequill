@@ -85,3 +85,4 @@ When Windows' contrast themes or macOS's Increase Contrast are on, these replace
   3. `0 16px 40px -8px rgba(0,0,0,.2), 0 4px 10px rgba(0,0,0,.06)` for dialogs;
   4. `0 40px 90px -10px rgba(0,0,0,.35), 0 12px 28px rgba(0,0,0,.14)` for windows.
 - **Motion (ms):** 60, 120, 180, 260, 360. All motion is off when the system asks for reduced motion.
+- **Curves:** standard `cubic-bezier(.4,0,.2,1)` for hovers, ease-out `cubic-bezier(.22,1,.36,1)` for chevrons, and the soft spring `cubic-bezier(.3,1.12,.5,1)` for panes, the page and popovers.

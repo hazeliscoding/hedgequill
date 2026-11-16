@@ -120,6 +120,8 @@ What the design must protect, in this order when two conflict. Everything else g
 - **Earlier versions live in `Versions/`,** beside `Trash/`, under the same folders as their scene: `Chapter 1/Fog.md` keeps them as `Versions/Chapter 1/Fog/2026-11-16 09.12.05.md`, plain Markdown named for when it was kept. They follow the scene when it, its chapter or its act is renamed or moved. Scenes keep versions; empty text and Notes and Research pages don't. The sheet gives every version a time, since a day can keep several. This gives up a chapter named Versions at the top of the project, which Hedgequill now keeps for itself as it does Trash.
 - **Find in project looks for the words as typed,** never a pattern, in every scene and page, and lists up to 50 matches a scene. Replace all puts in the replacement as typed, and its notice has Undo, which leaves alone any scene typed in since. Replace all saves through autosave, so each scene's first save that session keeps an earlier version. This gives up regular expressions.
 - **Text size scales only the page's text,** from 80% to 200% in nine steps, as the prototype draws it. Titles, the navigator and the preview keep their size, and the text column keeps its width. On Windows the menu labels the shortcut Ctrl++, where the prototype writes Ctrl+=, because Avalonia names the = key by its shifted symbol, as Firefox does. This gives up the prototype's label.
+- **Motion follows the prototype, and the system's reduced motion turns all of it off.** Up to M4 nothing moved. Now the navigator and preview slide over 260 ms on the soft spring, focus mode slides the page down and fades the header and toolbar, chevrons turn, hovers fade in, the save details pop in, and Saving… turns. Hedgequill reads Windows' Animation effects switch or macOS's Reduce motion once at launch, so a change made while it's open applies at the next launch. Avalonia exposes neither setting, so `Themes/ReducedMotion.cs` reads it with one native call per platform, the only native calls besides spell check's, and the guard lists every name it may pass. A setting in the app instead would have shown the motion before the people who need it found the switch. This gives up keeping native calls to spell check alone.
+- **A sliding pane keeps its width and is cut off, as in the prototype,** so the navigator and the preview don't reflow every frame. The chapter beside them does reflow when its column narrows. With the typing probe's 10,000-word chapter, a slide's frames take 1.5 ms at the median and 3.2 ms at the 95th percentile on the owner's PC, under one 60 Hz frame. Opening the preview takes about 50 ms on its first frame, the preview laying out the whole chapter as it did before it slid, so that slide starts a little late. This gives up nothing the prototype shows.
 
 ## M0: Placeholder (as soon as possible)
 
@@ -211,6 +213,7 @@ What the design must protect, in this order when two conflict. Everything else g
 
 ## M5: 1.0
 
+- [x] Motion as the prototype shows it, off when the system asks for reduced motion.
 - [ ] Windows x64 Setup, signed, and macOS packages for Apple Silicon and Intel, ad-hoc signed.
 - [ ] Self-update as decided above, plus Help › Check for updates….
 - [ ] Help: Writing in Hedgequill, Keyboard shortcuts, Pasting into AO3 and About.
