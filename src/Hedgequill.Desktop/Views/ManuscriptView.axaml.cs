@@ -28,6 +28,7 @@ public partial class ManuscriptView : UserControl
     private readonly MarkdownStyles _styles;
     private bool _loading;
     private int _menuOffset;
+    private int _textSize = 100;
 
     // One system checker for the app, opened the first time an editor needs it.
     private static readonly Lazy<SpellChecker?> Speller = new(SpellChecker.Create);
@@ -216,6 +217,17 @@ public partial class ManuscriptView : UserControl
         };
     }
 
+    /// <summary>View › Larger text and Smaller text, in percent of the prototype's size: 19 px Cardo for scenes, 15.5 px for pages.</summary>
+    public int TextSize
+    {
+        get => _textSize;
+        set
+        {
+            _textSize = value;
+            ApplyTextSize();
+        }
+    }
+
     /// <summary>Selects text in the open scene or page and scrolls to it, as a match in Find in project does.</summary>
     public void Reveal(int offset, int length)
     {
@@ -301,6 +313,7 @@ public partial class ManuscriptView : UserControl
         Editor.CaretOffset = Math.Min(_carets.GetValueOrDefault(node), document.TextLength);
         Editor.Classes.Set("page", isPage);
         EmptyHint.Classes.Set("page", isPage);
+        ApplyTextSize();
         BreakButton.IsVisible = !isPage;
 
         var chapter = ChapterOf(node);
@@ -424,6 +437,13 @@ public partial class ManuscriptView : UserControl
 
     private T? Resource<T>(string key)
         where T : class => this.TryFindResource(key, ActualThemeVariant, out var value) ? value as T : null;
+
+    private void ApplyTextSize()
+    {
+        var size = (Editor.Classes.Contains("page") ? 15.5 : 19) * _textSize / 100.0;
+        Editor.FontSize = size;
+        EmptyHint.FontSize = size;
+    }
 
     /// <summary>The prototype's line heights: 1.7 for the manuscript, 1.65 for pages. AvaloniaEdit scales the font's own line spacing, so start from that.</summary>
     private void UpdateLineHeight()

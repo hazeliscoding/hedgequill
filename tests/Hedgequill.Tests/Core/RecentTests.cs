@@ -77,6 +77,25 @@ public class RecentTests
     }
 
     [Fact]
+    public void Text_size_is_remembered_beside_appearance_and_steps_between_80_and_200_percent()
+    {
+        using var temp = new TempFolder();
+        var preferences = new Preferences(temp["settings"]);
+        Assert.Equal(100, preferences.TextSize);
+
+        preferences.Appearance = Appearance.Dark;
+        preferences.TextSize = 125;
+        Assert.Equal(125, new Preferences(temp["settings"]).TextSize);
+        Assert.Equal(Appearance.Dark, new Preferences(temp["settings"]).Appearance);
+
+        Assert.Equal([110, 140, 100, 200, 80], new[] { Preferences.Step(100, 1), Preferences.Step(125, 1), Preferences.Step(160, 0), Preferences.Step(200, 1), Preferences.Step(80, -1) });
+
+        // Edited by hand, a size snaps to the nearest step.
+        temp.Write("settings/settings.json", "{ \"textSize\": 5000 }");
+        Assert.Equal(200, new Preferences(temp["settings"]).TextSize);
+    }
+
+    [Fact]
     public void Settings_live_in_a_Hedgequill_folder_under_local_app_data() =>
         Assert.Equal(
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Hedgequill"),

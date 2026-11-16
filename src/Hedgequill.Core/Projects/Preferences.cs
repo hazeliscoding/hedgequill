@@ -13,32 +13,55 @@ public enum Appearance
 /// <summary>Choices that outlive a session, in settings.json beside the Recent list.</summary>
 public sealed class Preferences(string settingsFolder)
 {
+    /// <summary>View › Larger text and Smaller text step through these sizes, in percent of the prototype's.</summary>
+    public static readonly int[] TextSizes = [80, 90, 100, 110, 125, 140, 160, 180, 200];
+
     private string FilePath => Path.Combine(settingsFolder, "settings.json");
 
     /// <summary>View › Appearance. A missing or damaged file means Match system.</summary>
     public Appearance Appearance
     {
-        get
-        {
-            try
-            {
-                return JsonSerializer.Deserialize(File.ReadAllText(FilePath), CoreJson.Readable.PreferencesFile)?.Appearance ?? Appearance.System;
-            }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException)
-            {
-                return Appearance.System;
-            }
-        }
+        get => Read().Appearance;
+        set => Write(file => file.Appearance = value);
+    }
 
-        set
+    /// <summary>The page's text size in percent, one of <see cref="TextSizes"/>. A missing or damaged file means 100.</summary>
+    public int TextSize
+    {
+        get => Nearest(Read().TextSize);
+        set => Write(file => file.TextSize = Nearest(value));
+    }
+
+    /// <summary>The next size up (1), down (-1), or back to 100 (0).</summary>
+    public static int Step(int size, int direction) =>
+        direction == 0 ? 100 : TextSizes[Math.Clamp(Array.IndexOf(TextSizes, Nearest(size)) + Math.Sign(direction), 0, TextSizes.Length - 1)];
+
+    private static int Nearest(int size) => TextSizes.MinBy(step => Math.Abs(step - size));
+
+    private PreferencesFile Read()
+    {
+        try
         {
-            Directory.CreateDirectory(settingsFolder);
-            AtomicFile.Write(FilePath, JsonSerializer.Serialize(new PreferencesFile { Appearance = value }, CoreJson.Readable.PreferencesFile) + "\n");
+            return JsonSerializer.Deserialize(File.ReadAllText(FilePath), CoreJson.Readable.PreferencesFile) ?? new();
         }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException)
+        {
+            return new();
+        }
+    }
+
+    private void Write(Action<PreferencesFile> change)
+    {
+        var file = Read();
+        change(file);
+        Directory.CreateDirectory(settingsFolder);
+        AtomicFile.Write(FilePath, JsonSerializer.Serialize(file, CoreJson.Readable.PreferencesFile) + "\n");
     }
 }
 
 internal sealed class PreferencesFile
 {
     public Appearance Appearance { get; set; }
+
+    public int TextSize { get; set; } = 100;
 }

@@ -28,6 +28,7 @@ public partial class MainWindow : Window
     {
         _recent = new RecentProjects(settingsFolder);
         _preferences = new Preferences(settingsFolder);
+        TextSize = _preferences.TextSize;
         InitializeComponent();
 
         // The prototype's Windows frame: icon, menu bar and title share the caption row. macOS keeps its own title bar and shows the menu at the top of the screen.
@@ -100,6 +101,27 @@ public partial class MainWindow : Window
             Apply(value);
             _menu.Update();
         }
+    }
+
+    /// <summary>The page's text size in percent, remembered in settings.json.</summary>
+    public int TextSize { get; private set; }
+
+    /// <summary>View › Larger text (1), Smaller text (-1) and Actual size (0).</summary>
+    public void ChangeTextSize(int direction)
+    {
+        TextSize = Preferences.Step(TextSize, direction);
+        try
+        {
+            _preferences.TextSize = TextSize;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            // The size still applies now; it just won't be remembered.
+        }
+
+        Workspace?.TextSize = TextSize;
+        Notice.Show($"Text size {TextSize}%", "");
+        _menu.Update();
     }
 
     public void NewProject() => Sheet.Show();
@@ -250,6 +272,7 @@ public partial class MainWindow : Window
             var rows = project.Versions(scene).Select(version => VersionRow.From(version, now)).ToList();
             Versions.Show(scene.Title, rows, row => workspace.BringBack(scene, row.Version, row.When));
         });
+        workspace.TextSize = TextSize;
         workspace.NoticeRequested += (title, detail, label, action) => Notice.Show(title, detail, label, action);
 
         var saver = new Saver(project, workspace.Commit, TimeSpan.FromMilliseconds(700));
