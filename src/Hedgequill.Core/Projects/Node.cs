@@ -33,6 +33,18 @@ public sealed class Node(NodeKind kind, string name, string title)
     /// <summary>The text last read from or written to the file, to tell a change made in another app from one made here.</summary>
     public string SavedText { get; internal set; } = "";
 
+    /// <summary>The summary AO3 shows for the work (on the project) or a chapter, as Markdown.</summary>
+    public string Summary { get; set; } = "";
+
+    /// <summary>AO3's notes before the work or chapter, as Markdown.</summary>
+    public string BeginningNotes { get; set; } = "";
+
+    /// <summary>AO3's notes after the work or chapter, as Markdown.</summary>
+    public string EndNotes { get; set; } = "";
+
+    /// <summary>A chapter's fingerprint of the AO3 HTML Copy chapter HTML last gave, if it has been copied.</summary>
+    public string? Copied { get; internal set; }
+
     public bool IsFile => Kind is NodeKind.Scene or NodeKind.Page;
 
     /// <summary>The path from the project folder, with forward slashes, as the index keys it. Empty for the project itself.</summary>

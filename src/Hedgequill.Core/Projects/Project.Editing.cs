@@ -112,7 +112,7 @@ public sealed partial class Project
         static Node Clone(Node source, string name, string title)
         {
             var text = source.Text.ReplaceLineEndings("\n");
-            var clone = new Node(source.Kind, name, title) { Text = text, SavedText = text };
+            var clone = new Node(source.Kind, name, title) { Text = text, SavedText = text, Summary = source.Summary, BeginningNotes = source.BeginningNotes, EndNotes = source.EndNotes };
             foreach (var child in source.Children)
             {
                 clone.Add(Clone(child, child.Name, child.Title));
