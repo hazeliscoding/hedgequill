@@ -52,7 +52,7 @@ public sealed partial class RealWindowTests : IDisposable
 
             // The caption row carries the prototype's menu bar. Windows adds the title bar's own System menu.
             Assert.Equal(
-                ["File", "Edit", "View", "Chapter"],
+                ["File", "Edit", "View", "Chapter", "Help"],
                 window.FindAllDescendants(cf => cf.ByControlType(ControlType.MenuItem)).Select(item => item.Name).Where(name => name != "System"));
 
             // Recent opens the project.
