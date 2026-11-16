@@ -113,6 +113,13 @@ What the design must protect, in this order when two conflict. Everything else g
 - **A field's count is the length of the HTML its Copy gives,** since AO3 counts what's pasted into its form. This gives up a count of the Markdown typed.
 - **Changed since copied compares fingerprints:** Copy chapter HTML keeps a short SHA-256 of the HTML in `hedgequill.json`, and a chapter is marked when its HTML differs. An edit that changes nothing on AO3, such as a space at the end of a paragraph, doesn't mark it, and undoing an edit clears the mark. This gives up keeping the text that was copied.
 - **The editor shows strikethrough and links as it shows emphasis:** `~~struck~~` is struck through and a link's brackets and target fade. The prototype doesn't draw either, but they follow its rule for markers. This gives up a link that looks like a link in the editor; the preview shows it as one.
+- **A save that meets a file another app holds waits it out.** While a sync client uploads a file, Windows refuses to replace it: access denied if the client lets others read, a sharing violation if not. Hedgequill showed the first as Read-only. Both now mean the file is held: the save tries again at the autosave delay for about ten seconds, then shows Couldn't save with Retry. The file is still replaced whole or not at all, and a file marked read-only still shows Read-only. This gives up an immediate Couldn't save while a file is held.
+- **A file watcher picks up changes made in other apps,** as the 2026-11-13 decision left for later. A moment after another app changes a scene or page, Hedgequill reloads it if nothing in it is unsaved, or shows Changed on disk at once if something is. Its own saves don't count. This gives up nothing; a change the watcher misses still shows Changed on disk at the next save.
+- **High contrast follows the system, with no setting of its own.** Windows' contrast themes and macOS's Increase Contrast switch Hedgequill to the prototype's high contrast, stronger text and solid borders, over whichever of light or dark View › Appearance picks, and back without a restart. Windows' contrast themes also pick their own colors; Hedgequill keeps its palette. This gives up the contrast theme's colors.
+- **Find in project, earlier versions and text size are drawn in the prototype** (version 5), as the 2026-11-14 decision asked. Find in project takes the navigator's place, Earlier versions… is in a scene's row menu and opens a sheet, and Larger text, Smaller text and Actual size are in the View menu. This gives up nothing.
+- **Earlier versions live in `Versions/`,** beside `Trash/`, under the same folders as their scene: `Chapter 1/Fog.md` keeps them as `Versions/Chapter 1/Fog/2026-11-16 09.12.05.md`, plain Markdown named for when it was kept. They follow the scene when it, its chapter or its act is renamed or moved. Scenes keep versions; empty text and Notes and Research pages don't. The sheet gives every version a time, since a day can keep several. This gives up a chapter named Versions at the top of the project, which Hedgequill now keeps for itself as it does Trash.
+- **Find in project looks for the words as typed,** never a pattern, in every scene and page, and lists up to 50 matches a scene. Replace all puts in the replacement as typed, and its notice has Undo, which leaves alone any scene typed in since. Replace all saves through autosave, so each scene's first save that session keeps an earlier version. This gives up regular expressions.
+- **Text size scales only the page's text,** from 80% to 200% in nine steps, as the prototype draws it. Titles, the navigator and the preview keep their size, and the text column keeps its width. On Windows the menu labels the shortcut Ctrl++, where the prototype writes Ctrl+=, because Avalonia names the = key by its shifted symbol, as Firefox does. This gives up the prototype's label.
 
 ## M0: Placeholder (as soon as possible)
 
@@ -189,11 +196,11 @@ What the design must protect, in this order when two conflict. Everything else g
 
 ## M4: Everyday writing
 
-- [ ] Find and replace across the project: every scene and page, each match listed under its scene.
-- [ ] Earlier versions, as decided above: Earlier versions… in the row menu lists a scene's kept versions and brings one back.
-- [ ] Synced folders: a save while another process holds the file, as a sync client does mid-upload, never loses or halves it. A file watcher reloads a scene another app changed when it has no unsaved edits, and shows Changed on disk at once when it has.
-- [ ] Text size: Ctrl+= and Ctrl+− (⌘= and ⌘−) make the page's text larger and smaller, remembered in `settings.json`.
-- [ ] High contrast: Hedgequill follows Windows' contrast themes and macOS's Increase Contrast.
+- [x] Find and replace across the project: every scene and page, each match listed under its scene.
+- [x] Earlier versions, as decided above: Earlier versions… in the row menu lists a scene's kept versions and brings one back.
+- [x] Synced folders: a save while another process holds the file, as a sync client does mid-upload, never loses or halves it. A file watcher reloads a scene another app changed when it has no unsaved edits, and shows Changed on disk at once when it has.
+- [x] Text size: Ctrl+= and Ctrl+− (⌘= and ⌘−) make the page's text larger and smaller, remembered in `settings.json`.
+- [x] High contrast: Hedgequill follows Windows' contrast themes and macOS's Increase Contrast.
 
 **Done when:** tests on invented text cover find and replace, bringing back an earlier version, a save while another process holds the file, and a reload after another app's change; the headless renders cover a larger text size and high contrast; and the owner has written in a project inside a synced folder.
 
