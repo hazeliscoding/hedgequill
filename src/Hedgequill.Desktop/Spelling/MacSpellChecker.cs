@@ -11,15 +11,41 @@ internal sealed unsafe partial class MacSpellChecker : SpellChecker
     private static readonly nint NotFound = nint.MaxValue;
 
     private readonly nint _checker;
+    private readonly nint _language;
 
-    private MacSpellChecker(nint checker) => _checker = checker;
+    private MacSpellChecker(nint checker, nint language)
+    {
+        _checker = checker;
+        _language = language;
+    }
 
+    /// <summary>
+    /// A checker in the first language the writer chose under System Settings › Keyboard › Spelling. Left to guess, macOS
+    /// reads the language off each line, and a short one can come back unchecked.
+    /// </summary>
     public static MacSpellChecker? Open()
     {
         // The app has AppKit loaded already; a test without a window doesn't.
         NativeLibrary.Load("/System/Library/Frameworks/AppKit.framework/AppKit");
-        var checker = Send(Class("NSSpellChecker"), Selector("sharedSpellChecker"));
-        return checker == 0 ? null : new MacSpellChecker(checker);
+        var pool = objc_autoreleasePoolPush();
+        try
+        {
+            var checker = Send(Class("NSSpellChecker"), Selector("sharedSpellChecker"));
+            if (checker == 0)
+            {
+                return null;
+            }
+
+            var preferred = Send(checker, Selector("userPreferredLanguages"));
+            var language = preferred != 0 && Send(preferred, Selector("count")) > 0
+                ? Send(preferred, Selector("objectAtIndex:"), 0)
+                : Send(checker, Selector("language"));
+            return language == 0 ? null : new MacSpellChecker(checker, Send(language, Selector("retain")));
+        }
+        finally
+        {
+            objc_autoreleasePoolPop(pool);
+        }
     }
 
     protected override IReadOnlyList<Misspelling> CheckText(string text)
@@ -31,7 +57,7 @@ internal sealed unsafe partial class MacSpellChecker : SpellChecker
         {
             for (nint start = 0; start < text.Length;)
             {
-                var range = CheckSpelling(_checker, Selector("checkSpellingOfString:startingAt:language:wrap:inSpellDocumentWithTag:wordCount:"), native, start, 0, 0, 0, 0);
+                var range = CheckSpelling(_checker, Selector("checkSpellingOfString:startingAt:language:wrap:inSpellDocumentWithTag:wordCount:"), native, start, _language, 0, 0, 0);
                 if (range.Location == NotFound || range.Location < start || range.Length == 0)
                 {
                     break;
@@ -57,7 +83,7 @@ internal sealed unsafe partial class MacSpellChecker : SpellChecker
         var native = ToNative(word);
         try
         {
-            var guesses = Guesses(_checker, Selector("guessesForWordRange:inString:language:inSpellDocumentWithTag:"), new Range(0, word.Length), native, 0, 0);
+            var guesses = Guesses(_checker, Selector("guessesForWordRange:inString:language:inSpellDocumentWithTag:"), new Range(0, word.Length), native, _language, 0);
             var count = guesses == 0 ? 0 : Send(guesses, Selector("count"));
             for (nint i = 0; i < count; i++)
             {
