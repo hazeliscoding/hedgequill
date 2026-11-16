@@ -141,6 +141,12 @@ What the design must protect, in this order when two conflict. Everything else g
 
 **Done when:** on a 10,000-word invented chapter with spell check on, a keystroke shows within one frame at 60 Hz on the owner's PC, measured, and the styling matches the prototype. If AvaloniaEdit can't get there, reopen the stack decision before M3.
 
+**Done** (2026-11-15), in [#4](https://github.com/hazeliscoding/hedgequill/pull/4):
+- CI is green on win-x64 and osx-arm64 ([run](https://github.com/hazeliscoding/hedgequill/actions/runs/43786490626)): 277 tests on invented text, the NativeAOT probe with its spell check checks on both platforms, and the real-window test on Windows.
+- `tools/Hedgequill.TypingProbe` on the owner's PC, NativeAOT, 10,082 words, spell check on: a median 2.2–2.4 ms from keystroke to frame and about 5 ms at the 95th percentile. One or two keystrokes in 380 hit a 15–23 ms garbage collection, which plain AvaloniaEdit hits too; the owner counted the bar as met (decision above).
+- `StyledMarkdownTests` and `SpellCheckUiTests` check the styles, the ornament, the underline, the menu and the project dictionary in the editor itself. `docs/screenshots/` shows the styling in both themes.
+- The owner tried the styling and spell check in the app and found they match the prototype.
+
 ## M3: AO3
 
 - [ ] Markdown to AO3 HTML in `Hedgequill.Core`: paragraphs, emphasis, strikethrough, headings, quotes, lists, links and scene breaks. Anything else becomes plain text.
