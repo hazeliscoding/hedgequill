@@ -132,7 +132,8 @@ jobs:
           } | tee -a "$GITHUB_STEP_SUMMARY"
           status=0
           [ "$bar" = "Apple, Hedgequill, File, Edit, View, Chapter, Help" ] || { echo "::error::The menu bar reads: $bar"; status=1; }
-          [ "$help" = "Writing in Hedgequill, Keyboard shortcuts, Pasting into AO3, missing value, Check for updates…, About Hedgequill" ] || { echo "::error::The Help menu reads: $help"; status=1; }
+          # macOS puts its own Search field at the top of a menu named Help.
+          [ "$help" = "missing value, Writing in Hedgequill, Keyboard shortcuts, Pasting into AO3, missing value, Check for updates…, About Hedgequill" ] || { echo "::error::The Help menu reads: $help"; status=1; }
           [ "$file" = "New project…, Open folder…, Open recent, missing value, New scene, New chapter, missing value, Show project folder, Close project" ] || { echo "::error::The File menu reads: $file"; status=1; }
           case "$about" in *Avalonia*|*rror*) echo "::error::The app menu reads: $about"; status=1 ;; esac
           exit $status
