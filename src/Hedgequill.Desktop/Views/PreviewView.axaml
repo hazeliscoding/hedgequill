@@ -1,0 +1,28 @@
+<!-- The AO3 preview: the chapter as readers will see it, drawn from the same reading as Copy chapter HTML. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Hedgequill.Desktop.Views.PreviewView">
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Height="40" Spacing="8" Margin="16,0">
+      <TextBlock Classes="header-title" Text="Preview" VerticalAlignment="Center" />
+      <TextBlock Classes="caption" Text="as readers will see it" VerticalAlignment="Center" />
+    </StackPanel>
+    <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource Separator}" BorderThickness="0,1,0,0" Padding="16,8,16,10">
+      <TextBlock Classes="preview-note"
+                 Text="Final rendering on AO3 may differ slightly. Only paragraphs, emphasis, strikethrough, headings, quotes, lists, links and scene breaks are carried over." />
+    </Border>
+    <ScrollViewer x:Name="Scroller" HorizontalScrollBarVisibility="Disabled">
+      <Panel Margin="16,4,20,48">
+        <StackPanel x:Name="Chapter">
+          <TextBlock x:Name="ChapterTitle" Classes="preview-title" />
+          <TextBlock x:Name="ChapterMeta" Classes="caption" Margin="0,0,0,20" />
+          <StackPanel x:Name="Body" />
+        </StackPanel>
+        <StackPanel x:Name="Empty" Spacing="6" Margin="8,40" IsVisible="False">
+          <TextBlock x:Name="EmptyTitle" Classes="manuscript-italic" FontSize="16" LineHeight="23" TextWrapping="Wrap" />
+          <TextBlock x:Name="EmptyDetail" Classes="preview-note" />
+        </StackPanel>
+      </Panel>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>
