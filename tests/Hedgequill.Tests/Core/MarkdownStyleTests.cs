@@ -21,6 +21,20 @@ public class MarkdownStyleTests
     [InlineData("* not emphasis *")]
     public void Stray_markers_stay_plain(string line) => Assert.Equal("", Describe(line));
 
+    [Theory]
+    [InlineData("It was ~~never~~ always yours.", "Marker[~~] Strike[never] Marker[~~]")]
+    [InlineData("~one~ and ~~~three~~~", "")]
+    [InlineData("~~ not struck ~~", "")]
+    public void Two_tildes_strike_through(string line, string spans) => Assert.Equal(spans, Describe(line));
+
+    [Theory]
+    [InlineData("See [the map](https://example.com/map).", "Marker[[] Link[the map] Marker[](https://example.com/map)]")]
+    [InlineData("[a *b*](https://example.com/a_b_c)", "Marker[[] Link[a *b*] Marker[*] Emphasis[b] Marker[*] Marker[](https://example.com/a_b_c)]")]
+    [InlineData("![the harbour](harbour.png)", "")]
+    [InlineData("[no target]", "")]
+    [InlineData("[spaced](not a link)", "")]
+    public void A_link_fades_its_brackets_and_target(string line, string spans) => Assert.Equal(spans, Describe(line));
+
     [Fact]
     public void A_backslash_keeps_a_marker_literal_and_fades() =>
         Assert.Equal("Marker[\\] Marker[\\]", Describe("\\*not italic\\*"));

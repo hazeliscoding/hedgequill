@@ -7,6 +7,8 @@ public enum Mark
     Quote,
     Emphasis,
     Strong,
+    Strike,
+    Link,
     Marker,
 }
 
@@ -69,7 +71,16 @@ public static partial class Markdown
             spans.Add(new(0, body, Mark.Marker));
         }
 
-        Emphasis(line, body, spans);
+        InlineSpans(line, body, spans);
+        spans.Sort((a, b) => a.Mark.CompareTo(b.Mark));
+        return spans;
+    }
+
+    /// <summary>The spans inside one line of text, without looking for a heading, quote or scene break at its start.</summary>
+    public static List<Span> Inline(string text)
+    {
+        var spans = new List<Span>();
+        InlineSpans(text, 0, spans);
         spans.Sort((a, b) => a.Mark.CompareTo(b.Mark));
         return spans;
     }
@@ -77,7 +88,7 @@ public static partial class Markdown
     private static int Indent(ReadOnlySpan<char> line) => line.Length - line.TrimStart(' ').Length;
 
     // One to six #, then a space or the end of the line.
-    private static int HeadingPrefix(string line)
+    internal static int HeadingPrefix(string line)
     {
         var start = Indent(line);
         if (start > 3)
@@ -105,7 +116,7 @@ public static partial class Markdown
     }
 
     // One or more >, each with an optional space after it.
-    private static int QuotePrefix(string line)
+    internal static int QuotePrefix(string line)
     {
         var end = 0;
         while (true)
@@ -131,12 +142,20 @@ public static partial class Markdown
     }
 
     // CommonMark's delimiter runs: a run opens when it leans on the word after it and closes when it leans on the word before.
-    private static void Emphasis(string line, int from, List<Span> spans)
+    // Links come first, so a * or _ in a link's target is never emphasis.
+    private static void InlineSpans(string line, int from, List<Span> spans)
     {
         var runs = new List<Run>();
+        (int Start, int End) target = (-1, -1);
         for (var i = from; i < line.Length;)
         {
             var c = line[i];
+            if (i == target.Start)
+            {
+                i = target.End + 1;
+                continue;
+            }
+
             if (c == '\\' && i + 1 < line.Length && IsPunctuation(line[i + 1]) && line[i + 1] < 128)
             {
                 spans.Add(new(i, 1, Mark.Marker));
@@ -144,7 +163,17 @@ public static partial class Markdown
                 continue;
             }
 
-            if (c is not ('*' or '_'))
+            if (c == '[' && (i == from || line[i - 1] != '!') && LinkAt(line, i) is var (close, paren))
+            {
+                spans.Add(new(i, 1, Mark.Marker));
+                spans.Add(new(i + 1, close - i - 1, Mark.Link));
+                spans.Add(new(close, paren - close + 1, Mark.Marker));
+                target = (close, paren);
+                i++;
+                continue;
+            }
+
+            if (c is not ('*' or '_' or '~'))
             {
                 i++;
                 continue;
@@ -160,9 +189,13 @@ public static partial class Markdown
             var after = end < line.Length ? line[end] : ' ';
             var left = !char.IsWhiteSpace(after) && (!IsPunctuation(after) || char.IsWhiteSpace(before) || IsPunctuation(before));
             var right = !char.IsWhiteSpace(before) && (!IsPunctuation(before) || char.IsWhiteSpace(after) || IsPunctuation(after));
-            runs.Add(c == '*'
-                ? new Run(c, i, end - i, left, right)
-                : new Run(c, i, end - i, left && (!right || IsPunctuation(before)), right && (!left || IsPunctuation(after))));
+            runs.Add(c switch
+            {
+                '*' => new Run(c, i, end - i, left, right),
+                // Strikethrough takes exactly two tildes, as GitHub's Markdown does.
+                '~' => new Run(c, i, end - i, left && end - i == 2, right && end - i == 2),
+                _ => new Run(c, i, end - i, left && (!right || IsPunctuation(before)), right && (!left || IsPunctuation(after))),
+            });
             i = end;
         }
 
@@ -172,7 +205,7 @@ public static partial class Markdown
             while (closer.CanClose && closer.Length > 0)
             {
                 var opening = closing - 1;
-                while (opening >= 0 && !(runs[opening] is { Length: > 0, CanOpen: true } run && run.Marker == closer.Marker && !RuleOfThree(run, closer)))
+                while (opening >= 0 && !(runs[opening] is { Length: > 0, CanOpen: true } run && run.Marker == closer.Marker && (run.Marker == '~' || !RuleOfThree(run, closer))))
                 {
                     opening--;
                 }
@@ -186,7 +219,7 @@ public static partial class Markdown
                 var use = opener.Length >= 2 && closer.Length >= 2 ? 2 : 1;
                 var content = opener.Start + opener.Length;
                 spans.Add(new(content - use, use, Mark.Marker));
-                spans.Add(new(content, closer.Start - content, use == 2 ? Mark.Strong : Mark.Emphasis));
+                spans.Add(new(content, closer.Start - content, closer.Marker == '~' ? Mark.Strike : use == 2 ? Mark.Strong : Mark.Emphasis));
                 spans.Add(new(closer.Start, use, Mark.Marker));
                 opener.Length -= use;
                 closer.Start += use;
@@ -197,6 +230,34 @@ public static partial class Markdown
                 }
             }
         }
+    }
+
+    // [text](target): the closing bracket and parenthesis of the link opening at this bracket, if it is one. A target has no spaces.
+    private static (int Close, int Paren)? LinkAt(string line, int open)
+    {
+        var close = -1;
+        for (var i = open + 1; i < line.Length && close < 0; i++)
+        {
+            switch (line[i])
+            {
+                case '\\':
+                    i++;
+                    break;
+                case '[':
+                    return null;
+                case ']':
+                    close = i;
+                    break;
+            }
+        }
+
+        if (close <= open + 1 || close + 1 >= line.Length || line[close + 1] != '(')
+        {
+            return null;
+        }
+
+        var paren = line.IndexOf(')', close + 2);
+        return paren > close + 2 && line.AsSpan(close + 2, paren - close - 2).IndexOfAny(" \t(") < 0 ? (close, paren) : null;
     }
 
     // A run that can both open and close can't pair with one whose lengths sum to a multiple of 3, unless both are: "*a**b*" stays one emphasis.
