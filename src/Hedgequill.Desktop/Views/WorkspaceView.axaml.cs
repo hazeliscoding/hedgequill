@@ -5,11 +5,13 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Hedgequill.Core.Ao3;
 using Hedgequill.Core.Projects;
 using Hedgequill.Core.Text;
+using Hedgequill.Desktop.Themes;
 
 namespace Hedgequill.Desktop.Views;
 
@@ -37,12 +39,29 @@ public partial class WorkspaceView : UserControl
     private bool _detailsDirty;
     private bool _previewWanted = true;
     private double _previewWidth = 340;
+    private readonly Slide _navigatorSlide;
+    private readonly Slide _previewSlide;
 
     public WorkspaceView(Project project)
     {
         _project = project;
         InitializeComponent();
         ProjectTitle.Text = project.Title;
+        // The spring overshoots, so a closing pane passes below zero for a frame or two.
+        _navigatorSlide = new Slide(width =>
+        {
+            Columns.ColumnDefinitions[0].Width = new GridLength(Math.Max(0, width));
+            NavigatorPane.IsVisible = width > 0;
+        });
+        _previewSlide = new Slide(width =>
+        {
+            var column = Columns.ColumnDefinitions[3];
+            // The splitter stops at 280 px, but a slide passes through every width.
+            column.MinWidth = Math.Clamp(width, 0, 280);
+            column.Width = new GridLength(Math.Max(0, width));
+            Preview.IsVisible = PreviewSplitter.IsVisible = width > 0;
+        });
+        PreviewSplitter.DragCompleted += (_, _) => _previewWidth = Columns.ColumnDefinitions[3].ActualWidth;
         Navigator.SelectionChanged += (_, _) => ShowSelected();
         Navigator.AddHandler(Button.ClickEvent, (_, e) =>
         {
@@ -403,8 +422,7 @@ public partial class WorkspaceView : UserControl
         FocusMode = !FocusMode;
         Header.Opacity = FocusMode ? 0 : 1;
         Header.IsHitTestVisible = !FocusMode;
-        Columns.ColumnDefinitions[0].Width = new GridLength(!FocusMode && _navigatorWanted ? 236 : 0);
-        NavigatorPane.IsVisible = !FocusMode && _navigatorWanted;
+        SlideNavigator();
         ContentPane.Classes.Set("focus", FocusMode);
         Manuscript.FocusMode = FocusMode;
         ShowPreview();
@@ -419,20 +437,16 @@ public partial class WorkspaceView : UserControl
     public void ToggleNavigator()
     {
         _navigatorWanted = !_navigatorWanted;
-        Columns.ColumnDefinitions[0].Width = new GridLength(_navigatorWanted ? 236 : 0);
-        NavigatorPane.IsVisible = _navigatorWanted;
+        SlideNavigator();
         NavigatorToggle.Classes.Set("selected", _navigatorWanted);
         AutomationProperties.SetName(NavigatorToggle, _navigatorWanted ? "Hide navigator" : "Show navigator");
         StateChanged?.Invoke();
     }
 
+    private void SlideNavigator() => _navigatorSlide.Run(this, Columns.ColumnDefinitions[0].ActualWidth, !FocusMode && _navigatorWanted ? 236 : 0);
+
     public void TogglePreview()
     {
-        if (PreviewShown)
-        {
-            _previewWidth = Columns.ColumnDefinitions[3].ActualWidth;
-        }
-
         _previewWanted = !_previewWanted;
         ShowPreview();
         StateChanged?.Invoke();
@@ -558,13 +572,16 @@ public partial class WorkspaceView : UserControl
     // The preview shows when wanted and not in focus mode, at the width it had before it was hidden.
     private void ShowPreview()
     {
-        var shown = PreviewShown;
         var column = Columns.ColumnDefinitions[3];
-        column.MinWidth = shown ? 280 : 0;
-        column.MaxWidth = shown ? 460 : 0;
-        column.Width = new GridLength(shown ? _previewWidth : 0);
-        Preview.IsVisible = shown;
-        PreviewSplitter.IsVisible = shown;
+        column.MaxWidth = 460;
+        // The preview keeps its width while it slides, so its text doesn't rewrap every frame.
+        Preview.Width = Math.Max(_previewWidth, column.ActualWidth);
+        Preview.HorizontalAlignment = HorizontalAlignment.Left;
+        _previewSlide.Run(this, column.ActualWidth, PreviewShown ? _previewWidth : 0, () =>
+        {
+            Preview.Width = double.NaN;
+            Preview.HorizontalAlignment = HorizontalAlignment.Stretch;
+        });
         PreviewToggle.Classes.Set("selected", _previewWanted);
         AutomationProperties.SetName(PreviewToggle, _previewWanted ? "Hide preview" : "Show preview");
         ToolTip.SetTip(PreviewToggle, $"{(_previewWanted ? "Hide" : "Show")} preview ({Shortcut("Shift+P")})");
@@ -630,6 +647,22 @@ public partial class WorkspaceView : UserControl
         Refresh();
         // A row inside a collapsed folder goes away, so its folder takes the selection.
         Select(selected is null ? null : Ancestors(selected).Prepend(selected).Reverse().FirstOrDefault(_collapsed.Contains) ?? selected);
+        TurnChevron(node);
+    }
+
+    // Rows are rebuilt on every change, so a transition can't tell which chevron turned; this turns the toggled one by hand.
+    private void TurnChevron(Node node)
+    {
+        if (!Motion.On || Rows.FirstOrDefault(row => row.Node == node) is not { } row)
+        {
+            return;
+        }
+
+        Navigator.UpdateLayout();
+        if (Navigator.ContainerFromItem(row)?.FindDescendantOfType<Avalonia.Controls.Shapes.Path>() is { } chevron)
+        {
+            Motion.Turn(chevron, 90 - row.ChevronAngle, row.ChevronAngle);
+        }
     }
 
     /// <summary>New scene: in the selected chapter, else the first one; a project with no chapter gets one instead.</summary>

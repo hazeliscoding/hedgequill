@@ -1,0 +1,73 @@
+<!--
+  The prototype's transitions. App loads these only when Motion.On, so a system that asks for reduced motion gets none.
+  Durations and curves are the tokens in docs/brand/tokens.md: fast 120 ms on the standard curve, base 180 ms.
+-->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Hedgequill.Desktop.Themes.MotionStyles">
+  <!-- Hover and selection fade in: buttons, navigator rows, menu items. -->
+  <Style Selector="Button /template/ ContentPresenter#PART_ContentPresenter, ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.4,0,0.2,1" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="MenuItem /template/ Border#PART_LayoutRoot">
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.4,0,0.2,1" />
+      </Transitions>
+    </Setter>
+  </Style>
+
+  <!-- An open folder's chevron shows on hover. -->
+  <Style Selector="Button.chevron">
+    <Setter Property="Transitions">
+      <Transitions>
+        <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+      </Transitions>
+    </Setter>
+  </Style>
+
+  <!-- The save state's color settles more slowly than its hover. -->
+  <Style Selector="Button.save-status">
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Foreground" Duration="0:0:0.18" />
+      </Transitions>
+    </Setter>
+  </Style>
+
+  <!-- Saving…'s arc turns. -->
+  <Style Selector="Button.save-status.saving Path">
+    <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+    <Style.Animations>
+      <Animation Duration="0:0:0.9" IterationCount="Infinite">
+        <KeyFrame Cue="0%">
+          <Setter Property="RotateTransform.Angle" Value="0" />
+        </KeyFrame>
+        <KeyFrame Cue="100%">
+          <Setter Property="RotateTransform.Angle" Value="360" />
+        </KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
+
+  <Style Selector="GridSplitter.preview-splitter">
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" />
+      </Transitions>
+    </Setter>
+  </Style>
+
+  <!-- Focus mode fades the header and the page's toolbar out; its footer brightens on hover. -->
+  <Style Selector="Grid#Header, StackPanel#Toolbar, StackPanel.focus-footer">
+    <Setter Property="Transitions">
+      <Transitions>
+        <DoubleTransition Property="Opacity" Duration="0:0:0.18" />
+      </Transitions>
+    </Setter>
+  </Style>
+</Styles>

@@ -1,13 +1,21 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Hedgequill.Desktop.Themes;
 using Hedgequill.Desktop.Views;
 
 namespace Hedgequill.Desktop;
 
 public partial class App : Application
 {
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+        if (Motion.On)
+        {
+            Styles.Add(new MotionStyles());
+        }
+    }
 
     public override void OnFrameworkInitializationCompleted()
     {
