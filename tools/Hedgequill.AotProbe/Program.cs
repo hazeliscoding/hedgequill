@@ -91,10 +91,6 @@ public sealed partial class ProbeApp : Application
         var flagged = speller?.Check(Misspelled) ?? [];
         Console.WriteLine($"      flagged: {string.Join(", ", flagged.Select(word => $"\"{Misspelled.Substring(word.Start, word.Length)}\" at {word.Start}"))}");
         Check("it flagged the misspelling, and only that", flagged is [{ Start: 15, Length: 3 }]);
-        if (OperatingSystem.IsMacOS() && flagged is not [{ Start: 15, Length: 3 }])
-        {
-            MacSpellingDiagnostics.Print(Misspelled);
-        }
         Check("it suggested the word", speller?.Suggest("teh").Contains("the") == true);
         Check("it passed a correct line", speller?.Check("The keeper saw the boat.") is []);
 
