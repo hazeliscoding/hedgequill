@@ -125,6 +125,7 @@ public sealed partial class NetworkGuardTests
         ["Avalonia.Native"] = "The macOS backend.",
         ["Avalonia.X11"] = "The Linux backend.",
         ["Avalonia.Angle.Windows.Natives"] = "ANGLE, OpenGL ES on Direct3D, for the Windows backend.",
+        ["Velopack"] = "Installs, updates and uninstalls Hedgequill. Its update check, called only from Updates/Updater.cs, is the app's one network request; Program calls only VelopackApp, which handles Setup's and the uninstaller's arguments.",
         ["MicroCom.Runtime"] = "In-process COM-style calls between Avalonia and its native Windows and macOS code.",
         ["Avalonia.FreeDesktop"] = "Linux desktop integration (theme, input methods, file dialogs) over the D-Bus session bus, which is local IPC.",
         ["Avalonia.FreeDesktop.AtSpi"] = "Linux screen-reader support; it only connects to the accessibility bus's Unix socket (UnixDomainSocketEndPoint).",
