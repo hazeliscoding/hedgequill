@@ -11,6 +11,7 @@ using AvaloniaEdit.Editing;
 using AvaloniaEdit.Search;
 using Hedgequill.Core.Projects;
 using Hedgequill.Core.Text;
+using Hedgequill.Desktop.Spelling;
 
 namespace Hedgequill.Desktop.Views;
 
@@ -26,6 +27,10 @@ public partial class ManuscriptView : UserControl
     private readonly SearchPanel _search;
     private readonly MarkdownStyles _styles;
     private bool _loading;
+    private int _menuOffset;
+
+    // One system checker for the app, opened the first time an editor needs it.
+    private static readonly Lazy<SpellChecker?> Speller = new(SpellChecker.Create);
 
     public ManuscriptView()
     {
@@ -44,6 +49,16 @@ public partial class ManuscriptView : UserControl
         _styles = new MarkdownStyles { Faded = Brushes.Gray, Quote = Brushes.Gray, Title = FontFamily.Default };
         area.TextView.LineTransformers.Add(_styles);
         area.TextView.ElementGenerators.Add(new SceneBreaks(area));
+        if (Speller.Value is { } speller)
+        {
+            Spelling = new SpellingUnderlines(area.TextView, speller, word => _project?.Knows(word) == true);
+            area.TextView.BackgroundRenderers.Add(Spelling);
+        }
+
+        var menu = new MenuFlyout();
+        menu.Opening += (_, _) => menu.ItemsSource = EditorMenu();
+        area.ContextFlyout = menu;
+        area.AddHandler(ContextRequestedEvent, (_, e) => _menuOffset = OffsetAt(e), RoutingStrategies.Tunnel);
         AttachedToVisualTree += (_, _) => Restyle();
         ActualThemeVariantChanged += (_, _) => Restyle();
         Editor.TextArea.TextView.ScrollOffsetChanged += (_, _) => ((TranslateTransform)Overlay.RenderTransform!).Y = -Editor.TextArea.TextView.ScrollOffset.Y;
@@ -73,7 +88,7 @@ public partial class ManuscriptView : UserControl
         ItalicButton.Click += (_, _) => Wrap(Markdown.Italic);
         BreakButton.Click += (_, _) => InsertSceneBreak();
         AddSceneButton.Click += (_, _) => AddSceneRequested?.Invoke();
-        LeaveFocus.Click += (_, _) => FocusExitRequested?.Invoke();
+        LeaveFocus.Click += (_, _) => FocusToggleRequested?.Invoke();
         ChapterScenes.AddHandler(Button.ClickEvent, (_, e) =>
         {
             if (e.Source is Control { DataContext: SceneRow row })
@@ -93,9 +108,15 @@ public partial class ManuscriptView : UserControl
 
     public event Action? AddSceneRequested;
 
-    public event Action? FocusExitRequested;
+    public event Action? FocusToggleRequested;
+
+    /// <summary>Something went wrong that the writer should hear about: a heading and a detail.</summary>
+    public event Action<string, string>? NoticeRequested;
 
     public AvaloniaEdit.TextEditor TextEditor => Editor;
+
+    /// <summary>Spell check's underlines, or null where the system has no checker.</summary>
+    public SpellingUnderlines? Spelling { get; }
 
     public Node? Node => _node;
 
@@ -219,7 +240,7 @@ public partial class ManuscriptView : UserControl
         // The text area takes Escape for itself, so focus mode looks first; an open Find keeps it.
         if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None && FocusMode && !_search.IsOpened)
         {
-            FocusExitRequested?.Invoke();
+            FocusToggleRequested?.Invoke();
             e.Handled = true;
             return;
         }
@@ -289,13 +310,86 @@ public partial class ManuscriptView : UserControl
         ChapterEmpty.IsVisible = scenes.Count == 0;
     }
 
-    // The colorizer's brushes follow light and dark.
+    // The colorizer's and the underlines' brushes follow light and dark.
     private void Restyle()
     {
         _styles.Faded = Resource<IBrush>("MarkerFaded") ?? _styles.Faded;
         _styles.Quote = Resource<IBrush>("TextSecondary") ?? _styles.Quote;
         _styles.Title = Resource<FontFamily>("FontTitle") ?? _styles.Title;
+        if (Spelling is not null)
+        {
+            Spelling.Brush = Resource<IBrush>("Misspelling") ?? Spelling.Brush;
+        }
+
         Editor.TextArea.TextView.Redraw();
+    }
+
+    // Where the menu was asked for: under the pointer, or at the caret from the keyboard.
+    private int OffsetAt(ContextRequestedEventArgs e)
+    {
+        var view = Editor.TextArea.TextView;
+        return e.TryGetPosition(view, out var point) && view.GetPosition(point + view.ScrollOffset) is { } position
+            ? Editor.Document.GetOffset(position.Location)
+            : Editor.CaretOffset;
+    }
+
+    /// <summary>The editor's menu, as the prototype draws it: a misspelled word's suggestions first, then editing.</summary>
+    private List<Control> EditorMenu()
+    {
+        var items = new List<Control>();
+        if (Spelling?.At(_menuOffset) is { } word && _project is { } project)
+        {
+            var text = Editor.Document.GetText(word);
+            var suggestions = Speller.Value!.Suggest(text).Take(5).ToList();
+            items.AddRange(suggestions.Count > 0
+                ? suggestions.Select(suggestion => Item(suggestion, () => Apply(new Change(word.StartOffset, word.Length, suggestion, word.StartOffset + suggestion.Length))))
+                : [new MenuItem { Header = "No suggestions", IsEnabled = false }]);
+            items.Add(Item("Add to project dictionary", () => AddToDictionary(project, text)));
+            items.Add(new Separator());
+        }
+
+        var selected = Editor.SelectionLength > 0;
+        items.AddRange(
+        [
+            Item("Cut", Editor.Cut, Gesture(Key.X), selected),
+            Item("Copy", Editor.Copy, Gesture(Key.C), selected),
+            Item("Paste", Editor.Paste, Gesture(Key.V)),
+            new Separator(),
+            Item("Bold", () => Wrap(Markdown.Bold), Gesture(Key.B)),
+            Item("Italic", () => Wrap(Markdown.Italic), Gesture(Key.I)),
+        ]);
+        if (_node?.Kind == NodeKind.Scene)
+        {
+            items.Add(Item("Insert scene break", InsertSceneBreak, Gesture(Key.Enter)));
+        }
+
+        items.AddRange([new Separator(), Item(FocusMode ? "Leave focus mode" : "Focus mode", () => FocusToggleRequested?.Invoke(), Gesture(Key.F, KeyModifiers.Shift))]);
+        return items;
+    }
+
+    private void AddToDictionary(Project project, string word)
+    {
+        try
+        {
+            project.AddToDictionary(word);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            // The word stays known for this session; only hedgequill.json missed it.
+            NoticeRequested?.Invoke($"Couldn't save “{word}” to the project dictionary", error.Message);
+        }
+
+        Spelling?.Refresh();
+    }
+
+    private static KeyGesture Gesture(Key key, KeyModifiers more = KeyModifiers.None) =>
+        new(key, (OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control) | more);
+
+    private static MenuItem Item(string header, Action action, KeyGesture? gesture = null, bool enabled = true)
+    {
+        var item = new MenuItem { Header = header, InputGesture = gesture, IsEnabled = enabled };
+        item.Click += (_, _) => action();
+        return item;
     }
 
     private T? Resource<T>(string key)

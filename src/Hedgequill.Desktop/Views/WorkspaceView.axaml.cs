@@ -84,7 +84,8 @@ public partial class WorkspaceView : UserControl
         FocusButton.Click += (_, _) => ToggleFocus();
         Manuscript.OpenRequested += Select;
         Manuscript.AddSceneRequested += AddScene;
-        Manuscript.FocusExitRequested += ToggleFocus;
+        Manuscript.FocusToggleRequested += ToggleFocus;
+        Manuscript.NoticeRequested += (heading, detail) => NoticeRequested?.Invoke(heading, detail, null, null);
         Manuscript.Edited += node => Edited?.Invoke(node);
         AddHandler(KeyDownEvent, OnWorkspaceKey, RoutingStrategies.Tunnel);
         ToolTip.SetTip(FocusButton, $"Focus mode ({Shortcut("Shift+F")})");
