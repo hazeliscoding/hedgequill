@@ -21,7 +21,16 @@ public sealed partial class Project
 
         if (!overwrite && File.Exists(path))
         {
-            var disk = File.ReadAllText(path).ReplaceLineEndings("\n");
+            string disk;
+            try
+            {
+                disk = File.ReadAllText(path).ReplaceLineEndings("\n");
+            }
+            catch (IOException error) when (AtomicFile.IsHeld(error, path))
+            {
+                throw new FileHeldException(path, error);
+            }
+
             if (disk != node.SavedText && disk != text)
             {
                 throw new ChangedOnDiskException(path);

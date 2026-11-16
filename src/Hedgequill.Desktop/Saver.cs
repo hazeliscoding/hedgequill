@@ -1,4 +1,5 @@
 using Avalonia.Threading;
+using Hedgequill.Core.Files;
 using Hedgequill.Core.Projects;
 
 namespace Hedgequill.Desktop;
@@ -18,8 +19,12 @@ public sealed class Saver
 {
     private readonly Project _project;
     private readonly Action _commit;
+    // About ten seconds of retries at the autosave delay.
+    private const int HeldTries = 15;
+
     private readonly HashSet<Node> _unsaved = [];
     private readonly DispatcherTimer _timer;
+    private int _heldTries;
 
     /// <param name="commit">Copies the editor's text into the open node before a write.</param>
     public Saver(Project project, Action commit, TimeSpan delay)
@@ -89,6 +94,41 @@ public sealed class Saver
         }
     }
 
+    /// <summary>
+    /// Another app changed a scene's or page's file. With no unsaved edits it reloads, and the editor shows the new text; with
+    /// some, it's Changed on disk at once, without waiting for the next save.
+    /// </summary>
+    public void ChangedOutside(Node node)
+    {
+        string disk;
+        try
+        {
+            disk = File.ReadAllText(_project.PathOf(node)).ReplaceLineEndings("\n");
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            // Still being written, or gone; the next event or save sees it.
+            return;
+        }
+
+        // Hedgequill's own save, or nothing new.
+        if (disk == node.SavedText || node.Parent is null)
+        {
+            return;
+        }
+
+        _commit();
+        if (!_unsaved.Contains(node) && node.Text == node.SavedText)
+        {
+            _project.Reload(node);
+            Reloaded?.Invoke(node);
+        }
+        else
+        {
+            Set(SaveState.ChangedOnDisk, node, "");
+        }
+    }
+
     public void KeepMine()
     {
         if (Problem is { } node)
@@ -131,11 +171,24 @@ public sealed class Saver
         {
             _project.Save(node, overwrite);
             _unsaved.Remove(node);
+            _heldTries = 0;
             return true;
         }
         catch (ChangedOnDiskException)
         {
             Set(SaveState.ChangedOnDisk, node, "");
+        }
+        catch (FileHeldException error)
+        {
+            // A sync client holds a file for a moment while it uploads; keep trying quietly before calling it a failure.
+            if (++_heldTries < HeldTries)
+            {
+                _timer.Stop();
+                _timer.Start();
+                return false;
+            }
+
+            Set(SaveState.Failed, node, error.Message);
         }
         catch (UnauthorizedAccessException error)
         {

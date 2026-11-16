@@ -1,3 +1,4 @@
+using Hedgequill.Core.Files;
 using Hedgequill.Core.Projects;
 
 namespace Hedgequill.Tests.Core;
@@ -35,6 +36,52 @@ public sealed class SavingTests : IDisposable
 
         project.Save(scene, overwrite: true);
         Assert.Equal("Words typed in Hedgequill.", File.ReadAllText(_temp["Chapter 1/Fog.md"]));
+    }
+
+    // A sync client opens a file to upload it. On Windows that blocks replacing it until it lets go; on macOS it doesn't.
+    [Theory]
+    [InlineData(FileShare.Read)]
+    [InlineData(FileShare.ReadWrite)]
+    [InlineData(FileShare.None)]
+    public void A_save_while_another_app_holds_the_file_never_halves_it(FileShare share)
+    {
+        _temp.Write("Chapter 1/Fog.md", "Original words.");
+        var project = Project.Open(_temp.Path);
+        var scene = project.Scenes.Single();
+        scene.Text = "New words, all of them.";
+
+        Exception? error;
+        using (new FileStream(_temp["Chapter 1/Fog.md"], FileMode.Open, FileAccess.Read, share))
+        {
+            error = Record.Exception(() => project.Save(scene));
+        }
+
+        Assert.True(error is null or FileHeldException, error?.ToString());
+        Assert.Equal(error is null ? "New words, all of them." : "Original words.", File.ReadAllText(_temp["Chapter 1/Fog.md"]));
+        Assert.Equal(["Fog.md"], Directory.GetFiles(_temp["Chapter 1"]).Select(Path.GetFileName));
+        Assert.Equal("New words, all of them.", scene.Text);
+
+        project.Save(scene);
+        Assert.Equal("New words, all of them.", File.ReadAllText(_temp["Chapter 1/Fog.md"]));
+    }
+
+    [Fact]
+    public void A_file_marked_read_only_still_reads_as_read_only_not_held()
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "Only Windows refuses to replace a read-only file.");
+        _temp.Write("Chapter 1/Fog.md", "Original words.");
+        var project = Project.Open(_temp.Path);
+        var scene = project.Scenes.Single();
+        scene.Text = "New words.";
+        File.SetAttributes(_temp["Chapter 1/Fog.md"], FileAttributes.ReadOnly);
+        try
+        {
+            Assert.Throws<UnauthorizedAccessException>(() => project.Save(scene));
+        }
+        finally
+        {
+            File.SetAttributes(_temp["Chapter 1/Fog.md"], FileAttributes.Normal);
+        }
     }
 
     [Fact]

@@ -14,6 +14,7 @@ public partial class MainWindow : Window
     private readonly Preferences _preferences;
     private readonly AppMenu _menu;
     private Saver? _saver;
+    private ProjectWatcher? _watcher;
     private bool _closeAnyway;
     private Control? _lastText;
 
@@ -118,6 +119,12 @@ public partial class MainWindow : Window
     public void Paste() => Edit(box => box.Paste(), editor => editor.Paste());
 
     /// <summary>Writes what's unsaved first. Text that still can't be written stops the close until the writer chooses to lose it.</summary>
+    protected override void OnClosed(EventArgs e)
+    {
+        _watcher?.Dispose();
+        base.OnClosed(e);
+    }
+
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         _saver?.Flush();
@@ -151,6 +158,8 @@ public partial class MainWindow : Window
     {
         _saver?.Flush();
         _saver = null;
+        _watcher?.Dispose();
+        _watcher = null;
         Project = null;
         Title = "Hedgequill";
         var now = DateTimeOffset.Now;
@@ -248,6 +257,8 @@ public partial class MainWindow : Window
         status.ChooseFolderRequested += () => _ = ChooseFolderAsync(project);
         workspace.SaveSlot.Content = status;
         _saver = saver;
+        _watcher?.Dispose();
+        _watcher = new ProjectWatcher(project, saver.ChangedOutside);
         Screen.Content = workspace;
         _menu.UpdateRecent(Recent());
         _menu.Update();
@@ -293,6 +304,8 @@ public partial class MainWindow : Window
             {
                 // The edits that couldn't be written are in the copy now, so the old project can close.
                 _saver = null;
+                _watcher?.Dispose();
+                _watcher = null;
                 Show(copy);
                 Notice.Show("Saved the project in a new folder", copy.Folder);
             }
