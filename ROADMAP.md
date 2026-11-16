@@ -172,8 +172,8 @@ What the design must protect, in this order when two conflict. Everything else g
 - [x] Copy chapter HTML, Copy chapter title and Show HTML, with the note "Paste into AO3's HTML editor, not Rich Text." Copy warns when a chapter passes AO3's limit of 500,000 characters.
 - [ ] Summary and notes, for the work and each chapter, as AO3's posting form has them: a summary, beginning notes and end notes. Each has Copy, which gives AO3 HTML, and shows AO3's limit: 1,250 characters for a summary, 5,000 for notes. Settle first where they live; `hedgequill.json`, which holds a project's details, is the likely home.
 - [ ] Changed since copied: Copy chapter HTML records the chapter in `hedgequill.json`, and the navigator marks a chapter edited since, so a fix doesn't get left off AO3.
-- [ ] Every word count Hedgequill shows matches AO3's, as decided above.
-- [ ] Fixture tests: invented chapters in, expected HTML out, byte for byte, and expected word counts.
+- [x] Every word count Hedgequill shows matches AO3's, as decided above.
+- [x] Fixture tests: invented chapters in, expected HTML out, byte for byte, and expected word counts.
 
 **Done when:** the fixtures pass, and a chapter copied from Hedgequill and pasted into AO3's HTML editor looks the same in AO3's preview as in Hedgequill's, with the same word count.
 
