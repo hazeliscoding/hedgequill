@@ -1,10 +1,10 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
-using Avalonia.Styling;
 using Avalonia.VisualTree;
 using AvaloniaEdit;
 using Hedgequill.Core.Projects;
+using Hedgequill.Desktop.Themes;
 
 namespace Hedgequill.Desktop.Views;
 
@@ -40,9 +40,16 @@ public partial class MainWindow : Window
 
         _menu = new AppMenu(this);
         NativeMenu.SetMenu(this, _menu.Menu);
-        if (_preferences.Appearance != Appearance.System)
+        // Match system with no call for more contrast is Avalonia's default already.
+        if (Contrast.For(_preferences.Appearance, Application.Current?.PlatformSettings?.GetColorValues()) != Avalonia.Styling.ThemeVariant.Default)
         {
             Apply(_preferences.Appearance);
+        }
+
+        // Turning on a contrast theme or Increase Contrast takes effect without a restart.
+        if (Application.Current?.PlatformSettings is { } platform)
+        {
+            platform.ColorValuesChanged += (_, _) => Apply(_preferences.Appearance);
         }
 
         Sheet.CreateRequested += (location, title) =>
@@ -177,12 +184,8 @@ public partial class MainWindow : Window
 
     public bool Create(string location, string title) => CanLeaveProject() && Attempt("Couldn't create the project", () => Show(Project.Create(location, title)));
 
-    private static void Apply(Appearance appearance) => Application.Current!.RequestedThemeVariant = appearance switch
-    {
-        Appearance.Light => ThemeVariant.Light,
-        Appearance.Dark => ThemeVariant.Dark,
-        _ => ThemeVariant.Default,
-    };
+    private static void Apply(Appearance appearance) =>
+        Application.Current!.RequestedThemeVariant = Contrast.For(appearance, Application.Current.PlatformSettings?.GetColorValues());
 
     private List<RecentProject> Recent() => _recent.Load().Where(entry => Directory.Exists(entry.Folder)).ToList();
 

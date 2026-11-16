@@ -3,7 +3,8 @@
   The theme follows the OS setting. ContrastTests checks every text pair it lists, in both themes.
 -->
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:themes="using:Hedgequill.Desktop.Themes">
   <!-- type: the interface uses the system font (Segoe UI, or the system font on macOS) -->
   <FontFamily x:Key="FontManuscript">avares://Hedgequill/Assets/Fonts/Cardo#Cardo</FontFamily>
   <FontFamily x:Key="FontTitle">avares://Hedgequill/Assets/Fonts/Gloock#Gloock</FontFamily>
@@ -148,6 +149,49 @@
       <StaticResource x:Key="TextControlBorderBrush" ResourceKey="InputBorder" />
       <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="InputBorder" />
       <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="FocusRing" />
+      <StaticResource x:Key="TextControlForeground" ResourceKey="TextPrimary" />
+      <StaticResource x:Key="TextControlForegroundPointerOver" ResourceKey="TextPrimary" />
+      <StaticResource x:Key="TextControlForegroundFocused" ResourceKey="TextPrimary" />
+      <StaticResource x:Key="TextControlPlaceholderForeground" ResourceKey="TextTertiary" />
+      <StaticResource x:Key="TextControlPlaceholderForegroundPointerOver" ResourceKey="TextTertiary" />
+      <StaticResource x:Key="TextControlPlaceholderForegroundFocused" ResourceKey="TextTertiary" />
+    </ResourceDictionary>
+
+    <!--
+      High contrast, from the prototype's [data-contrast="high"]: solid borders, stronger text tiers. Each inherits the rest
+      from Light or Dark. The aliases above resolve inside their own dictionary, so the ones these colors feed are repeated.
+    -->
+    <ResourceDictionary x:Key="{x:Static themes:Contrast.LightHigh}">
+      <SolidColorBrush x:Key="TextSecondary" Color="#3A3936" />
+      <SolidColorBrush x:Key="TextTertiary" Color="#55534F" />
+      <SolidColorBrush x:Key="BorderDefault" Color="#8028241E" />
+      <SolidColorBrush x:Key="Separator" Color="#6628241E" />
+      <SolidColorBrush x:Key="StateHover" Color="#1A28241E" />
+      <SolidColorBrush x:Key="StateSelected" Color="#386E2633" />
+      <SolidColorBrush x:Key="InputBorder" Color="#9928241E" />
+      <SolidColorBrush x:Key="ButtonBorderBrush" Color="#9928241E" />
+      <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#CC28241E" />
+      <StaticResource x:Key="TextControlBorderBrush" ResourceKey="InputBorder" />
+      <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="InputBorder" />
+      <StaticResource x:Key="TextControlPlaceholderForeground" ResourceKey="TextTertiary" />
+      <StaticResource x:Key="TextControlPlaceholderForegroundPointerOver" ResourceKey="TextTertiary" />
+      <StaticResource x:Key="TextControlPlaceholderForegroundFocused" ResourceKey="TextTertiary" />
+    </ResourceDictionary>
+
+    <ResourceDictionary x:Key="{x:Static themes:Contrast.DarkHigh}">
+      <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="TextSecondary" Color="#D6D7DC" />
+      <SolidColorBrush x:Key="TextTertiary" Color="#B0B1B8" />
+      <SolidColorBrush x:Key="BorderDefault" Color="#80FFFFFF" />
+      <SolidColorBrush x:Key="Separator" Color="#66FFFFFF" />
+      <SolidColorBrush x:Key="StateHover" Color="#1FFFFFFF" />
+      <SolidColorBrush x:Key="StateSelected" Color="#59A14A5C" />
+      <SolidColorBrush x:Key="InputBorder" Color="#99FFFFFF" />
+      <SolidColorBrush x:Key="ButtonBorderBrush" Color="#99FFFFFF" />
+      <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#CCFFFFFF" />
+      <StaticResource x:Key="ButtonForeground" ResourceKey="TextPrimary" />
+      <StaticResource x:Key="TextControlBorderBrush" ResourceKey="InputBorder" />
+      <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="InputBorder" />
       <StaticResource x:Key="TextControlForeground" ResourceKey="TextPrimary" />
       <StaticResource x:Key="TextControlForegroundPointerOver" ResourceKey="TextPrimary" />
       <StaticResource x:Key="TextControlForegroundFocused" ResourceKey="TextPrimary" />
