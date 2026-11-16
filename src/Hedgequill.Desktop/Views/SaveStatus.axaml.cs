@@ -1,5 +1,8 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.VisualTree;
+using Hedgequill.Desktop.Themes;
 
 namespace Hedgequill.Desktop.Views;
 
@@ -21,6 +24,14 @@ public partial class SaveStatus : UserControl
     public SaveStatus()
     {
         InitializeComponent();
+        var details = (Flyout)Label.Flyout!;
+        details.Opened += (_, _) =>
+        {
+            if ((details.Content as Visual)?.FindAncestorOfType<FlyoutPresenter>() is { } popover)
+            {
+                Motion.PopIn(popover);
+            }
+        };
         Primary.Click += (_, _) => Act(primary: true);
         Secondary.Click += (_, _) => Act(primary: false);
     }
@@ -55,6 +66,7 @@ public partial class SaveStatus : UserControl
         Icon.Data = Geometry.Parse(state.Icon);
         Label.Foreground = this.TryFindResource(state.Color, ActualThemeVariant, out var brush) ? brush as IBrush : null;
         Label.Classes.Set("problem", state.Primary is not null);
+        Label.Classes.Set("saving", _saver.State == SaveState.Saving);
         DetailTitle.Text = state.Title;
         DetailText.Text = state.Detail;
         DetailPath.Text = _path;

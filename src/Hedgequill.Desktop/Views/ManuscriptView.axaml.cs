@@ -12,6 +12,7 @@ using AvaloniaEdit.Search;
 using Hedgequill.Core.Projects;
 using Hedgequill.Core.Text;
 using Hedgequill.Desktop.Spelling;
+using Hedgequill.Desktop.Themes;
 
 namespace Hedgequill.Desktop.Views;
 
@@ -30,12 +31,21 @@ public partial class ManuscriptView : UserControl
     private int _menuOffset;
     private int _textSize = 100;
 
+    // The page's top margin: 64 px, or 120 in focus mode, sliding between them.
+    private double _top = 64;
+    private readonly Slide _topSlide;
+
     // One system checker for the app, opened the first time an editor needs it.
     private static readonly Lazy<SpellChecker?> Speller = new(SpellChecker.Create);
 
     public ManuscriptView()
     {
         InitializeComponent();
+        _topSlide = new Slide(top =>
+        {
+            _top = top;
+            Layout();
+        });
         _search = SearchPanel.Install(Editor);
         Editor.Options.EnableHyperlinks = false;
         Editor.Options.EnableEmailHyperlinks = false;
@@ -130,9 +140,10 @@ public partial class ManuscriptView : UserControl
         set
         {
             field = value;
-            Toolbar.IsVisible = !value;
+            Toolbar.Opacity = value ? 0 : 1;
+            Toolbar.IsHitTestVisible = !value;
             FocusFooter.IsVisible = value && _node is not null;
-            Layout();
+            _topSlide.Run(this, _top, value ? 120 : 64);
         }
     }
 
@@ -467,11 +478,10 @@ public partial class ManuscriptView : UserControl
 
         var measure = _node.Kind == NodeKind.Page ? 640 : 620;
         var side = Math.Max(32, ((Editor.Bounds.Width - measure) / 2) + 32);
-        var top = FocusMode ? 120 : 64;
         var header = DocHeader.Bounds.Height + DocHeader.Margin.Bottom;
-        Overlay.Margin = new Thickness(side, top, side, 0);
+        Overlay.Margin = new Thickness(side, _top, side, 0);
         EmptyHint.Margin = new Thickness(0, header, 0, 0);
-        Editor.Padding = new Thickness(side, top + header, side, 160);
+        Editor.Padding = new Thickness(side, _top + header, side, 160);
     }
 
     private Node? ChapterOf(Node node)

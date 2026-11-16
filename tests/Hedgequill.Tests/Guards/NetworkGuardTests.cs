@@ -41,9 +41,10 @@ public sealed partial class NetworkGuardTests
         new("Velopack update check", @"\bUpdateManager\b|\bVelopack\.Sources\b"),
     ];
 
-    // Spell check calls the system's checker through native code. These two files may, and only with the names listed: every
-    // string literal in them must be here, and the Objective-C runtime only takes a class or selector written out as one.
-    private static readonly Dictionary<string, HashSet<string>> SpellCheckNames = new()
+    // Spell check calls the system's checker through native code, and reduced motion reads one system setting. These files may,
+    // and only with the names listed: every string literal in them must be here, and the Objective-C runtime only takes a class
+    // or selector written out as one.
+    private static readonly Dictionary<string, HashSet<string>> NativeNames = new()
     {
         ["src/Hedgequill.Desktop/Spelling/WindowsSpellChecker.cs"] =
         [
@@ -80,6 +81,18 @@ public sealed partial class NetworkGuardTests
             "count",
             "objectAtIndex:",
             "release",
+        ],
+        ["src/Hedgequill.Desktop/Themes/ReducedMotion.cs"] =
+        [
+            "/usr/lib/libobjc.A.dylib",
+            "user32.dll",
+            "/System/Library/Frameworks/AppKit.framework/AppKit",
+            "NSWorkspace",
+            "sharedWorkspace",
+            "accessibilityDisplayShouldReduceMotion",
+            "objc_getClass",
+            "sel_registerName",
+            "objc_msgSend",
         ],
     };
 
@@ -143,7 +156,7 @@ public sealed partial class NetworkGuardTests
             return [];
         }
 
-        if (SpellCheckNames.TryGetValue(file, out var names))
+        if (NativeNames.TryGetValue(file, out var names))
         {
             return SourceScan.Find(file, text, [.. Apis.Where(ban => ban.Name != "native interop"), NameNotWrittenOut])
                 .Concat(StringLiteral().Matches(text)
@@ -296,14 +309,16 @@ public sealed partial class NetworkGuardTests
 
     private const string MacSpelling = "src/Hedgequill.Desktop/Spelling/MacSpellChecker.cs";
     private const string WindowsSpelling = "src/Hedgequill.Desktop/Spelling/WindowsSpellChecker.cs";
+    private const string ReducedMotionFile = "src/Hedgequill.Desktop/Themes/ReducedMotion.cs";
 
     [Fact]
-    public void Allows_native_calls_in_the_spell_checker_with_the_listed_names_only()
+    public void Allows_native_calls_in_the_listed_files_with_the_listed_names_only()
     {
         const string ole = "[LibraryImport(\"ole32.dll\")] private static partial int CoCreateInstance();";
 
         Assert.Empty(Scan(MacSpelling, "[LibraryImport(Runtime)] private static partial nint Class(string name);\nvar checker = Send(Class(\"NSSpellChecker\"), Selector(\"sharedSpellChecker\"));"));
         Assert.Empty(Scan(WindowsSpelling, ole));
+        Assert.Empty(Scan(ReducedMotionFile, "var workspace = Send(Class(\"NSWorkspace\"), Selector(\"sharedWorkspace\"));"));
         Assert.NotEmpty(Scan("src/Hedgequill.Desktop/Spelling/SpellChecker.cs", ole));
     }
 
@@ -315,7 +330,9 @@ public sealed partial class NetworkGuardTests
     [InlineData(WindowsSpelling, "[LibraryImport(\"winhttp.dll\")] private static partial nint WinHttpOpen();", "native name outside the list")]
     [InlineData(WindowsSpelling, "private static readonly Guid Browser = new(\"0002DF01-0000-0000-C000-000000000046\");", "native name outside the list")]
     [InlineData(WindowsSpelling, "private readonly HttpClient _client = new();", "HTTP client")]
-    public void Flags_anything_else_in_the_spell_checker(string file, string code, string ban) =>
+    [InlineData(ReducedMotionFile, "[LibraryImport(\"winhttp.dll\")] private static partial nint WinHttpOpen();", "native name outside the list")]
+    [InlineData(ReducedMotionFile, "var session = Send(Class(\"NSURLSession\"), Selector(\"sharedSession\"));", "native name outside the list")]
+    public void Flags_anything_else_in_a_file_with_native_calls(string file, string code, string ban) =>
         Assert.Contains(ban, Scan(file, code).Select(hit => hit.Name));
 
     private const string Window = """
