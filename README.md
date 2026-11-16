@@ -14,7 +14,7 @@ Writing apps for long fiction tend to be paid, or busy with features a fic doesn
   <img alt="Hedgequill's Welcome screen: the name, &quot;A quiet place to write.&quot;, New project… and Open folder… buttons, a note that a project is a folder of Markdown files on your computer, and an empty Recent list that says &quot;Nothing here yet.&quot;" src="docs/screenshots/welcome-light.png">
 </picture>
 
-> **Status: early.** The Welcome screen is all there is so far, and there's nothing to download yet. [ROADMAP.md](ROADMAP.md) says what gets built, in what order.
+> **Status: early.** There's nothing to download until 1.0. [ROADMAP.md](ROADMAP.md) says what gets built, in what order.
 
 ## Before and after
 
@@ -39,6 +39,26 @@ Writing apps for long fiction tend to be paid, or busy with features a fic doesn
 - **Always up to date.** Updates download quietly and install when you close the app. It never restarts on its own.
 
 Windows and macOS. Open source, so you can check all of this.
+
+## Download
+
+From the [latest release](https://github.com/hazeliscoding/hedgequill/releases/latest):
+
+| Computer | Download |
+|---|---|
+| Windows x64 (10 and 11) | `Hedgequill-Setup.exe`, signed |
+| Mac with Apple Silicon | `Hedgequill-macOS-arm64.pkg` |
+| Mac with Intel | `Hedgequill-macOS-x64.pkg` |
+
+None needs anything else installed, and Hedgequill keeps itself up to date. Every release also has a `SHA256SUMS` file: check a download with `shasum -a 256 --check --ignore-missing SHA256SUMS` on a Mac, or `Get-FileHash Hedgequill-Setup.exe` in PowerShell.
+
+Until enough people have downloaded it, Windows may say it "protected your PC". Choose **More info**, check that the publisher is Hazel Granados, then **Run anyway**.
+
+The Mac builds aren't notarized by Apple, so macOS blocks the installer the first time:
+
+1. Open the `.pkg` and close the warning.
+2. Go to **System Settings › Privacy & Security**, scroll down to Security, and choose **Open Anyway**.
+3. Confirm once more.
 
 ## Alternatives
 
