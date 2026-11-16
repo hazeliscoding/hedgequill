@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    M2's typing measurement: opens the app on an invented 10,000-word chapter with spell check on, types into the
+    middle of it, and times each keystroke's work against one 60 Hz frame. Publish it with NativeAOT, as the app ships,
+    and run it on the PC being measured. It opens a window for about half a minute and types only into that window.
+    Its bare option types into plain AvaloniaEdit instead, for comparison; AGENTS.md has the commands.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Hedgequill.TypingProbe</RootNamespace>
+    <PublishAot>true</PublishAot>
+    <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Hedgequill.Desktop\Hedgequill.Desktop.csproj" />
+  </ItemGroup>
+
+</Project>
