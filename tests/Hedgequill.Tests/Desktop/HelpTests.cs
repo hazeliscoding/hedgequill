@@ -29,8 +29,12 @@ public sealed class HelpTests : IDisposable
             .Where(item => item.Gesture is not null)
             .ToDictionary(item => item.Header!.TrimEnd('…'), item => item.Gesture!.ToString("p", null));
         Assert.All(groups.SelectMany(group => group.Rows), row => Assert.Equal(gestures[row.Label], row.Keys));
-        Assert.Contains(new ShortcutRow("Bold", OperatingSystem.IsMacOS() ? "⌘B" : "Ctrl+B"), groups[0].Rows);
-        Assert.Contains(new ShortcutRow("Keyboard shortcuts", OperatingSystem.IsMacOS() ? "⌘/" : "Ctrl+/"), groups[3].Rows);
+        // A Mac shows its own symbols, which only the native platform registers, so the labels themselves are checked on Windows.
+        if (!OperatingSystem.IsMacOS())
+        {
+            Assert.Contains(new ShortcutRow("Bold", "Ctrl+B"), groups[0].Rows);
+            Assert.Contains(new ShortcutRow("Keyboard shortcuts", "Ctrl+/"), groups[3].Rows);
+        }
 
         Press(window, PhysicalKey.Escape);
         Assert.False(sheet.IsVisible);
