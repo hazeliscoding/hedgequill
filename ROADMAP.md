@@ -204,6 +204,11 @@ What the design must protect, in this order when two conflict. Everything else g
 
 **Done when:** tests on invented text cover find and replace, bringing back an earlier version, a save while another process holds the file, and a reload after another app's change; the headless renders cover a larger text size and high contrast; and the owner has written in a project inside a synced folder.
 
+**Done** (2026-11-16), in [#6](https://github.com/hazeliscoding/hedgequill/pull/6):
+- CI is green on win-x64 and osx-arm64 ([run](https://github.com/hazeliscoding/hedgequill/actions/runs/43911902618)): 367 tests on invented text, among them `FindTests` and `FindInProjectTests` for find and replace, `VersionsTests` and `EarlierVersionsTests` for bringing back an earlier version, and `SavingTests` and `SyncedFolderTests` for a save while another process holds the file and a reload after another app's change. The NativeAOT probe and the real-window test pass too.
+- `TextSizeTests` and `HighContrastTests` render the page at a larger size and in both high contrast themes, headless.
+- The owner wrote in a project inside a synced folder, with a scene changed elsewhere while Hedgequill was open.
+
 ## M5: 1.0
 
 - [ ] Windows x64 Setup, signed, and macOS packages for Apple Silicon and Intel, ad-hoc signed.
