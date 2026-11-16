@@ -182,6 +182,11 @@ What the design must protect, in this order when two conflict. Everything else g
 
 **Done when:** the fixtures pass, and a chapter copied from Hedgequill and pasted into AO3's HTML editor looks the same in AO3's preview as in Hedgequill's, with the same word count.
 
+**Done** (2026-11-16), in [#5](https://github.com/hazeliscoding/hedgequill/pull/5):
+- CI is green on win-x64 and osx-arm64 ([run](https://github.com/hazeliscoding/hedgequill/actions/runs/43895641864)): 325 tests, among them `Ao3TextTests`, whose invented fixtures fix the HTML byte for byte, with word counts from an independent copy of AO3's counter. The NativeAOT probe and the real-window test pass too.
+- `Ao3PreviewTests` and `Ao3DetailsTests` check the preview, Copy chapter HTML and its sheet, the 500,000-character warning, the summary and notes, and the changed-since-copied dot in the app itself.
+- The owner pasted an invented chapter, paragraphs and a scene break, into AO3's HTML editor. AO3's preview and word count matched Hedgequill's: 106 words by AO3's rules.
+
 ## M4: Everyday writing
 
 - [ ] Find and replace across the project: every scene and page, each match listed under its scene.
