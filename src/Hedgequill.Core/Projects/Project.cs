@@ -17,10 +17,13 @@ public sealed partial class Project
     // "Chapter 2" before "Chapter 10" when the index doesn't say.
     private static readonly StringComparer ByName = StringComparer.Create(CultureInfo.InvariantCulture, CompareOptions.NumericOrdering | CompareOptions.IgnoreCase);
 
-    private Project(string folder, Node root)
+    private readonly HashSet<string> _dictionary;
+
+    private Project(string folder, Node root, IEnumerable<string> dictionary)
     {
         Folder = folder;
         Root = root;
+        _dictionary = new(dictionary, StringComparer.OrdinalIgnoreCase);
     }
 
     public string Folder { get; }
@@ -101,7 +104,19 @@ public sealed partial class Project
             node.Title = index.Titles?.GetValueOrDefault(node.RelativePath) ?? node.DefaultTitle;
         }
 
-        return new Project(folder, root);
+        return new Project(folder, root, index.Dictionary ?? []);
+    }
+
+    /// <summary>Whether Add to project dictionary has taken this word, in any case.</summary>
+    public bool Knows(string word) => _dictionary.Contains(word);
+
+    /// <summary>Keeps a word in hedgequill.json, so spell check stops flagging it in this project.</summary>
+    public void AddToDictionary(string word)
+    {
+        if (_dictionary.Add(word))
+        {
+            SaveIndex();
+        }
     }
 
     public string PathOf(Node node) => node.Parent is null ? Folder : Path.Combine(PathOf(node.Parent), node.Name);
@@ -118,6 +133,7 @@ public sealed partial class Project
             Order = nodes.Where(node => node.Children.Count > 0).ToDictionary(node => node.RelativePath, node => node.Children.Select(child => child.Name).ToList()),
             Acts = Root.Children.Where(node => node.Kind == NodeKind.Act).Select(node => node.Name).ToList() is { Count: > 0 } acts ? acts : null,
             Titles = titles.Count > 0 ? titles : null,
+            Dictionary = _dictionary.Count > 0 ? [.. _dictionary.Order(StringComparer.Ordinal)] : null,
         };
         AtomicFile.Write(Path.Combine(Folder, IndexFile), JsonSerializer.Serialize(index, CoreJson.Readable.ProjectIndex) + "\n");
     }

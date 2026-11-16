@@ -19,6 +19,9 @@ internal sealed class ProjectIndex
 
     /// <summary>Titles that differ from their file or folder name, keyed by path.</summary>
     public Dictionary<string, string>? Titles { get; set; }
+
+    /// <summary>Words spell check accepts in this project only, such as its fandom's names.</summary>
+    public List<string>? Dictionary { get; set; }
 }
 
 [JsonSourceGenerationOptions(
