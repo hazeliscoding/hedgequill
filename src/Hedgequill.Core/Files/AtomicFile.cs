@@ -2,6 +2,10 @@ using System.Text;
 
 namespace Hedgequill.Core.Files;
 
+/// <summary>Another app has the file open, as a sync client does while it uploads. It passes; the save can try again.</summary>
+public sealed class FileHeldException(string path, Exception inner)
+    : IOException($"Another app has {Path.GetFileName(path)} open. Hedgequill will try again.", inner);
+
 /// <summary>Writes a file so that a crash or a full disk leaves either the old file or the new one, never half of either.</summary>
 public static class AtomicFile
 {
@@ -19,7 +23,14 @@ public static class AtomicFile
                 stream.Flush(flushToDisk: true);
             }
 
-            File.Move(temporary, path, overwrite: true);
+            try
+            {
+                File.Move(temporary, path, overwrite: true);
+            }
+            catch (Exception error) when (IsHeld(error, path))
+            {
+                throw new FileHeldException(path, error);
+            }
         }
         catch
         {
@@ -37,4 +48,16 @@ public static class AtomicFile
             throw;
         }
     }
+
+    /// <summary>
+    /// Whether a refusal means another app has the file open. Windows refuses to replace a file opened without delete sharing
+    /// as "access denied", and to open one held exclusively as a sharing violation. A file marked read-only is refused the same
+    /// way but stays refused, so it doesn't count.
+    /// </summary>
+    public static bool IsHeld(Exception error, string path) => error switch
+    {
+        IOException io => (io.HResult & 0xFFFF) is 32 or 33,
+        UnauthorizedAccessException => File.Exists(path) && !File.GetAttributes(path).HasFlag(FileAttributes.ReadOnly),
+        _ => false,
+    };
 }
