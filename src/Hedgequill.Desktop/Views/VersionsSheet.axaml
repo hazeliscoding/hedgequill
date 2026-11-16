@@ -1,0 +1,66 @@
+<!-- The prototype's Earlier versions sheet: a scene's kept versions on the left, the chosen one's text on the right. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Hedgequill.Desktop.Views"
+             x:Class="Hedgequill.Desktop.Views.VersionsSheet">
+  <UserControl.Styles>
+    <Style Selector="ListBox.versions > ListBoxItem">
+      <Setter Property="Padding" Value="10,8" />
+      <Setter Property="Margin" Value="0,0,0,2" />
+      <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+    </Style>
+    <Style Selector="ListBox.versions > ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource StateSelected}" />
+    </Style>
+    <Style Selector="ListBox.versions > ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource StateHover}" />
+    </Style>
+    <Style Selector="TextBlock.version-when">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="LineHeight" Value="16" />
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+    <Style Selector="SelectableTextBlock.version-text">
+      <Setter Property="FontFamily" Value="{StaticResource FontManuscript}" />
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="LineHeight" Value="24" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+  </UserControl.Styles>
+  <Panel>
+    <Border Background="{DynamicResource Scrim}" />
+    <Border Classes="sheet" Width="640" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,64,0,0"
+            KeyboardNavigation.TabNavigation="Cycle">
+      <StackPanel Spacing="14">
+        <StackPanel Spacing="4">
+          <TextBlock x:Name="Heading" Classes="heading" TextWrapping="Wrap" AutomationProperties.HeadingLevel="2" />
+          <TextBlock Classes="callout" TextWrapping="Wrap"
+                     Text="Each time you open the project and start changing a scene, Hedgequill keeps its text from before. Bringing one back keeps the current text as a version too." />
+        </StackPanel>
+        <Grid ColumnDefinitions="190,*" ColumnSpacing="12" Height="280">
+          <ListBox x:Name="Kept" Classes="versions" Background="Transparent" AutomationProperties.Name="Earlier versions">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="views:VersionRow">
+                <StackPanel>
+                  <TextBlock Classes="version-when" Text="{Binding When}" />
+                  <TextBlock Classes="caption" Text="{Binding Words}" />
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <Border Grid.Column="1" Classes="html-box" Background="{DynamicResource BgPage}" Padding="16,12">
+            <ScrollViewer x:Name="TextScroll" HorizontalScrollBarVisibility="Disabled">
+              <SelectableTextBlock x:Name="KeptText" Classes="version-text" AutomationProperties.Name="Version text" />
+            </ScrollViewer>
+          </Border>
+        </Grid>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,6,0,0">
+          <Button x:Name="Cancel" Classes="medium" Content="Cancel" />
+          <Button x:Name="Restore" Classes="medium accent" Content="Bring back this version" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+  </Panel>
+</UserControl>

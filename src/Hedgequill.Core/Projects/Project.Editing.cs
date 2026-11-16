@@ -58,8 +58,10 @@ public sealed partial class Project
         var name = UniqueName(node.Parent!, title, Extension(node), Untitled(node.Kind), except: node);
         if (name != node.Name)
         {
+            var versions = VersionsOf(node);
             MoveOnDisk(node, PathOf(node), Path.Combine(PathOf(node.Parent!), name));
             node.Name = name;
+            MoveVersions(versions, VersionsOf(node));
         }
 
         node.Title = title;
@@ -70,6 +72,7 @@ public sealed partial class Project
     public void Move(Node node, Node parent, int index)
     {
         Require(node.Parent is not null && CanHold(parent, node.Kind), $"A {parent.Kind} can't hold a {node.Kind}.");
+        var versions = VersionsOf(node);
         if (node.Parent != parent)
         {
             var name = UniqueName(parent, BaseName(node), Extension(node), Untitled(node.Kind), except: null);
@@ -80,6 +83,7 @@ public sealed partial class Project
 
         node.Detach();
         parent.Insert(Math.Clamp(index, 0, EndOf(parent)), node);
+        MoveVersions(versions, VersionsOf(node));
         SaveIndex();
     }
 
