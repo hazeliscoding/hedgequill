@@ -180,6 +180,13 @@ public partial class WorkspaceView : UserControl
     /// <summary>Earlier versions…: the window opens the sheet with the scene's kept versions.</summary>
     public event Action<Node>? VersionsRequested;
 
+    /// <summary>The page's text size, in percent.</summary>
+    public int TextSize
+    {
+        get => Manuscript.TextSize;
+        set => Manuscript.TextSize = value;
+    }
+
     public bool FocusMode { get; private set; }
 
     public bool PreviewShown => _previewWanted && !FocusMode;

@@ -410,16 +410,14 @@
     <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
   </Style>
 
-  <!-- The manuscript: Cardo at 19 px for scenes, the interface font at 15.5 px for pages, as the prototype sets them. -->
+  <!-- The manuscript: Cardo for scenes, the interface font for pages. ManuscriptView sets the size, which View › Larger text scales. -->
   <Style Selector="ae|TextEditor.manuscript">
     <Setter Property="FontFamily" Value="{StaticResource FontManuscript}" />
-    <Setter Property="FontSize" Value="19" />
     <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
     <Setter Property="Background" Value="Transparent" />
   </Style>
   <Style Selector="ae|TextEditor.manuscript.page">
     <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
-    <Setter Property="FontSize" Value="15.5" />
   </Style>
   <Style Selector="TextBlock.eyebrow">
     <Setter Property="FontSize" Value="10" />
@@ -501,13 +499,11 @@
   </Style>
   <Style Selector="TextBlock.empty-hint">
     <Setter Property="FontFamily" Value="{StaticResource FontManuscript}" />
-    <Setter Property="FontSize" Value="19" />
     <Setter Property="FontStyle" Value="Italic" />
     <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
   </Style>
   <Style Selector="TextBlock.empty-hint.page">
     <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
-    <Setter Property="FontSize" Value="15.5" />
   </Style>
   <Style Selector="TextBlock.meta">
     <Setter Property="FontSize" Value="13" />
