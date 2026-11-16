@@ -52,11 +52,13 @@ public static class AtomicFile
     /// <summary>
     /// Whether a refusal means another app has the file open. Windows refuses to replace a file opened without delete sharing
     /// as "access denied", and to open one held exclusively as a sharing violation. A file marked read-only is refused the same
-    /// way but stays refused, so it doesn't count.
+    /// way but stays refused, so it doesn't count. On macOS and Linux, .NET keeps FileShare with a lock, and opening a file
+    /// another app locks fails with EWOULDBLOCK, which the exception carries as its HResult.
     /// </summary>
     public static bool IsHeld(Exception error, string path) => error switch
     {
-        IOException io => (io.HResult & 0xFFFF) is 32 or 33,
+        IOException io when OperatingSystem.IsWindows() => (io.HResult & 0xFFFF) is 32 or 33,
+        IOException io => io.HResult == (OperatingSystem.IsMacOS() ? 35 : 11),
         UnauthorizedAccessException => File.Exists(path) && !File.GetAttributes(path).HasFlag(FileAttributes.ReadOnly),
         _ => false,
     };
