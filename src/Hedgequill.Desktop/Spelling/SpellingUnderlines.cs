@@ -10,20 +10,26 @@ namespace Hedgequill.Desktop.Spelling;
 /// <summary>
 /// Underlines misspelled words with a thin wavy line, as the prototype draws it. A line is checked once the text has stood
 /// still for a moment, so a keystroke never waits on the checker; the word being typed loses its underline until then, and
-/// the rest of the line keeps theirs. Only lines on screen are checked, and a line's text is checked once per session.
+/// the rest of the line keeps theirs. Only lines on screen are checked, a sentence at a time, and each sentence once per session.
 /// </summary>
 public sealed class SpellingUnderlines : IBackgroundRenderer
 {
     private const int CacheLimit = 5000;
     private static readonly TimeSpan Pause = TimeSpan.FromMilliseconds(400);
-    private static readonly TimeSpan Budget = TimeSpan.FromMilliseconds(8);
+    private static readonly TimeSpan Budget = TimeSpan.FromMilliseconds(4);
 
     private readonly TextView _view;
     private readonly SpellChecker _checker;
     private readonly Func<string, bool> _known;
+
+    // Results by sentence, so an edit re-asks the checker about one sentence and the rest of the line comes from here.
     private readonly Dictionary<string, IReadOnlyList<Misspelling>> _cache = [];
-    private readonly HashSet<DocumentLine> _checked = [];
+
+    // The lines checked or queued since their last edit, each with the generation of its queued sentences.
+    private readonly Dictionary<DocumentLine, int> _checked = [];
+    private readonly Queue<(DocumentLine Line, int From, int Generation)> _work = new();
     private readonly DispatcherTimer _timer;
+    private int _generation;
     private TextSegmentCollection<TextSegment> _found = [];
     private TextDocument? _document;
 
@@ -47,7 +53,10 @@ public sealed class SpellingUnderlines : IBackgroundRenderer
     /// <summary>Redraws, leaving out words the project dictionary has taken since.</summary>
     public void Refresh() => _view.InvalidateLayer(Layer);
 
-    /// <summary>Checks the lines on screen now, as the pause after typing would.</summary>
+    /// <summary>
+    /// Checks the lines on screen that changed or haven't been checked, as the pause after typing does. A sentence at a time
+    /// for a few milliseconds, then the rest after the next frame, so a keystroke never waits long behind it.
+    /// </summary>
     public void CheckVisible()
     {
         _timer.Stop();
@@ -56,52 +65,26 @@ public sealed class SpellingUnderlines : IBackgroundRenderer
             return;
         }
 
-        var clock = Stopwatch.StartNew();
-        var changed = false;
         foreach (var line in _view.VisualLines.Select(visual => visual.FirstDocumentLine))
         {
-            if (line.IsDeleted || _checked.Contains(line))
+            if (!line.IsDeleted && !_checked.ContainsKey(line))
             {
-                continue;
-            }
-
-            // A long first look at a chapter carries on after the next frame instead of holding it up.
-            if (clock.Elapsed > Budget)
-            {
-                Dispatcher.UIThread.Post(CheckVisible, DispatcherPriority.Background);
-                break;
-            }
-
-            _checked.Add(line);
-            var text = _document.GetText(line);
-            if (!_cache.TryGetValue(text, out var words))
-            {
-                if (_cache.Count >= CacheLimit)
+                _checked[line] = ++_generation;
+                foreach (var old in _found.FindOverlappingSegments(line.Offset, line.Length).ToList())
                 {
-                    _cache.Clear();
+                    _found.Remove(old);
                 }
 
-                _cache[text] = words = _checker.Check(text);
+                _work.Enqueue((line, 0, _generation));
             }
-
-            foreach (var old in _found.FindOverlappingSegments(line.Offset, line.Length).ToList())
-            {
-                _found.Remove(old);
-            }
-
-            foreach (var word in words)
-            {
-                _found.Add(new TextSegment { StartOffset = line.Offset + word.Start, Length = word.Length });
-            }
-
-            changed = true;
         }
 
-        _checked.RemoveWhere(line => line.IsDeleted);
-        if (changed)
+        foreach (var line in _checked.Keys.Where(line => line.IsDeleted).ToList())
         {
-            _view.InvalidateLayer(Layer);
+            _checked.Remove(line);
         }
+
+        Continue();
     }
 
     public void Draw(TextView textView, DrawingContext drawingContext)
@@ -112,7 +95,7 @@ public sealed class SpellingUnderlines : IBackgroundRenderer
         }
 
         var lines = textView.VisualLines;
-        if (!_timer.IsEnabled && lines.Any(visual => !_checked.Contains(visual.FirstDocumentLine)))
+        if (!_timer.IsEnabled && lines.Any(visual => !_checked.ContainsKey(visual.FirstDocumentLine)))
         {
             _timer.Start();
         }
@@ -136,6 +119,77 @@ public sealed class SpellingUnderlines : IBackgroundRenderer
 
     private bool IsKnown(TextSegment word) => _document is not null && _known(_document.GetText(word));
 
+    private void Continue()
+    {
+        var clock = Stopwatch.StartNew();
+        var changed = false;
+        while (_document is not null && _work.Count > 0 && clock.Elapsed < Budget)
+        {
+            // A line edited since it was queued waits for the next pause; its generation tells.
+            var (line, from, generation) = _work.Dequeue();
+            if (line.IsDeleted || _checked.GetValueOrDefault(line) != generation)
+            {
+                continue;
+            }
+
+            var text = _document.GetText(line);
+            var to = SentenceEnd(text, from);
+            var sentence = text[from..to];
+            if (!_cache.TryGetValue(sentence, out var words))
+            {
+                if (_cache.Count >= CacheLimit)
+                {
+                    _cache.Clear();
+                }
+
+                _cache[sentence] = words = _checker.Check(sentence);
+            }
+
+            foreach (var word in words)
+            {
+                _found.Add(new TextSegment { StartOffset = line.Offset + from + word.Start, Length = word.Length });
+            }
+
+            if (to < text.Length)
+            {
+                _work.Enqueue((line, to, generation));
+            }
+
+            changed = true;
+        }
+
+        if (changed)
+        {
+            _view.InvalidateLayer(Layer);
+        }
+
+        if (_work.Count > 0)
+        {
+            Dispatcher.UIThread.Post(Continue, DispatcherPriority.Background);
+        }
+    }
+
+    // Where the sentence starting at the offset ends: after the space that follows . ! or ?, or at a space within 300 characters.
+    private static int SentenceEnd(string text, int from)
+    {
+        var limit = Math.Min(text.Length, from + 300);
+        for (var i = from; i < limit - 1; i++)
+        {
+            if (text[i] is '.' or '!' or '?' && text[i + 1] == ' ')
+            {
+                return i + 2;
+            }
+        }
+
+        if (limit == text.Length)
+        {
+            return limit;
+        }
+
+        var space = text.LastIndexOf(' ', limit - 1, limit - from);
+        return space > from ? space + 1 : limit;
+    }
+
     private void Attach(TextDocument? document)
     {
         if (_document is not null)
@@ -146,6 +200,7 @@ public sealed class SpellingUnderlines : IBackgroundRenderer
 
         _document = document;
         _checked.Clear();
+        _work.Clear();
         _found = document is null ? [] : new TextSegmentCollection<TextSegment>(document);
         if (document is not null)
         {
