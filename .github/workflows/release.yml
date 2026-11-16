@@ -176,6 +176,71 @@ jobs:
           kill -0 "$pid" 2>/dev/null || { echo "The installed Hedgequill stopped within 15 seconds."; exit 1; }
           kill "$pid"
 
+  # An installed copy updates itself when it closes. The same build, packed as the next patch version, waits in a local
+  # folder that HEDGEQUILL_UPDATE_FEED points the installed app at instead of GitHub.
+  windows-update:
+    needs: [version, windows, windows-package]
+    runs-on: windows-latest
+    timeout-minutes: 15
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - run: dotnet tool restore
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: publish-windows
+          path: publish
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist-windows
+          path: dist
+      - name: Pack the next version into a local feed
+        shell: bash
+        run: |
+          IFS=. read -r major minor patch <<< "${VERSION%%-*}"
+          next="$major.$minor.$((patch + 1))"
+          echo "NEXT=$next" >> "$GITHUB_ENV"
+          dotnet vpk pack --packId "$PACK_ID" --packVersion "$next" --packDir publish --runtime win-x64 \
+            --mainExe Hedgequill.exe --packTitle Hedgequill --packAuthors "Hazel Granados" \
+            --icon docs/brand/app-icon.ico --noPortable --outputDir feed
+      - name: Install, let it download the update, and close it
+        shell: pwsh
+        env:
+          HEDGEQUILL_SETTINGS: ${{ runner.temp }}/settings
+          HEDGEQUILL_UPDATE_FEED: ${{ github.workspace }}/feed
+        run: |
+          & .\dist\Hedgequill-Setup.exe --silent
+          # Only the copy started here may run, so nothing else holds the files the update replaces.
+          Start-Sleep 5
+          Get-Process Hedgequill -ErrorAction SilentlyContinue | Stop-Process -Force
+          $root = "$env:LOCALAPPDATA\$env:PACK_ID"
+          $app = Start-Process "$root\current\Hedgequill.exe" -PassThru
+          # The check at launch finds the feed's version and downloads it.
+          $deadline = (Get-Date).AddSeconds(90)
+          while (-not (Test-Path "$root\packages\*$env:NEXT-full.nupkg") -and (Get-Date) -lt $deadline) { Start-Sleep 1 }
+          if (-not (Test-Path "$root\packages\*$env:NEXT-full.nupkg")) { Get-ChildItem $root -Recurse | Select-Object -ExpandProperty FullName; throw "Hedgequill didn't download $env:NEXT" }
+          Start-Sleep 5
+          # Closing the window, as the writer would, hands the update to Velopack's updater.
+          $app.CloseMainWindow() | Out-Null
+          if (-not $app.WaitForExit(30000)) { throw "Hedgequill didn't close" }
+          $deadline = (Get-Date).AddSeconds(90)
+          while ((Get-Date) -lt $deadline) {
+            if ((Get-Content "$root\current\sq.version" -Raw -ErrorAction SilentlyContinue) -match "<version>$([regex]::Escape($env:NEXT))</version>") {
+              "Updated from $env:VERSION to $env:NEXT after closing"
+              exit 0
+            }
+            Start-Sleep 1
+          }
+          Get-ChildItem $root -Recurse | Select-Object -ExpandProperty FullName
+          Get-Content "$root\current\sq.version" -ErrorAction SilentlyContinue
+          throw "Hedgequill wasn't updated to $env:NEXT after it closed"
+
   macos:
     needs: version
     # Both builds run on the Apple Silicon runner: NativeAOT cross-compiles the Intel one, smoke-tested under Rosetta.
@@ -222,7 +287,17 @@ jobs:
           app=$(ls -d unpacked/*.app)
           codesign -dv "$app" 2>&1 | sed 's/^/  /'
           codesign --verify --deep --strict --verbose=2 "$app"
-      - name: Smoke test the app
+      - name: Install the package
+        run: |
+          sudo installer -pkg releases/*-Setup.pkg -target /
+          # Velopack's package may open the app it installed; the smoke test starts its own.
+          sleep 5
+          pkill -x Hedgequill || true
+          app=$(ls -d /Applications/Hedgequill.app "$HOME/Applications/Hedgequill.app" 2>/dev/null | head -1)
+          test -n "$app" || { echo "The package installed no Hedgequill.app"; exit 1; }
+          echo "APP=$app" >> "$GITHUB_ENV"
+          codesign --verify --deep --strict "$app"
+      - name: Smoke test the installed app
         env:
           HEDGEQUILL_SETTINGS: ${{ runner.temp }}/settings
         run: |
@@ -231,7 +306,7 @@ jobs:
             /usr/bin/pgrep -q oahd || softwareupdate --install-rosetta --agree-to-license
             run=(arch -x86_64)
           fi
-          app=$(ls -d unpacked/*.app)
+          app="$APP"
           "${run[@]}" "$app/Contents/MacOS/Hedgequill" &
           pid=$!
           # The first launch under Rosetta translates the whole app, so give it longer than the CI smoke test.
@@ -251,7 +326,7 @@ jobs:
           if-no-files-found: error
 
   publish:
-    needs: [version, windows-package, windows-smoke, macos]
+    needs: [version, windows-package, windows-smoke, windows-update, macos]
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     permissions:

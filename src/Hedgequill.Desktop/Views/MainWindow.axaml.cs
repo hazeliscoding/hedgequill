@@ -1,10 +1,12 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using AvaloniaEdit;
 using Hedgequill.Core.Projects;
 using Hedgequill.Desktop.Themes;
+using Hedgequill.Desktop.Updates;
 
 namespace Hedgequill.Desktop.Views;
 
@@ -16,6 +18,9 @@ public partial class MainWindow : Window
     private Saver? _saver;
     private ProjectWatcher? _watcher;
     private bool _closeAnyway;
+    private bool _restart;
+    private IDisposable? _updateTimer;
+    private readonly Updater _updater = new(Environment.GetEnvironmentVariable("HEDGEQUILL_UPDATE_FEED"));
     private Control? _lastText;
 
     public MainWindow()
@@ -72,7 +77,56 @@ public partial class MainWindow : Window
             }
         });
         KeyDown += (_, e) => e.Handled = e.Handled || _menu.TryShortcut(e);
+        // Updates are checked at launch and every few hours, quietly until one is ready.
+        Opened += (_, _) =>
+        {
+            _ = CheckQuietly();
+            _updateTimer = DispatcherTimer.Run(
+                () =>
+                {
+                    _ = CheckQuietly();
+                    return true;
+                },
+                TimeSpan.FromHours(4));
+        };
         ShowWelcome();
+    }
+
+    /// <summary>A downloaded update is waiting to install when Hedgequill closes.</summary>
+    public bool UpdateReady => _updater.ReadyVersion is not null;
+
+    /// <summary>Help › Check for updates…: says what it's doing, and what it found.</summary>
+    public async Task CheckForUpdates()
+    {
+        if (UpdateReady)
+        {
+            ShowUpdateReady();
+            return;
+        }
+
+        Notice.Show("Checking for updates…", "");
+        switch (await _updater.CheckAsync(version => Notice.Show($"Downloading Hedgequill {version}…", "Keep writing; it downloads in the background.")))
+        {
+            case UpdateCheck.Ready:
+                ShowUpdateReady();
+                break;
+            case UpdateCheck.UpToDate:
+                Notice.Show("Hedgequill is up to date", $"Version {Updater.Version} is the newest.");
+                break;
+            case UpdateCheck.NotInstalled:
+                Notice.Show("This copy can't update itself", "Updates come to a Hedgequill installed from its releases page.");
+                break;
+            default:
+                Notice.Show("Couldn't check for updates", "Check your connection and try again.");
+                break;
+        }
+    }
+
+    /// <summary>Restart: closes as usual, so unsaved text is written or kept first, then installs the update and opens again.</summary>
+    public void RestartToUpdate()
+    {
+        _restart = true;
+        Close();
     }
 
     public Project? Project { get; private set; }
@@ -151,6 +205,9 @@ public partial class MainWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         _watcher?.Dispose();
+        _updateTimer?.Dispose();
+        // Restarting brings the open project back.
+        _updater.InstallOnExit(_restart, Project is { } project ? [project.Folder] : []);
         base.OnClosed(e);
     }
 
@@ -160,6 +217,9 @@ public partial class MainWindow : Window
         if (_saver is { HasUnsaved: true } && !_closeAnyway)
         {
             e.Cancel = true;
+            // Staying open forgets Restart; Close anyway keeps it.
+            var restart = _restart;
+            _restart = false;
             Confirmation.Show(
                 "Close without saving?",
                 "Some changes couldn't be written to disk. Save a copy first, or close and lose them.",
@@ -167,6 +227,7 @@ public partial class MainWindow : Window
                 () =>
                 {
                     _closeAnyway = true;
+                    _restart = restart;
                     Close();
                 });
         }
@@ -205,6 +266,21 @@ public partial class MainWindow : Window
     public bool Open(string folder) => CanLeaveProject() && Attempt("Couldn't open the project", () => Show(Project.Open(folder)));
 
     public bool Create(string location, string title) => CanLeaveProject() && Attempt("Couldn't create the project", () => Show(Project.Create(location, title)));
+
+    private async Task CheckQuietly()
+    {
+        var wasReady = UpdateReady;
+        if (await _updater.CheckAsync() == UpdateCheck.Ready && !wasReady)
+        {
+            ShowUpdateReady();
+        }
+    }
+
+    private void ShowUpdateReady()
+    {
+        Notice.Show("Update ready", $"Hedgequill {_updater.ReadyVersion} installs when you close it, or restart now to finish.", "Restart", RestartToUpdate);
+        _menu.Update();
+    }
 
     private static void Apply(Appearance appearance) =>
         Application.Current!.RequestedThemeVariant = Contrast.For(appearance, Application.Current.PlatformSettings?.GetColorValues());
