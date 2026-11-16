@@ -72,12 +72,33 @@ public partial class ContrastTests
     }
 
     [Fact]
-    public void The_app_tokens_pass_in_both_themes()
+    public void The_app_tokens_pass_in_every_theme_high_contrast_among_them()
     {
-        var themes = ParseThemes(Repo.Read("src/Hedgequill.Desktop/Themes/Tokens.axaml"));
-        Assert.Equal(["Light", "Dark"], themes.Keys);
+        var themes = Effective(ParseThemes(Repo.Read("src/Hedgequill.Desktop/Themes/Tokens.axaml")));
+        Assert.Equal(["Light", "Dark", "LightHighContrast", "DarkHighContrast"], themes.Keys);
         Assert.Empty(Failures(themes, Pairs));
     }
+
+    [Theory]
+    [InlineData("Light", "TextSecondary")]
+    [InlineData("Light", "TextTertiary")]
+    [InlineData("Dark", "TextPrimary")]
+    [InlineData("Dark", "TextSecondary")]
+    [InlineData("Dark", "TextTertiary")]
+    public void High_contrast_strengthens_the_text_tiers(string theme, string text)
+    {
+        var themes = Effective(ParseThemes(Repo.Read("src/Hedgequill.Desktop/Themes/Tokens.axaml")));
+        double Ratio(string variant) => Contrast(Resolve(themes[variant], text), Resolve(themes[variant], "BgPage"));
+        Assert.True(Ratio(theme + "HighContrast") > Ratio(theme), $"{text}: {Ratio(theme + "HighContrast"):F2} isn't above {Ratio(theme):F2}");
+    }
+
+    // A high contrast dictionary holds only what it changes; the rest comes from the light or dark one it inherits.
+    private static Dictionary<string, Dictionary<string, string>> Effective(Dictionary<string, Dictionary<string, string>> themes) =>
+        themes.ToDictionary(
+            theme => theme.Key.StartsWith("{x:Static", StringComparison.Ordinal) ? (theme.Key.Contains("Dark", StringComparison.Ordinal) ? "DarkHighContrast" : "LightHighContrast") : theme.Key,
+            theme => theme.Key.StartsWith("{x:Static", StringComparison.Ordinal)
+                ? new Dictionary<string, string>(themes[theme.Key.Contains("Dark", StringComparison.Ordinal) ? "Dark" : "Light"].Concat(theme.Value).GroupBy(pair => pair.Key).Select(group => group.Last()).ToDictionary())
+                : theme.Value);
 
     // Each theme dictionary's colors by key: a brush's hex color, or an alias written as {StaticResource Key}.
     private static Dictionary<string, Dictionary<string, string>> ParseThemes(string xaml) =>
