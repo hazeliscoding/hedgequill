@@ -150,6 +150,24 @@ public class ProjectTests
     }
 
     [Fact]
+    public void The_project_dictionary_lives_in_the_index_and_outlasts_other_edits()
+    {
+        using var temp = new TempFolder();
+        var project = Project.Create(temp.Path, "Tides");
+
+        project.AddToDictionary("Okafor");
+        project.AddToDictionary("Ines");
+        project.AddToDictionary("okafor");
+        project.Rename(project.Scenes.Single(), "Harbour");
+
+        var reopened = Project.Open(project.Folder);
+        Assert.True(reopened.Knows("Okafor"));
+        Assert.True(reopened.Knows("OKAFOR"));
+        Assert.False(reopened.Knows("Mara"));
+        Assert.Contains("\"dictionary\": [\n    \"Ines\",\n    \"Okafor\"\n  ]", File.ReadAllText(Path.Combine(project.Folder, Project.IndexFile)), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void The_index_records_order_acts_and_only_the_titles_that_differ()
     {
         using var temp = new TempFolder();
