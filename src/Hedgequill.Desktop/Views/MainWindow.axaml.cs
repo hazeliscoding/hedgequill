@@ -129,6 +129,8 @@ public partial class MainWindow : Window
         Close();
     }
 
+    public void ShowHelp(HelpPage page) => Help.Show(page, _menu.ShortcutGroups());
+
     public Project? Project { get; private set; }
 
     public Saver? Saver => _saver;

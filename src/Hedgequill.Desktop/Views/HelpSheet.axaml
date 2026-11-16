@@ -1,0 +1,147 @@
+<!-- The prototype's Help sheets: Writing in Hedgequill, Keyboard shortcuts, Pasting into AO3, and About. One Done closes each. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:Hedgequill.Desktop.Views"
+             x:Class="Hedgequill.Desktop.Views.HelpSheet">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.help-heading">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="LineHeight" Value="18" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+      <Setter Property="Margin" Value="0,0,0,4" />
+    </Style>
+    <Style Selector="TextBlock.help-text">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="LineHeight" Value="20" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+    </Style>
+    <Style Selector="TextBlock.group-title">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="LetterSpacing" Value="0.4" />
+      <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
+    </Style>
+    <Style Selector="Border.key">
+      <Setter Property="Padding" Value="7,4" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Background" Value="{DynamicResource BgInset}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderDefault}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+  </UserControl.Styles>
+  <Panel>
+    <Border Background="{DynamicResource Scrim}" />
+    <Border x:Name="Card" Classes="sheet" Width="560" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,64,0,0"
+            KeyboardNavigation.TabNavigation="Cycle">
+      <StackPanel Spacing="14">
+        <TextBlock x:Name="Heading" Classes="heading" AutomationProperties.HeadingLevel="2" />
+        <ScrollViewer x:Name="Pages" MaxHeight="440" HorizontalScrollBarVisibility="Disabled">
+          <Panel Margin="0,0,6,0">
+            <StackPanel x:Name="WritingPage" Spacing="14">
+              <StackPanel>
+                <TextBlock Classes="help-heading" Text="Your project" AutomationProperties.HeadingLevel="3" />
+                <TextBlock Classes="help-text" Text="A project is a folder on your computer. Each chapter is a folder, and each scene is a Markdown file inside it. Acts are optional folders above chapters. Notes and Research hold pages that sit outside the story." />
+              </StackPanel>
+              <StackPanel>
+                <TextBlock Classes="help-heading" Text="Writing" AutomationProperties.HeadingLevel="3" />
+                <TextBlock Classes="help-text" Text="Hedgequill saves as you type, a moment after you stop. Bold and italic add their markers for you, and the markers stay faded, so the page reads like the finished chapter. A scene break goes between scenes in a chapter." />
+              </StackPanel>
+              <StackPanel>
+                <TextBlock Classes="help-heading" Text="Moving things" AutomationProperties.HeadingLevel="3" />
+                <TextBlock Classes="help-text" Text="Drag a scene, chapter or page in the navigator to move it, or move the selected one with Alt+Up and Alt+Down. Deleting moves it to the project's Trash folder, and Undo brings it back." />
+              </StackPanel>
+              <StackPanel>
+                <TextBlock Classes="help-heading" Text="If a save fails" AutomationProperties.HeadingLevel="3" />
+                <TextBlock Classes="help-text" Text="Your text stays on screen. The save state turns to Couldn't save, with Retry and Save a copy…. If another app changes a file you have open, it shows Changed on disk and lets you choose which to keep." />
+              </StackPanel>
+              <StackPanel>
+                <TextBlock Classes="help-heading" Text="Earlier versions" AutomationProperties.HeadingLevel="3" />
+                <TextBlock Classes="help-text" Text="The first time you change a scene after opening the project, Hedgequill keeps its text from before. Earlier versions… in the scene's menu brings one back." />
+              </StackPanel>
+              <StackPanel>
+                <TextBlock Classes="help-heading" Text="Focus and text size" AutomationProperties.HeadingLevel="3" />
+                <TextBlock Classes="help-text" Text="Focus mode hides everything but the page; Esc leaves it. Larger text and Smaller text in the View menu change the page's text only." />
+              </StackPanel>
+            </StackPanel>
+
+            <ItemsControl x:Name="ShortcutsPage">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Spacing="16" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="views:ShortcutGroup">
+                  <StackPanel Spacing="4">
+                    <TextBlock Classes="group-title" Text="{Binding Caps}" AutomationProperties.Name="{Binding Title}" AutomationProperties.HeadingLevel="3" />
+                    <ItemsControl ItemsSource="{Binding Rows}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="views:ShortcutRow">
+                          <Border BorderBrush="{DynamicResource Separator}" BorderThickness="0,0,0,1" MinHeight="30">
+                            <Grid ColumnDefinitions="*,Auto" AutomationProperties.Name="{Binding Spoken}">
+                              <TextBlock Classes="help-text" Foreground="{DynamicResource TextPrimary}" Text="{Binding Label}" VerticalAlignment="Center" />
+                              <Border Grid.Column="1" Classes="key">
+                                <TextBlock FontSize="12" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}" Text="{Binding Keys}" />
+                              </Border>
+                            </Grid>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <StackPanel x:Name="Ao3Page" Spacing="8">
+              <Grid ColumnDefinitions="22,*">
+                <TextBlock Classes="help-text" Text="1." />
+                <TextBlock Grid.Column="1" Classes="help-text">In Hedgequill, open the chapter and choose <Bold>Copy HTML</Bold>. The preview beside it shows what AO3 will keep.</TextBlock>
+              </Grid>
+              <Grid ColumnDefinitions="22,*">
+                <TextBlock Classes="help-text" Text="2." />
+                <TextBlock Grid.Column="1" Classes="help-text">On AO3, open <Bold>Post New</Bold>, or <Bold>Edit</Bold> on the chapter you're replacing.</TextBlock>
+              </Grid>
+              <Grid ColumnDefinitions="22,*">
+                <TextBlock Classes="help-text" Text="3." />
+                <TextBlock Grid.Column="1" Classes="help-text">Above the chapter text, choose <Bold>HTML</Bold>, not Rich Text.</TextBlock>
+              </Grid>
+              <Grid ColumnDefinitions="22,*">
+                <TextBlock Classes="help-text" Text="4." />
+                <TextBlock Grid.Column="1" Classes="help-text">Paste into the chapter text. The chapter title has its own field: <Bold>Copy chapter title</Bold> in the Chapter menu.</TextBlock>
+              </Grid>
+              <Grid ColumnDefinitions="22,*">
+                <TextBlock Classes="help-text" Text="5." />
+                <TextBlock Grid.Column="1" Classes="help-text" Text="Copy the summary and notes from the chapter's overview into AO3's fields, if you wrote them." />
+              </Grid>
+              <Grid ColumnDefinitions="22,*">
+                <TextBlock Classes="help-text" Text="6." />
+                <TextBlock Grid.Column="1" Classes="help-text" Text="Preview on AO3, then post. AO3's word count matches Hedgequill's." />
+              </Grid>
+              <TextBlock Classes="help-text" Margin="0,6,0,0" Text="AO3 keeps paragraphs, emphasis, strikethrough, headings, quotes, lists, links and scene breaks. Anything else arrives as plain text, which is why the preview shows it that way." />
+            </StackPanel>
+
+            <StackPanel x:Name="AboutPage" Spacing="14">
+              <StackPanel Spacing="4">
+                <TextBlock FontFamily="{StaticResource FontTitle}" FontSize="30" Foreground="{DynamicResource TextPrimary}" Text="Hedgequill" />
+                <TextBlock x:Name="AboutVersion" Classes="caption" />
+                <TextBlock FontFamily="{StaticResource FontManuscript}" FontStyle="Italic" FontSize="15" Foreground="{DynamicResource TextSecondary}" Text="A quiet place to write." />
+              </StackPanel>
+              <TextBlock Classes="help-text" Text="Your writing stays on your computer. The only network request is the update check, which asks GitHub for a newer version and sends nothing about you or your words." />
+              <TextBlock Classes="help-text" Text="Free and open source under the Apache License 2.0. The wordmark uses Gloock, under the SIL Open Font License 1.1." />
+              <StackPanel Spacing="3">
+                <TextBlock Classes="caption" Text="Source code and issues" />
+                <SelectableTextBlock FontFamily="{StaticResource FontMono}" FontSize="12" Foreground="{DynamicResource TextPrimary}"
+                                     Text="github.com/hazeliscoding/hedgequill" AutomationProperties.Name="Source code and issues: github.com/hazeliscoding/hedgequill" />
+              </StackPanel>
+            </StackPanel>
+          </Panel>
+        </ScrollViewer>
+        <Button x:Name="Done" Classes="medium accent" Content="Done" HorizontalAlignment="Right" Margin="0,6,0,0" />
+      </StackPanel>
+    </Border>
+  </Panel>
+</UserControl>

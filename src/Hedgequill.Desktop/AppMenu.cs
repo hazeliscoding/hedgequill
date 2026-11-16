@@ -8,8 +8,8 @@ using Hedgequill.Desktop.Views;
 namespace Hedgequill.Desktop;
 
 /// <summary>
-/// The prototype's menu bar: File, Edit, View and Chapter. It's one NativeMenu: macOS shows it at the top of the screen,
-/// and Windows in the window's caption row. Help arrives with M5, when it does something.
+/// The prototype's menu bar: File, Edit, View, Chapter and Help. It's one NativeMenu: macOS shows it at the top of the
+/// screen, and Windows in the window's caption row.
 /// </summary>
 public sealed class AppMenu
 {
@@ -18,6 +18,7 @@ public sealed class AppMenu
     private readonly MainWindow _window;
     private readonly List<Action> _refresh = [];
     private readonly List<(KeyGesture Gesture, Relay Command)> _shortcuts = [];
+    private readonly Dictionary<string, KeyGesture> _gestures = [];
     private readonly NativeMenuItem _recent;
 
     public AppMenu(MainWindow window)
@@ -93,12 +94,42 @@ public sealed class AppMenu
             new NativeMenuItemSeparator(),
             Item("Delete chapter", () => Workspace?.AskDelete(Workspace.CurrentChapter!), enabled: Chapter));
 
-        Menu = [file, edit, view, chapter];
+        var updates = Item("Check for updates…", () =>
+        {
+            if (window.UpdateReady)
+            {
+                window.RestartToUpdate();
+            }
+            else
+            {
+                _ = window.CheckForUpdates();
+            }
+        });
+        _refresh.Add(() => updates.Header = window.UpdateReady ? "Restart to finish updating" : "Check for updates…");
+        var help = Submenu(
+            "Help",
+            Item("Writing in Hedgequill", () => window.ShowHelp(HelpPage.Writing)),
+            Item("Keyboard shortcuts", () => window.ShowHelp(HelpPage.Shortcuts), Gesture(Key.OemQuestion)),
+            Item("Pasting into AO3", () => window.ShowHelp(HelpPage.Ao3)),
+            new NativeMenuItemSeparator(),
+            updates,
+            Item("About Hedgequill", () => window.ShowHelp(HelpPage.About)));
+
+        Menu = [file, edit, view, chapter, help];
     }
 
     public NativeMenu Menu { get; }
 
     private WorkspaceView? Workspace => _window.Workspace;
+
+    /// <summary>Help › Keyboard shortcuts, grouped as the prototype draws it, with each command's keys as its menu item shows them.</summary>
+    public IReadOnlyList<ShortcutGroup> ShortcutGroups() =>
+    [
+        Group("Writing", "Bold", "Italic", "Insert scene break", "Undo", "Redo", "Find…", "Find in project…"),
+        Group("Project", "New scene", "New project…", "Open folder…", "Rename"),
+        Group("View", "Navigator", "Preview", "Focus mode", "Larger text", "Smaller text", "Actual size"),
+        Group("AO3 and Help", "Copy chapter HTML", "Keyboard shortcuts"),
+    ];
 
     /// <summary>Re-reads which items are enabled and checked: after a project opens or closes, the selection changes, or a view toggles.</summary>
     public void Update()
@@ -141,6 +172,9 @@ public sealed class AppMenu
 
     private static KeyGesture Gesture(Key key, KeyModifiers more = KeyModifiers.None) => new(key, Command | more);
 
+    private ShortcutGroup Group(string title, params string[] headers) =>
+        new(title, [.. headers.Select(header => new ShortcutRow(header.TrimEnd('…'), _gestures[header].ToString("p", null)))]);
+
     private static NativeMenuItem Submenu(string header, params NativeMenuItemBase[] items)
     {
         var menu = new NativeMenu();
@@ -159,6 +193,7 @@ public sealed class AppMenu
         if (gesture is not null)
         {
             _shortcuts.Add((gesture, command));
+            _gestures[header] = gesture;
         }
 
         return new NativeMenuItem(header) { Gesture = gesture, Command = command };
