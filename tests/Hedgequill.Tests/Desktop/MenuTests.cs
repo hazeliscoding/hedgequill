@@ -26,7 +26,7 @@ public sealed class MenuTests : IDisposable
     public Task The_menu_bar_has_the_prototypes_menus_and_items() => OnWindow(ThemeVariant.Light, _temp["settings"], window =>
     {
         var exit = OperatingSystem.IsMacOS() ? [] : new[] { "-", "Exit" };
-        Assert.Equal(["File", "Edit", "View", "Chapter"], Menus(window).Select(menu => menu.Header));
+        Assert.Equal(["File", "Edit", "View", "Chapter", "Help"], Menus(window).Select(menu => menu.Header));
         Assert.Equal(
             ["New project…", "Open folder…", "Open recent", "-", "New scene", "New chapter", "-", "Show project folder", "Close project", .. exit],
             Headers(window, "File"));
@@ -39,6 +39,9 @@ public sealed class MenuTests : IDisposable
         Assert.Equal(
             ["Copy chapter HTML", "Copy chapter title", "Show last HTML…", "-", "Open chapter overview", "Duplicate chapter", "-", "Delete chapter"],
             Headers(window, "Chapter"));
+        Assert.Equal(
+            ["Writing in Hedgequill", "Keyboard shortcuts", "Pasting into AO3", "-", "Check for updates…", "About Hedgequill"],
+            Headers(window, "Help"));
     });
 
     [Fact]
@@ -170,7 +173,7 @@ public sealed class MenuTests : IDisposable
         Assert.Equal(!OperatingSystem.IsMacOS(), caption.IsVisible);
         if (caption.IsVisible)
         {
-            Assert.Equal(["File", "Edit", "View", "Chapter", "Tides — Hedgequill"], VisibleText(caption));
+            Assert.Equal(["File", "Edit", "View", "Chapter", "Help", "Tides — Hedgequill"], VisibleText(caption));
         }
     });
 
