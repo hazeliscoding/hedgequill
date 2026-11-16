@@ -60,6 +60,21 @@ Interface type scale: caption 11/14, callout 12/16, body 13/18, heading 15/20, d
 
 Every text color keeps 4.5:1 on the backgrounds it sits on. The prototype's tertiary text (`#7d756d` light, `#8a837a` dark) fell to 3.9–4.4:1, so it's darkened and lightened here. Faded Markdown markers are the one exception: they're meant to recede (2.9:1 light, 4.0:1 dark), and the text they wrap stays full contrast.
 
+### High contrast
+
+When Windows' contrast themes or macOS's Increase Contrast are on, these replace their light or dark tokens, as the prototype's high contrast does. Everything else stays.
+
+| Token | Light | Dark |
+|---|---|---|
+| Text | | `#ffffff` |
+| Text, secondary | `#3a3936` | `#d6d7dc` |
+| Text, tertiary | `#55534f` | `#b0b1b8` |
+| Borders | `rgba(40,36,30,.5)` | `rgba(255,255,255,.5)` |
+| Separators | `rgba(40,36,30,.4)` | `rgba(255,255,255,.4)` |
+| Text field and button borders | `rgba(40,36,30,.6)`, hovered `.8` | `rgba(255,255,255,.6)`, hovered `.8` |
+| Hovered row | `rgba(40,36,30,.1)` | `rgba(255,255,255,.12)` |
+| Selected row | `rgba(110,38,51,.22)` | `rgba(161,74,92,.35)` |
+
 ## Spacing, radius and shadow
 
 - **Spacing (px):** 0, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64.
