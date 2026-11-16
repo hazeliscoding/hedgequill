@@ -8,6 +8,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Hedgequill.Core.Text;
 using Hedgequill.Desktop;
+using Hedgequill.Desktop.Themes;
 using Hedgequill.Desktop.Views;
 
 namespace Hedgequill.TypingProbe;
@@ -29,9 +30,11 @@ internal static class Program
         try
         {
             var project = Chapter.Write(Path.Combine(scratch.FullName, "stories"));
+            var slide = args.Contains("--slide");
+            Motion.On = slide;
             AppBuilder.Configure<App>()
                 .UsePlatformDetect()
-                .AfterSetup(_ => DispatcherTimer.RunOnce(() => Run(project, args.Contains("--bare"), code => exit = code), TimeSpan.FromSeconds(1)))
+                .AfterSetup(_ => DispatcherTimer.RunOnce(() => Run(project, args.Contains("--bare"), slide, code => exit = code), TimeSpan.FromSeconds(1)))
                 .StartWithClassicDesktopLifetime(args);
         }
         finally
@@ -42,12 +45,19 @@ internal static class Program
         return exit;
     }
 
-    private static void Run(string project, bool bare, Action<int> done)
+    private static void Run(string project, bool bare, bool slide, Action<int> done)
     {
         var desktop = (IClassicDesktopStyleApplicationLifetime)Application.Current!.ApplicationLifetime!;
         try
         {
-            Measure((MainWindow)desktop.MainWindow!, project, bare, done);
+            if (slide)
+            {
+                Slide((MainWindow)desktop.MainWindow!, project, done);
+            }
+            else
+            {
+                Measure((MainWindow)desktop.MainWindow!, project, bare, done);
+            }
         }
         catch (Exception error)
         {
@@ -131,6 +141,72 @@ internal static class Program
                     }
                 }, DispatcherPriority.Background);
             });
+        }
+    }
+
+    // --slide slides the navigator and the preview shut and open 20 times, in a window narrow enough that the chapter rewraps
+    // as they move, and times each frame of the slides from its start to the end of its layout and rendering.
+    private static void Slide(MainWindow window, string project, Action<int> done)
+    {
+        window.Width = 1100;
+        window.Open(project);
+        window.UpdateLayout();
+        var workspace = window.Workspace!;
+        var top = TopLevel.GetTopLevel(window)!;
+        var frames = new List<double>();
+        Console.WriteLine($"Opened the chapter, {Words.Count(workspace.Editor.Text):N0} words; sliding.");
+        DispatcherTimer.RunOnce(() => Next(0), TimeSpan.FromMilliseconds(500));
+
+        void Next(int slide)
+        {
+            if (slide == 20)
+            {
+                double Percentile(double p) => frames.Order().ElementAt((int)Math.Min(frames.Count - 1, Math.Ceiling(p * frames.Count) - 1));
+
+                Console.WriteLine($"{RuntimeInformation.OSDescription}, {RuntimeInformation.ProcessArchitecture}, {Environment.ProcessorCount} logical processors");
+                Console.WriteLine($"Slide frames, ms: {frames.Count} frames, median {Percentile(0.5):F2}, 95th {Percentile(0.95):F2}, max {frames.Max():F2}; {frames.Count(ms => ms > Frame)} over {Frame:F1}");
+                done(frames.All(ms => ms <= Frame) ? 0 : 1);
+                window.Close();
+                return;
+            }
+
+            // Navigator shut, preview shut, navigator open, preview open, and again.
+            var pane = slide % 2 == 0 ? "navigator" : "preview";
+            var opening = slide % 4 >= 2;
+            if (pane == "navigator")
+            {
+                workspace.ToggleNavigator();
+            }
+            else
+            {
+                workspace.TogglePreview();
+            }
+
+            var until = Stopwatch.GetTimestamp() + (Stopwatch.Frequency * 3 / 10);
+            top.RequestAnimationFrame(Time);
+
+            // Asked for inside a frame, the next callback waits for the next frame; asked for outside one, Avalonia renders at once.
+            void Time(TimeSpan _)
+            {
+                var start = Stopwatch.GetTimestamp();
+                Dispatcher.UIThread.Post(() =>
+                {
+                    var took = Stopwatch.GetElapsedTime(start).TotalMilliseconds;
+                    frames.Add(took);
+                    if (took > Frame)
+                    {
+                        Console.WriteLine($"  {(opening ? "opening" : "shutting")} the {pane}: a frame took {took:F1} ms");
+                    }
+                }, DispatcherPriority.Background);
+                if (Stopwatch.GetTimestamp() < until)
+                {
+                    top.RequestAnimationFrame(Time);
+                }
+                else
+                {
+                    DispatcherTimer.RunOnce(() => Next(slide + 1), TimeSpan.FromMilliseconds(300));
+                }
+            }
         }
     }
 
