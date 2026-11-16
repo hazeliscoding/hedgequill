@@ -29,7 +29,7 @@ public sealed class PopupMenuTests : IDisposable
         Assert.Equal("Fog", workspace.Selected?.Title);
         menu.Hide();
 
-        Assert.Equal(["New scene", "Rename", "Duplicate", "-", "Delete chapter"], Headers(RightClick(window, workspace, "Chapter 1")));
+        Assert.Equal(["New scene", "Rename", "Duplicate", "-", "Copy chapter HTML", "-", "Delete chapter"], Headers(RightClick(window, workspace, "Chapter 1")));
         Find<ListBox>(workspace, "Navigator").ContextFlyout!.Hide();
         Assert.Equal(["New page"], Headers(RightClick(window, workspace, "Notes")));
     });

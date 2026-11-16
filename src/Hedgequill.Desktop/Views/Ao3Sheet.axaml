@@ -1,0 +1,54 @@
+<!-- The prototype's sheet after Copy chapter HTML: the chapter title to copy into AO3's own field, the HTML, and any warnings. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Hedgequill.Desktop.Views.Ao3Sheet">
+  <Panel>
+    <Border Background="{DynamicResource Scrim}" />
+    <Border Classes="sheet" Width="520" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,64,0,0"
+            KeyboardNavigation.TabNavigation="Cycle">
+      <StackPanel Spacing="14">
+        <StackPanel Spacing="4">
+          <TextBlock x:Name="Heading" Classes="heading" TextWrapping="Wrap" AutomationProperties.HeadingLevel="2" />
+          <TextBlock Classes="callout" Text="Paste into AO3's HTML editor (not Rich Text). The chapter title has its own field on AO3." />
+        </StackPanel>
+        <StackPanel Spacing="5">
+          <TextBlock Classes="field-caption" Text="Chapter title" />
+          <Border Classes="copy-field">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBlock x:Name="ChapterTitle" Classes="copy-field-title" VerticalAlignment="Center" />
+              <Button x:Name="CopyTitle" Grid.Column="1" Classes="small tertiary" Content="Copy" AutomationProperties.Name="Copy chapter title" />
+            </Grid>
+          </Border>
+        </StackPanel>
+        <StackPanel Spacing="5">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Classes="field-caption" Text="Chapter HTML" />
+            <TextBlock x:Name="Stats" Classes="caption" />
+          </StackPanel>
+          <Border Classes="html-box">
+            <ScrollViewer MaxHeight="170" HorizontalScrollBarVisibility="Disabled">
+              <SelectableTextBlock x:Name="Html" Classes="html-text" AutomationProperties.Name="Chapter HTML" />
+            </ScrollViewer>
+          </Border>
+        </StackPanel>
+        <Border x:Name="Warnings" Classes="warning-box" IsVisible="False">
+          <StackPanel Spacing="4">
+            <TextBlock x:Name="WarningTitle" Classes="warning-title" />
+            <ItemsControl x:Name="WarningList">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                  <TextBlock Classes="callout" Text="{Binding}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Classes="callout" Foreground="{DynamicResource TextTertiary}" Text="Your manuscript was not changed." />
+          </StackPanel>
+        </Border>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,6,0,0">
+          <Button x:Name="Done" Classes="medium" Content="Done" />
+          <Button x:Name="CopyAgain" Classes="medium accent" Content="Copy again" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+  </Panel>
+</UserControl>

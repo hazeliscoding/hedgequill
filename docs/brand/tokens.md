@@ -54,6 +54,7 @@ Interface type scale: caption 11/14, callout 12/16, body 13/18, heading 15/20, d
 | Misspelling underline | `#d9453b` | `#e8736b` |
 | Danger button, with white text | `#b1362d`, hover `#9a2e26` | the same (white on `#d9453b` is only about 4:1) |
 | Warning | `#c9830f`, text `#83560a` | text `#edbb66` |
+| Warning box background | `#fbf0dc` | `rgba(224,162,58,.15)` |
 | Info (Changed on disk) | text `#2353ad` | text `#9ab8f4` |
 | Success | `#2f9a5a`, text `#1f6f41` | |
 

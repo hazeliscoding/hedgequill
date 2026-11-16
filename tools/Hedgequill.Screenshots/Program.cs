@@ -75,7 +75,7 @@ internal static class Program
         Write(folder, "Act One/Low Tide/The causeway.md", "At low tide the island was not an island at all.");
         Write(folder, "Notes/Mara.md", "Keeper of the lantern since she was nineteen.");
         Write(folder, "Research/Tides.md", "Spring tides follow the full and new moon.");
-        File.WriteAllText(Path.Combine(folder, Project.IndexFile), """{ "format": 1, "order": { "": ["Prologue", "Act One"], "Act One": ["The Letter", "Low Tide"] } }""");
+        File.WriteAllText(Path.Combine(folder, Project.IndexFile), """{ "format": 1, "order": { "": ["Prologue", "Act One"], "Act One": ["The Letter", "Low Tide"] }, "dictionary": ["harbour"] }""");
         return folder;
     }
 

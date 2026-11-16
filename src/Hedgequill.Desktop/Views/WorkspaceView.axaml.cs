@@ -2,10 +2,13 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Hedgequill.Core.Ao3;
 using Hedgequill.Core.Projects;
+using Hedgequill.Core.Text;
 
 namespace Hedgequill.Desktop.Views;
 
@@ -28,6 +31,9 @@ public partial class WorkspaceView : UserControl
     private bool _navigatorWanted = true;
     private NavigatorRow? _contextRow;
     private (Node Target, Placement Where)? _drop;
+    private readonly DispatcherTimer _previewTimer;
+    private bool _previewWanted = true;
+    private double _previewWidth = 340;
 
     public WorkspaceView(Project project)
     {
@@ -86,9 +92,31 @@ public partial class WorkspaceView : UserControl
         Manuscript.AddSceneRequested += AddScene;
         Manuscript.FocusToggleRequested += ToggleFocus;
         Manuscript.NoticeRequested += (heading, detail) => NoticeRequested?.Invoke(heading, detail, null, null);
-        Manuscript.Edited += node => Edited?.Invoke(node);
+        Manuscript.Edited += node =>
+        {
+            Edited?.Invoke(node);
+            // The preview follows the text a moment after typing stops, so a keystroke never waits on it.
+            _previewTimer!.Stop();
+            _previewTimer.Start();
+        };
         AddHandler(KeyDownEvent, OnWorkspaceKey, RoutingStrategies.Tunnel);
         ToolTip.SetTip(FocusButton, $"Focus mode ({Shortcut("Shift+F")})");
+        _previewTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(300), DispatcherPriority.Background, (_, _) =>
+        {
+            _previewTimer!.Stop();
+            UpdatePreview();
+        });
+        PreviewToggle.Click += (_, _) => TogglePreview();
+        CopyHtml.Click += (_, _) => _ = CopyChapterHtml();
+        var previewMenu = new MenuFlyout();
+        previewMenu.Opening += (_, _) => previewMenu.ItemsSource = PreviewMenu();
+        Preview.ContextFlyout = previewMenu;
+        // The preview starts hidden in a window too narrow for three columns, as the prototype does under 1,200 px.
+        AttachedToVisualTree += (_, _) =>
+        {
+            _previewWanted = TopLevel.GetTopLevel(this) is not { ClientSize.Width: < 1200 };
+            ShowPreview();
+        };
         var addMenu = new MenuFlyout { Placement = PlacementMode.TopEdgeAlignedRight };
         addMenu.Opening += (_, _) => addMenu.ItemsSource = AddMenu();
         More.Flyout = addMenu;
@@ -115,7 +143,18 @@ public partial class WorkspaceView : UserControl
     /// <summary>Before anything moves or closes a file: write what's in the editor.</summary>
     public event Action? FlushRequested;
 
+    /// <summary>Show HTML: the window opens the sheet with a copied chapter's title and HTML.</summary>
+    public event Action<ChapterCopy>? HtmlRequested;
+
     public bool FocusMode { get; private set; }
+
+    public bool PreviewShown => _previewWanted && !FocusMode;
+
+    /// <summary>The last chapter copied for AO3, for Show last HTML….</summary>
+    public ChapterCopy? LastCopy { get; private set; }
+
+    /// <summary>A chapter with scenes to copy: the selected one, or the selected scene's.</summary>
+    public bool CanCopyChapter => CurrentChapter is { Children.Count: > 0 };
 
     /// <summary>The open scene's or page's file, or empty.</summary>
     public string OpenPath => Manuscript.Node is { IsFile: true } node && node.Parent is not null ? _project.PathOf(node) : "";
@@ -195,6 +234,7 @@ public partial class WorkspaceView : UserControl
         NavigatorPane.IsVisible = !FocusMode && _navigatorWanted;
         ContentPane.Classes.Set("focus", FocusMode);
         Manuscript.FocusMode = FocusMode;
+        ShowPreview();
         if (Manuscript.Node?.IsFile == true)
         {
             Manuscript.TextEditor.TextArea.Focus();
@@ -211,6 +251,155 @@ public partial class WorkspaceView : UserControl
         NavigatorToggle.Classes.Set("selected", _navigatorWanted);
         AutomationProperties.SetName(NavigatorToggle, _navigatorWanted ? "Hide navigator" : "Show navigator");
         StateChanged?.Invoke();
+    }
+
+    public void TogglePreview()
+    {
+        if (PreviewShown)
+        {
+            _previewWidth = Columns.ColumnDefinitions[3].ActualWidth;
+        }
+
+        _previewWanted = !_previewWanted;
+        ShowPreview();
+        StateChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// Copy chapter HTML: the chapter's scenes as AO3 HTML, on the clipboard, with a notice that offers the HTML. A chapter over
+    /// AO3's 500,000 characters still copies, with a warning.
+    /// </summary>
+    public async Task CopyChapterHtml(Node? chapter = null)
+    {
+        chapter ??= CurrentChapter;
+        if (chapter is not { Kind: NodeKind.Chapter, Children.Count: > 0 })
+        {
+            return;
+        }
+
+        Manuscript.Commit();
+        var scenes = chapter.Children.Select(scene => scene.Text).ToList();
+        var html = Ao3Text.ChapterHtml(scenes);
+        var number = Chapters().IndexOf(chapter) + 1;
+        var warnings = html.Length > ChapterCopy.Limit
+            ? new[] { $"This chapter is {html.Length:N0} characters of HTML, and AO3 takes up to {ChapterCopy.Limit:N0}. Split it into two chapters before posting." }
+            : [];
+        var copied = await CopyText(html);
+        var copy = new ChapterCopy(number, chapter.Title, html, scenes.Count, scenes.Sum(Words.Count), copied, warnings);
+        LastCopy = copy;
+        StateChanged?.Invoke();
+        if (!copied)
+        {
+            NoticeRequested?.Invoke("Couldn't reach the clipboard", "Open the HTML and copy it by hand.", "Show HTML", () => HtmlRequested?.Invoke(copy));
+        }
+        else if (warnings.Length > 0)
+        {
+            NoticeRequested?.Invoke($"Chapter {number} copied, but it's too long for AO3", "AO3 takes up to 500,000 characters a chapter.", "Show details", () => HtmlRequested?.Invoke(copy));
+        }
+        else
+        {
+            NoticeRequested?.Invoke($"Chapter {number} copied as HTML", "Paste into AO3's HTML editor, not Rich Text. The title goes in AO3's own field.", "Show HTML", () => HtmlRequested?.Invoke(copy));
+        }
+    }
+
+    public async Task CopyChapterTitle()
+    {
+        if (CurrentChapter is { } chapter && await CopyText(chapter.Title))
+        {
+            NoticeRequested?.Invoke("Chapter title copied", "", null, null);
+        }
+    }
+
+    public void ShowLastHtml()
+    {
+        if (LastCopy is { } copy)
+        {
+            HtmlRequested?.Invoke(copy);
+        }
+    }
+
+    /// <summary>Puts text on the clipboard, and says whether it got there.</summary>
+    public async Task<bool> CopyText(string text)
+    {
+        try
+        {
+            if (TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard)
+            {
+                return false;
+            }
+
+            await clipboard.SetTextAsync(text);
+            return true;
+        }
+        catch (Exception error) when (error is not OutOfMemoryException)
+        {
+            // A clipboard another app holds open refuses the text; the sheet still shows it to copy by hand.
+            return false;
+        }
+    }
+
+    // The preview shows when wanted and not in focus mode, at the width it had before it was hidden.
+    private void ShowPreview()
+    {
+        var shown = PreviewShown;
+        var column = Columns.ColumnDefinitions[3];
+        column.MinWidth = shown ? 280 : 0;
+        column.MaxWidth = shown ? 460 : 0;
+        column.Width = new GridLength(shown ? _previewWidth : 0);
+        Preview.IsVisible = shown;
+        PreviewSplitter.IsVisible = shown;
+        PreviewToggle.Classes.Set("selected", _previewWanted);
+        AutomationProperties.SetName(PreviewToggle, _previewWanted ? "Hide preview" : "Show preview");
+        ToolTip.SetTip(PreviewToggle, $"{(_previewWanted ? "Hide" : "Show")} preview ({Shortcut("Shift+P")})");
+        UpdatePreview();
+    }
+
+    /// <summary>The chapter the selection belongs to, as AO3 shows it, or why there's nothing to show.</summary>
+    private void UpdatePreview()
+    {
+        CopyHtml.IsEnabled = CanCopyChapter;
+        ToolTip.SetTip(CopyHtml, CurrentChapter is { } current ? $"Copy Chapter {Chapters().IndexOf(current) + 1} as HTML for AO3 ({Shortcut("Shift+C")})" : "Select a scene or chapter to copy");
+        if (!PreviewShown)
+        {
+            return;
+        }
+
+        var selected = Selected;
+        switch (CurrentChapter)
+        {
+            case { Children.Count: > 0 } chapter:
+                Manuscript.Commit();
+                var scenes = chapter.Children.Select(scene => Ao3Text.Read(scene.Text)).ToList();
+                Preview.ShowChapter(chapter.Title, $"Chapter {Chapters().IndexOf(chapter) + 1} · {Labels.Words(scenes.Sum(Ao3Text.Words))}", scenes);
+                break;
+            case not null:
+                Preview.ShowEmpty("Nothing to preview yet.", "Add a scene to this chapter and it will appear here.");
+                break;
+            default:
+                Preview.ShowEmpty(
+                    selected?.Kind == NodeKind.Page ? "Notes aren't part of a chapter." : "Select a scene to preview its chapter.",
+                    selected?.Kind == NodeKind.Page ? "The preview shows the chapter a scene belongs to." : "");
+                break;
+        }
+    }
+
+    private List<Control> PreviewMenu()
+    {
+        var chapter = CurrentChapter;
+        var copy = new KeyGesture(Key.C, (OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control) | KeyModifiers.Shift);
+        var hide = new KeyGesture(Key.P, (OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control) | KeyModifiers.Shift);
+        var items = new List<Control>
+        {
+            Item("Copy chapter HTML", () => _ = CopyChapterHtml(), copy),
+            Item("Copy chapter title", () => _ = CopyChapterTitle()),
+            new Separator(),
+            Item("Open chapter overview", () => Select(chapter)),
+            new Separator(),
+            Item("Hide preview", TogglePreview, hide),
+        };
+        items[0].IsEnabled = CanCopyChapter;
+        items[1].IsEnabled = items[3].IsEnabled = chapter is not null;
+        return items;
     }
 
     public void Toggle(Node node)
@@ -432,7 +621,7 @@ public partial class WorkspaceView : UserControl
             NodeKind.Scene or NodeKind.Page =>
                 [Item("Rename", () => StartRename(node), rename), Item("Duplicate", () => Duplicate(node), duplicate), new Separator(), Item(node.Kind == NodeKind.Scene ? "Delete scene" : "Delete page", () => AskDelete(node), delete, danger: true)],
             NodeKind.Chapter =>
-                [Item("New scene", () => Add(node, NodeKind.Scene)), Item("Rename", () => StartRename(node), rename), Item("Duplicate", () => Duplicate(node)), new Separator(), Item("Delete chapter", () => AskDelete(node), delete, danger: true)],
+                [Item("New scene", () => Add(node, NodeKind.Scene)), Item("Rename", () => StartRename(node), rename), Item("Duplicate", () => Duplicate(node)), new Separator(), Item("Copy chapter HTML", () => _ = CopyChapterHtml(node), new KeyGesture(Key.C, (OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control) | KeyModifiers.Shift)), new Separator(), Item("Delete chapter", () => AskDelete(node), delete, danger: true)],
             NodeKind.Act =>
                 [Item("New chapter", () => Add(node, NodeKind.Chapter)), Item("Rename", () => StartRename(node), rename), new Separator(), Item("Delete act", () => AskDelete(node), delete, danger: true)],
             _ => [Item("New page", () => Add(node, NodeKind.Page))],
@@ -678,6 +867,7 @@ public partial class WorkspaceView : UserControl
         }
 
         Manuscript.Show(_project, node);
+        UpdatePreview();
         StateChanged?.Invoke();
     }
 

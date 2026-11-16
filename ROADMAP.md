@@ -104,6 +104,9 @@ What the design must protect, in this order when two conflict. Everything else g
   - Fixtures in `tests/Hedgequill.Tests/Fixtures/Ao3/` fix this byte for byte.
   - This gives up nested lists and lazy continuation lines, which fic rarely uses.
 - **Word counts follow AO3's code,** otwarchive's `lib/word_counter.rb` at `def2683` (checked 2026-11-16). It counts each text node of the HTML, so `*wo*rd` is two words on AO3 and in Hedgequill. Thai joins Chinese and Japanese in counting a word per character. The fixtures' counts come from an independent copy of AO3's counter, run on the expected HTML. This gives up nothing; it supersedes M1's count, as decided on 2026-11-14.
+- **The preview catches up a moment after typing stops,** 300 ms after the last keystroke, rather than on every key. It draws the whole chapter, and redrawing it per key would slow typing in a long one. This gives up a preview that changes letter by letter.
+- **The preview's footnote lists what AO3 HTML now carries:** "Only paragraphs, emphasis, strikethrough, headings, quotes, lists, links and scene breaks are carried over." The prototype's line predates the 2026-11-14 decision. This gives up nothing.
+- **Copy's sheet warns about AO3's limit instead of unconverted items.** The prototype's sheet lists items that couldn't be converted, but anything AO3 doesn't keep stays as text, so nothing is left out. Its warning box is used for a chapter over 500,000 characters, which still copies. This gives up nothing the prototype needs.
 - **The editor shows strikethrough and links as it shows emphasis:** `~~struck~~` is struck through and a link's brackets and target fade. The prototype doesn't draw either, but they follow its rule for markers. This gives up a link that looks like a link in the editor; the preview shows it as one.
 
 ## M0: Placeholder (as soon as possible)
@@ -164,9 +167,9 @@ What the design must protect, in this order when two conflict. Everything else g
 
 ## M3: AO3
 
-- [ ] Markdown to AO3 HTML in `Hedgequill.Core`: paragraphs, emphasis, strikethrough, headings, quotes, lists, links and scene breaks. Anything else becomes plain text.
-- [ ] The AO3 preview: it can be hidden and resized, and starts hidden when the window is narrower than 1,200 px. It shows links but never opens them.
-- [ ] Copy chapter HTML, Copy chapter title and Show HTML, with the note "Paste into AO3's HTML editor, not Rich Text." Copy warns when a chapter passes AO3's limit of 500,000 characters.
+- [x] Markdown to AO3 HTML in `Hedgequill.Core`: paragraphs, emphasis, strikethrough, headings, quotes, lists, links and scene breaks. Anything else becomes plain text.
+- [x] The AO3 preview: it can be hidden and resized, and starts hidden when the window is narrower than 1,200 px. It shows links but never opens them.
+- [x] Copy chapter HTML, Copy chapter title and Show HTML, with the note "Paste into AO3's HTML editor, not Rich Text." Copy warns when a chapter passes AO3's limit of 500,000 characters.
 - [ ] Summary and notes, for the work and each chapter, as AO3's posting form has them: a summary, beginning notes and end notes. Each has Copy, which gives AO3 HTML, and shows AO3's limit: 1,250 characters for a summary, 5,000 for notes. Settle first where they live; `hedgequill.json`, which holds a project's details, is the likely home.
 - [ ] Changed since copied: Copy chapter HTML records the chapter in `hedgequill.json`, and the navigator marks a chapter edited since, so a fix doesn't get left off AO3.
 - [ ] Every word count Hedgequill shows matches AO3's, as decided above.

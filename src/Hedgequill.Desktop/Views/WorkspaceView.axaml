@@ -1,9 +1,9 @@
-<!-- A project open: the navigator on the left and the content column, as the prototype lays them out. -->
+<!-- A project open: the navigator on the left, the content column, and the AO3 preview on the right, as the prototype lays them out. -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:views="using:Hedgequill.Desktop.Views"
              x:Class="Hedgequill.Desktop.Views.WorkspaceView">
-  <Grid x:Name="Columns" ColumnDefinitions="236,*">
+  <Grid x:Name="Columns" ColumnDefinitions="236,*,Auto,340">
     <DockPanel x:Name="NavigatorPane" Grid.Column="0">
       <Button x:Name="ProjectMenu" DockPanel.Dock="Top" Classes="project-menu" Margin="8,8,8,6" AutomationProperties.Name="Project menu" ToolTip.Tip="Project menu">
         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
@@ -51,7 +51,7 @@
     </DockPanel>
 
     <DockPanel Grid.Column="1">
-      <Grid x:Name="Header" DockPanel.Dock="Top" Height="40" Margin="10,0,12,0" ColumnDefinitions="Auto,*,Auto,Auto">
+      <Grid x:Name="Header" DockPanel.Dock="Top" Height="40" Margin="10,0,12,0" ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto">
         <Button x:Name="NavigatorToggle" Classes="tool selected" AutomationProperties.Name="Hide navigator" VerticalAlignment="Center">
           <Path Data="M2.5 3.5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1ZM6 2.5v11" />
         </Button>
@@ -60,13 +60,26 @@
           <TextBlock x:Name="HeaderSub" Classes="caption" />
         </StackPanel>
         <ContentControl x:Name="SaveSlot" Grid.Column="2" VerticalAlignment="Center" Focusable="False" />
-        <Button x:Name="FocusButton" Grid.Column="3" Classes="tool" AutomationProperties.Name="Focus mode" VerticalAlignment="Center">
+        <Button x:Name="PreviewToggle" Grid.Column="3" Classes="tool selected" AutomationProperties.Name="Hide preview" VerticalAlignment="Center">
+          <Path Data="M2.5 3.5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1ZM10 2.5v11" />
+        </Button>
+        <Button x:Name="FocusButton" Grid.Column="4" Classes="tool" AutomationProperties.Name="Focus mode" VerticalAlignment="Center">
           <Path Data="M2.5 5V3.5a1 1 0 0 1 1-1H5M11 2.5h1.5a1 1 0 0 1 1 1V5M13.5 11v1.5a1 1 0 0 1-1 1H11M5 13.5H3.5a1 1 0 0 1-1-1V11" />
+        </Button>
+        <Border Grid.Column="5" Classes="header-separator" />
+        <Button x:Name="CopyHtml" Grid.Column="6" Classes="small accent copy-html" VerticalAlignment="Center" AutomationProperties.Name="Copy HTML">
+          <StackPanel>
+            <Path Data="M4.5 1.5h3v2h-3ZM4.5 2.5H3.5a1 1 0 0 0-1 1v6.5a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1V3.5a1 1 0 0 0-1-1H7.5" />
+            <TextBlock Text="Copy HTML" />
+          </StackPanel>
         </Button>
       </Grid>
       <Border x:Name="ContentPane" Classes="content-pane">
         <views:ManuscriptView x:Name="Manuscript" />
       </Border>
     </DockPanel>
+
+    <GridSplitter x:Name="PreviewSplitter" Grid.Column="2" Classes="preview-splitter" ResizeDirection="Columns" AutomationProperties.Name="Resize preview" />
+    <views:PreviewView x:Name="Preview" Grid.Column="3" />
   </Grid>
 </UserControl>

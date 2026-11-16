@@ -22,6 +22,7 @@
       <ContentControl x:Name="Screen" Focusable="False" />
       <views:NewProjectSheet x:Name="Sheet" IsVisible="False" />
       <views:ConfirmSheet x:Name="Confirmation" IsVisible="False" />
+      <views:Ao3Sheet x:Name="Ao3Html" IsVisible="False" />
       <views:Toast x:Name="Notice" IsVisible="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16" />
     </Panel>
   </DockPanel>

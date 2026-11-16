@@ -34,9 +34,11 @@ public sealed class MenuTests : IDisposable
             ["Undo", "Redo", "-", "Cut", "Copy", "Paste", "-", "Bold", "Italic", "Insert scene break", "-", "Rename", "Find…"],
             Headers(window, "Edit"));
         Assert.Equal(
-            ["Navigator", "Focus mode", "-", "Appearance", "Match system", "Light", "Dark", "-", "Collapse all"],
+            ["Navigator", "Preview", "Focus mode", "-", "Appearance", "Match system", "Light", "Dark", "-", "Collapse all"],
             Headers(window, "View"));
-        Assert.Equal(["Open chapter overview", "Duplicate chapter", "-", "Delete chapter"], Headers(window, "Chapter"));
+        Assert.Equal(
+            ["Copy chapter HTML", "Copy chapter title", "Show last HTML…", "-", "Open chapter overview", "Duplicate chapter", "-", "Delete chapter"],
+            Headers(window, "Chapter"));
     });
 
     [Fact]

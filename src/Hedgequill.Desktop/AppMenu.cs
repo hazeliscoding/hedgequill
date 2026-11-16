@@ -9,7 +9,7 @@ namespace Hedgequill.Desktop;
 
 /// <summary>
 /// The prototype's menu bar: File, Edit, View and Chapter. It's one NativeMenu: macOS shows it at the top of the screen,
-/// and Windows in the window's caption row. Help and the AO3 commands arrive with M3 and M5, when they do something.
+/// and Windows in the window's caption row. Help arrives with M5, when it does something.
 /// </summary>
 public sealed class AppMenu
 {
@@ -67,6 +67,7 @@ public sealed class AppMenu
         var view = Submenu(
             "View",
             Toggle("Navigator", () => Workspace?.ToggleNavigator(), () => Workspace?.NavigatorShown == true, Gesture(Key.OemPipe), () => Open() && Workspace?.FocusMode != true),
+            Toggle("Preview", () => Workspace?.TogglePreview(), () => Workspace?.PreviewShown == true, Gesture(Key.P, KeyModifiers.Shift), () => Open() && Workspace?.FocusMode != true),
             Toggle("Focus mode", () => Workspace?.ToggleFocus(), () => Workspace?.FocusMode == true, Gesture(Key.F, KeyModifiers.Shift), Open),
             new NativeMenuItemSeparator(),
             new NativeMenuItem("Appearance") { IsEnabled = false },
@@ -78,6 +79,10 @@ public sealed class AppMenu
 
         var chapter = Submenu(
             "Chapter",
+            Item("Copy chapter HTML", () => _ = Workspace?.CopyChapterHtml(), Gesture(Key.C, KeyModifiers.Shift), () => Workspace?.CanCopyChapter == true),
+            Item("Copy chapter title", () => _ = Workspace?.CopyChapterTitle(), enabled: Chapter),
+            Item("Show last HTML…", () => Workspace?.ShowLastHtml(), enabled: () => Workspace?.LastCopy is not null),
+            new NativeMenuItemSeparator(),
             Item("Open chapter overview", () => Workspace?.Select(Workspace.CurrentChapter), enabled: Chapter),
             Item("Duplicate chapter", () => Workspace?.Duplicate(Workspace.CurrentChapter!), enabled: Chapter),
             new NativeMenuItemSeparator(),

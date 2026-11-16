@@ -46,6 +46,7 @@
       <!-- Spell check's wavy underline, the prototype's danger red. -->
       <SolidColorBrush x:Key="Misspelling" Color="#D9453B" />
       <SolidColorBrush x:Key="WarningText" Color="#83560A" />
+      <SolidColorBrush x:Key="WarningSoft" Color="#FBF0DC" />
       <SolidColorBrush x:Key="InfoText" Color="#2353AD" />
       <!-- White on the prototype's danger red is about 4:1, so the button uses the darker red in both themes. -->
       <SolidColorBrush x:Key="DangerButton" Color="#B1362D" />
@@ -116,6 +117,7 @@
       <SolidColorBrush x:Key="DangerText" Color="#F0968F" />
       <SolidColorBrush x:Key="Misspelling" Color="#E8736B" />
       <SolidColorBrush x:Key="WarningText" Color="#EDBB66" />
+      <SolidColorBrush x:Key="WarningSoft" Color="#26E0A23A" />
       <SolidColorBrush x:Key="InfoText" Color="#9AB8F4" />
       <!-- White on the prototype's danger red is about 4:1, so the button uses the darker red in both themes. -->
       <SolidColorBrush x:Key="DangerButton" Color="#B1362D" />
