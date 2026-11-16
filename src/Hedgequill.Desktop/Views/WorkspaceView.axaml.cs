@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
@@ -135,6 +136,18 @@ public partial class WorkspaceView : UserControl
             _previewWanted = TopLevel.GetTopLevel(this) is not { ClientSize.Width: < 1200 };
             ShowPreview();
         };
+        FindPane.Documents = () =>
+        {
+            Manuscript.Commit();
+            return _project.Root.Descendants().Where(node => node.IsFile);
+        };
+        FindPane.CloseRequested += CloseFindInProject;
+        FindPane.OpenRequested += (node, offset, length) =>
+        {
+            Reveal(node);
+            Manuscript.Reveal(offset, length);
+        };
+        FindPane.ReplaceRequested += ReplaceAll;
         var addMenu = new MenuFlyout { Placement = PlacementMode.TopEdgeAlignedRight };
         addMenu.Opening += (_, _) => addMenu.ItemsSource = AddMenu();
         More.Flyout = addMenu;
@@ -226,6 +239,101 @@ public partial class WorkspaceView : UserControl
     public void InsertSceneBreak() => Manuscript.InsertSceneBreak();
 
     public void OpenFind() => Manuscript.OpenFind();
+
+    /// <summary>Edit › Find in project…: the find panel takes the navigator's place, leaving focus mode as the prototype does.</summary>
+    public void OpenFindInProject()
+    {
+        if (FocusMode)
+        {
+            ToggleFocus();
+        }
+
+        if (!_navigatorWanted)
+        {
+            ToggleNavigator();
+        }
+
+        Tree.IsVisible = false;
+        FindPane.IsVisible = true;
+        FindPane.Open();
+        StateChanged?.Invoke();
+    }
+
+    public void CloseFindInProject()
+    {
+        FindPane.IsVisible = false;
+        Tree.IsVisible = true;
+        FocusNavigator();
+        StateChanged?.Invoke();
+    }
+
+    /// <summary>Selects a scene or page, opening the chapters above it if they're collapsed.</summary>
+    private void Reveal(Node node)
+    {
+        if (_collapsed.Overlaps(Ancestors(node)))
+        {
+            _collapsed.ExceptWith(Ancestors(node));
+            Refresh();
+        }
+
+        Select(node);
+    }
+
+    private void ReplaceAll(Regex pattern, string replacement)
+    {
+        Manuscript.Commit();
+        var changed = new List<(Node Node, string Before, string After)>();
+        var count = 0;
+        foreach (var node in _project.Root.Descendants().Where(node => node.IsFile).ToList())
+        {
+            var matches = pattern.Count(node.Text);
+            if (matches > 0)
+            {
+                count += matches;
+                var before = node.Text;
+                node.Text = Find.ReplaceAll(pattern, before, replacement);
+                changed.Add((node, before, node.Text));
+            }
+        }
+
+        if (count == 0)
+        {
+            return;
+        }
+
+        Changed(changed.Select(change => change.Node));
+        var scenes = changed.Count;
+        NoticeRequested?.Invoke($"Replaced {count} match{(count == 1 ? "" : "es")} in {scenes} scene{(scenes == 1 ? "" : "s")}", "", "Undo", () =>
+        {
+            Manuscript.Commit();
+            // Only what hasn't changed since, so Undo never takes back words typed after the replace.
+            var undone = changed.Where(change => change.Node.Text == change.After && change.Node.Parent is not null).ToList();
+            foreach (var (node, before, _) in undone)
+            {
+                node.Text = before;
+            }
+
+            Changed(undone.Select(change => change.Node));
+        });
+    }
+
+    /// <summary>Text changed outside the editor: the editor drops what it held for these, and the saver writes them.</summary>
+    private void Changed(IEnumerable<Node> nodes)
+    {
+        foreach (var node in nodes)
+        {
+            Manuscript.Reload(node);
+            Edited?.Invoke(node);
+        }
+
+        if (FindPane.IsVisible)
+        {
+            FindPane.Refresh();
+        }
+
+        _previewTimer.Stop();
+        _previewTimer.Start();
+    }
 
     /// <summary>Copies a scene, page or chapter to "… copy" right after it and selects the copy, as the prototype does.</summary>
     public void Duplicate(Node node)

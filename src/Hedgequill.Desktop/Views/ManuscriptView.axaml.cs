@@ -216,6 +216,16 @@ public partial class ManuscriptView : UserControl
         };
     }
 
+    /// <summary>Selects text in the open scene or page and scrolls to it, as a match in Find in project does.</summary>
+    public void Reveal(int offset, int length)
+    {
+        offset = Math.Min(offset, Editor.Document.TextLength);
+        Editor.Select(offset, Math.Min(length, Editor.Document.TextLength - offset));
+        var location = Editor.Document.GetLocation(offset);
+        Editor.ScrollTo(location.Line, location.Column);
+        Editor.TextArea.Focus();
+    }
+
     /// <summary>Edit › Find…: AvaloniaEdit's search panel, on the open scene or page.</summary>
     public void OpenFind()
     {

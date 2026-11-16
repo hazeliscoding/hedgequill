@@ -21,6 +21,7 @@
       <SolidColorBrush x:Key="AccentHover" Color="#5D1F2B" />
       <SolidColorBrush x:Key="AccentPressed" Color="#4D1923" />
       <SolidColorBrush x:Key="AccentText" Color="#6E2633" />
+      <SolidColorBrush x:Key="AccentSoft" Color="#F1E3E5" />
       <SolidColorBrush x:Key="TextOnAccent" Color="#FFFFFF" />
       <StaticResource x:Key="FocusRing" ResourceKey="Accent" />
 
@@ -92,6 +93,7 @@
       <SolidColorBrush x:Key="AccentHover" Color="#AD5668" />
       <SolidColorBrush x:Key="AccentPressed" Color="#8F3F50" />
       <SolidColorBrush x:Key="AccentText" Color="#DC98A4" />
+      <SolidColorBrush x:Key="AccentSoft" Color="#2EA14A5C" />
       <SolidColorBrush x:Key="TextOnAccent" Color="#FFFFFF" />
       <!-- The accent itself is under 3:1 on BgPage, so focus uses the lighter accent text. -->
       <StaticResource x:Key="FocusRing" ResourceKey="AccentText" />
