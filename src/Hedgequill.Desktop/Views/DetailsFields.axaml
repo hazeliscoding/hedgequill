@@ -1,0 +1,8 @@
+<!-- The prototype's "For AO3" fields: a summary and the notes before and after, each with its count against AO3's limit and Copy. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Hedgequill.Desktop.Views.DetailsFields">
+  <StackPanel x:Name="Fields" Spacing="18" Margin="0,44,0,0">
+    <TextBlock Classes="eyebrow" Text="FOR AO3" />
+  </StackPanel>
+</UserControl>

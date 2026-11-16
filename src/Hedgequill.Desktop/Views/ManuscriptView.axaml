@@ -60,6 +60,7 @@
             </StackPanel>
           </Button>
         </StackPanel>
+        <views:DetailsFields x:Name="ForAo3" />
       </StackPanel>
     </ScrollViewer>
 

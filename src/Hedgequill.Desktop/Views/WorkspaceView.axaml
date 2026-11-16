@@ -28,7 +28,7 @@
         <ListBox x:Name="Navigator" Classes="navigator" AutomationProperties.Name="Manuscript">
           <ListBox.ItemTemplate>
             <DataTemplate x:DataType="views:NavigatorRow">
-              <Grid Height="{Binding Height}" Margin="{Binding Indent}" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="4" Background="Transparent">
+              <Grid Height="{Binding Height}" Margin="{Binding Indent}" ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="4" Background="Transparent">
                 <Button Classes="chevron" Classes.empty="{Binding !HasChildren}" Classes.quiet="{Binding QuietChevron}" AutomationProperties.Name="Expand or collapse" Focusable="False">
                   <Path Data="M4.5 3L7.5 6L4.5 9">
                     <Path.RenderTransform>
@@ -39,6 +39,7 @@
                 <TextBlock Grid.Column="1" Classes="row-number" IsVisible="{Binding IsChapter}" Text="{Binding Number}" />
                 <TextBlock Grid.Column="2" Classes="row-title" Classes.label="{Binding IsLabel}" Classes.chapter="{Binding IsChapter}" Text="{Binding Title}" IsVisible="{Binding !IsRenaming}" />
                 <TextBox Grid.Column="2" Classes="rename" IsVisible="{Binding IsRenaming}" Text="{Binding Title, Mode=OneTime}" AutomationProperties.Name="Rename" />
+                <Ellipse Grid.Column="3" Classes="changed-dot" IsVisible="{Binding Changed}" ToolTip.Tip="Changed since you copied it for AO3" />
               </Grid>
             </DataTemplate>
           </ListBox.ItemTemplate>

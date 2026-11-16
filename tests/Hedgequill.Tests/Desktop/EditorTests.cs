@@ -204,7 +204,7 @@ public sealed class EditorTests : IDisposable
         workspace.Select(workspace.Rows.Single(row => row.Title == "Chapter 1").Node);
 
         var manuscript = Find<ManuscriptView>(workspace, "Manuscript");
-        Assert.Equal(["CHAPTER 1", "Chapter 1", "2 scenes · 9 words", "1", "Fog", "4 words", "2", "Rain", "5 words"], VisibleText(manuscript));
+        Assert.Equal(["CHAPTER 1", "Chapter 1", "2 scenes · 9 words", "1", "Fog", "4 words", "2", "Rain", "5 words"], VisibleText(manuscript).TakeWhile(text => text != "FOR AO3"));
 
         Click(window, Visible<Button>(manuscript).Single(button => Avalonia.Automation.AutomationProperties.GetName(button) == "Rain"));
         Assert.Equal("Rain", workspace.Selected?.Title);

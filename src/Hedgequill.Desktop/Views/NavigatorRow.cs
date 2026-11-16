@@ -1,14 +1,35 @@
+using System.ComponentModel;
 using Avalonia;
 using Hedgequill.Core.Projects;
 
 namespace Hedgequill.Desktop.Views;
 
 /// <summary>One visible line of the navigator. The prototype flattens the outline into rows, indented by depth.</summary>
-public sealed class NavigatorRow(Node node, int depth, int chapterNumber, bool expanded, bool first, bool renaming)
+public sealed class NavigatorRow(Node node, int depth, int chapterNumber, bool expanded, bool first, bool renaming) : INotifyPropertyChanged
 {
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     public Node Node { get; } = node;
 
     public string Title => Node.Title;
+
+    /// <summary>A chapter edited since Copy chapter HTML last copied it, which the prototype marks with a dot.</summary>
+    public bool Changed
+    {
+        get;
+        set
+        {
+            if (field != value)
+            {
+                field = value;
+                PropertyChanged?.Invoke(this, new(nameof(Changed)));
+                PropertyChanged?.Invoke(this, new(nameof(Spoken)));
+            }
+        }
+    }
+
+    /// <summary>What a screen reader says for the row: its title, and the mark when there is one.</summary>
+    public string Spoken => Changed ? $"{Title}, changed since copied for AO3" : Title;
 
     /// <summary>Acts, Notes and Research are small labels over their contents.</summary>
     public bool IsLabel => Node.Kind is NodeKind.Act or NodeKind.Notes or NodeKind.Research;
