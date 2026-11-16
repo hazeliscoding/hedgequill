@@ -37,6 +37,8 @@ public sealed partial class Project
             }
         }
 
+        KeepOnce(node);
+
         // A folder deleted in another app comes back rather than losing the words.
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         AtomicFile.Write(path, text);

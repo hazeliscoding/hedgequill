@@ -25,7 +25,7 @@ public sealed class PopupMenuTests : IDisposable
     public Task Right_clicking_a_row_opens_its_menu_like_the_prototype() => OnProject((window, workspace) =>
     {
         var menu = RightClick(window, workspace, "Fog");
-        Assert.Equal(["Rename", "Duplicate", "-", "Delete scene"], Headers(menu));
+        Assert.Equal(["Rename", "Duplicate", "Earlier versions…", "-", "Delete scene"], Headers(menu));
         Assert.Equal("Fog", workspace.Selected?.Title);
         menu.Hide();
 

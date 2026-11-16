@@ -177,6 +177,9 @@ public partial class WorkspaceView : UserControl
     /// <summary>Show HTML: the window opens the sheet with a copied chapter's title and HTML.</summary>
     public event Action<ChapterCopy>? HtmlRequested;
 
+    /// <summary>Earlier versions…: the window opens the sheet with the scene's kept versions.</summary>
+    public event Action<Node>? VersionsRequested;
+
     public bool FocusMode { get; private set; }
 
     public bool PreviewShown => _previewWanted && !FocusMode;
@@ -265,6 +268,28 @@ public partial class WorkspaceView : UserControl
         Tree.IsVisible = true;
         FocusNavigator();
         StateChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// Brings back an earlier version of a scene. The text it replaces is kept as a version first, and the editor shows the
+    /// version as new text, so the saver writes it like any edit.
+    /// </summary>
+    public void BringBack(Node scene, SceneVersion version, string when)
+    {
+        Manuscript.Commit();
+        Attempt($"Couldn't bring back the version from {when}", () =>
+        {
+            _project.BringBack(scene, version);
+            Changed([scene]);
+            NoticeRequested?.Invoke($"Brought back the version from {when}", "The text before it is kept as a version too.", null, null);
+        });
+    }
+
+    /// <summary>Earlier versions…, from a scene's row menu: what's in the editor is written first, so the list is current.</summary>
+    public void ShowVersions(Node scene)
+    {
+        FlushRequested?.Invoke();
+        VersionsRequested?.Invoke(scene);
     }
 
     /// <summary>Selects a scene or page, opening the chapters above it if they're collapsed.</summary>
@@ -804,7 +829,7 @@ public partial class WorkspaceView : UserControl
         return node.Kind switch
         {
             NodeKind.Scene or NodeKind.Page =>
-                [Item("Rename", () => StartRename(node), rename), Item("Duplicate", () => Duplicate(node), duplicate), new Separator(), Item(node.Kind == NodeKind.Scene ? "Delete scene" : "Delete page", () => AskDelete(node), delete, danger: true)],
+                [Item("Rename", () => StartRename(node), rename), Item("Duplicate", () => Duplicate(node), duplicate), .. (node.Kind == NodeKind.Scene ? [Item("Earlier versions…", () => ShowVersions(node))] : Array.Empty<Control>()), new Separator(), Item(node.Kind == NodeKind.Scene ? "Delete scene" : "Delete page", () => AskDelete(node), delete, danger: true)],
             NodeKind.Chapter =>
                 [Item("New scene", () => Add(node, NodeKind.Scene)), Item("Rename", () => StartRename(node), rename), Item("Duplicate", () => Duplicate(node)), new Separator(), Item("Copy chapter HTML", () => _ = CopyChapterHtml(node), new KeyGesture(Key.C, (OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control) | KeyModifiers.Shift)), new Separator(), Item("Delete chapter", () => AskDelete(node), delete, danger: true)],
             NodeKind.Act =>

@@ -228,7 +228,8 @@ public sealed partial class Project
     private static bool IsReserved(string name) =>
         name.Equals(NotesFolder, StringComparison.OrdinalIgnoreCase) ||
         name.Equals(ResearchFolder, StringComparison.OrdinalIgnoreCase) ||
-        name.Equals(TrashFolder, StringComparison.OrdinalIgnoreCase);
+        name.Equals(TrashFolder, StringComparison.OrdinalIgnoreCase) ||
+        name.Equals(VersionsFolder, StringComparison.OrdinalIgnoreCase);
 
     private static IEnumerable<string> Folders(string folder) =>
         Directory.EnumerateDirectories(folder).Select(Path.GetFileName).OfType<string>().Where(name => !name.StartsWith('.'));

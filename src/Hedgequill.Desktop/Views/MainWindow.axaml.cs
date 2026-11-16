@@ -244,6 +244,12 @@ public partial class MainWindow : Window
         var workspace = new WorkspaceView(project);
         workspace.ConfirmRequested += Confirmation.Show;
         workspace.HtmlRequested += copy => Ao3Html.Show(copy, workspace.CopyText, done => Notice.Show(done, ""));
+        workspace.VersionsRequested += scene => Attempt("Couldn't read the earlier versions", () =>
+        {
+            var now = DateTime.Now;
+            var rows = project.Versions(scene).Select(version => VersionRow.From(version, now)).ToList();
+            Versions.Show(scene.Title, rows, row => workspace.BringBack(scene, row.Version, row.When));
+        });
         workspace.NoticeRequested += (title, detail, label, action) => Notice.Show(title, detail, label, action);
 
         var saver = new Saver(project, workspace.Commit, TimeSpan.FromMilliseconds(700));
