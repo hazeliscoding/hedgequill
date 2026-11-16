@@ -113,6 +113,9 @@ public partial class ManuscriptView : UserControl
     /// <summary>Something went wrong that the writer should hear about: a heading and a detail.</summary>
     public event Action<string, string>? NoticeRequested;
 
+    /// <summary>The "For AO3" fields under a chapter's or the work's overview.</summary>
+    public DetailsFields Ao3Fields => ForAo3;
+
     public AvaloniaEdit.TextEditor TextEditor => Editor;
 
     /// <summary>Spell check's underlines, or null where the system has no checker.</summary>
@@ -170,7 +173,7 @@ public partial class ManuscriptView : UserControl
         _project = project;
         _node = node;
         EditorPane.IsVisible = node?.IsFile == true;
-        ChapterPane.IsVisible = node?.Kind == NodeKind.Chapter;
+        ChapterPane.IsVisible = node?.Kind is NodeKind.Chapter or NodeKind.Project;
         EmptyPane.IsVisible = !EditorPane.IsVisible && !ChapterPane.IsVisible;
         FocusFooter.IsVisible = FocusMode && node is not null;
 
@@ -186,6 +189,10 @@ public partial class ManuscriptView : UserControl
         else if (node.Kind == NodeKind.Chapter)
         {
             ShowChapter(node);
+        }
+        else if (node.Kind == NodeKind.Project)
+        {
+            ShowWork(project);
         }
         else
         {
@@ -298,8 +305,21 @@ public partial class ManuscriptView : UserControl
         Layout();
     }
 
+    /// <summary>The work as AO3 lists it: its title, chapters and words, and its summary and notes.</summary>
+    private void ShowWork(Project project)
+    {
+        var chapters = project.Root.Descendants().Count(node => node.Kind == NodeKind.Chapter);
+        ChapterEyebrow.Text = "WORK";
+        ChapterTitle.Text = project.Title;
+        ChapterMeta.Text = $"{chapters} chapter{(chapters == 1 ? "" : "s")} · {Labels.Words(project.Words)}";
+        ChapterScenes.IsVisible = false;
+        ChapterEmpty.IsVisible = false;
+        ForAo3.Show(project.Root);
+    }
+
     private void ShowChapter(Node chapter)
     {
+        ForAo3.Show(chapter);
         var scenes = chapter.Children.ToList();
         var words = scenes.Sum(scene => Words.Count(scene.Text));
         ChapterEyebrow.Text = $"CHAPTER {NumberOf(chapter)}";

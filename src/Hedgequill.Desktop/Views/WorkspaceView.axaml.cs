@@ -32,6 +32,8 @@ public partial class WorkspaceView : UserControl
     private NavigatorRow? _contextRow;
     private (Node Target, Placement Where)? _drop;
     private readonly DispatcherTimer _previewTimer;
+    private readonly DispatcherTimer _detailsTimer;
+    private bool _detailsDirty;
     private bool _previewWanted = true;
     private double _previewWidth = 340;
 
@@ -85,7 +87,7 @@ public partial class WorkspaceView : UserControl
         Navigator.AddHandler(PointerReleasedEvent, OnRelease, RoutingStrategies.Tunnel);
         Navigator.AddHandler(PointerCaptureLostEvent, (_, _) => EndDrag());
         NewScene.Click += (_, _) => AddScene();
-        ProjectMenu.Click += (_, _) => new MenuFlyout { ItemsSource = new List<Control> { Item("Close project", () => CloseRequested?.Invoke()) } }.ShowAt(ProjectMenu);
+        ProjectMenu.Click += (_, _) => new MenuFlyout { ItemsSource = new List<Control> { Item("Summary and notes", ShowWork), new Separator(), Item("Close project", () => CloseRequested?.Invoke()) } }.ShowAt(ProjectMenu);
         NavigatorToggle.Click += (_, _) => ToggleNavigator();
         FocusButton.Click += (_, _) => ToggleFocus();
         Manuscript.OpenRequested += Select;
@@ -105,7 +107,23 @@ public partial class WorkspaceView : UserControl
         {
             _previewTimer!.Stop();
             UpdatePreview();
+            UpdateChanged(all: false);
         });
+        // Summary and notes are the writer's words too: saved a moment after typing stops, and with every flush.
+        _detailsTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(700), DispatcherPriority.Background, (_, _) => SaveDetails());
+        Manuscript.Ao3Fields.Changed += () =>
+        {
+            _detailsDirty = true;
+            _detailsTimer.Stop();
+            _detailsTimer.Start();
+        };
+        Manuscript.Ao3Fields.CopyRequested += async (label, html) =>
+        {
+            if (await CopyText(html))
+            {
+                NoticeRequested?.Invoke($"{label} copied as HTML", "Paste it into the matching field on AO3's posting form.", null, null);
+            }
+        };
         PreviewToggle.Click += (_, _) => TogglePreview();
         CopyHtml.Click += (_, _) => _ = CopyChapterHtml();
         var previewMenu = new MenuFlyout();
@@ -165,8 +183,23 @@ public partial class WorkspaceView : UserControl
         set => Manuscript.SaveLabel = value;
     }
 
-    /// <summary>Copies the editor's text into its scene or page.</summary>
-    public void Commit() => Manuscript.Commit();
+    /// <summary>Copies the editor's text into its scene or page, and writes changed summaries and notes to hedgequill.json.</summary>
+    public void Commit()
+    {
+        Manuscript.Commit();
+        SaveDetails();
+    }
+
+    /// <summary>Summary and notes, from the project menu: the work's overview, with its summary and notes for AO3.</summary>
+    public void ShowWork()
+    {
+        Navigator.SelectedItem = null;
+        HeaderTitle.Text = _project.Title;
+        HeaderSub.Text = "Work";
+        Manuscript.Show(_project, _project.Root);
+        UpdatePreview();
+        StateChanged?.Invoke();
+    }
 
     public void Reload(Node node) => Manuscript.Reload(node);
 
@@ -285,6 +318,20 @@ public partial class WorkspaceView : UserControl
             ? new[] { $"This chapter is {html.Length:N0} characters of HTML, and AO3 takes up to {ChapterCopy.Limit:N0}. Split it into two chapters before posting." }
             : [];
         var copied = await CopyText(html);
+        if (copied)
+        {
+            try
+            {
+                _project.MarkCopied(chapter, html);
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            {
+                // The mark is a reminder; a folder that can't take the index already shows its own save state.
+            }
+
+            UpdateChanged();
+        }
+
         var copy = new ChapterCopy(number, chapter.Title, html, scenes.Count, scenes.Sum(Words.Count), copied, warnings);
         LastCopy = copy;
         StateChanged?.Invoke();
@@ -335,6 +382,36 @@ public partial class WorkspaceView : UserControl
         {
             // A clipboard another app holds open refuses the text; the sheet still shows it to copy by hand.
             return false;
+        }
+    }
+
+    private void SaveDetails()
+    {
+        _detailsTimer.Stop();
+        if (!_detailsDirty)
+        {
+            return;
+        }
+
+        try
+        {
+            _project.SaveIndex();
+            _detailsDirty = false;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            // The text stays in the fields and in memory, and the next pause or flush tries again.
+            NoticeRequested?.Invoke("Couldn't save the summary and notes", error.Message, null, null);
+        }
+    }
+
+    /// <summary>Marks the chapters whose AO3 HTML changed since it was copied: the open chapter after an edit, or all of them.</summary>
+    private void UpdateChanged(bool all = true)
+    {
+        var current = CurrentChapter ?? ChapterOf(Manuscript.Node);
+        foreach (var row in Rows.Where(row => row.IsChapter && (all || row.Node == current)))
+        {
+            row.Changed = Project.ChangedSinceCopied(row.Node);
         }
     }
 
@@ -838,7 +915,7 @@ public partial class WorkspaceView : UserControl
             foreach (var node in parent.Children)
             {
                 var expanded = !_collapsed.Contains(node);
-                rows.Add(new NavigatorRow(node, depth, chapters.IndexOf(node) + 1, expanded, rows.Count == 0, node == _renaming));
+                rows.Add(new NavigatorRow(node, depth, chapters.IndexOf(node) + 1, expanded, rows.Count == 0, node == _renaming) { Changed = node.Kind == NodeKind.Chapter && Project.ChangedSinceCopied(node) });
                 if (expanded)
                 {
                     Add(node, depth + 1);

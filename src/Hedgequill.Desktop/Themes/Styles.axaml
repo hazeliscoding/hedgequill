@@ -239,6 +239,30 @@
     <Setter Property="LineHeight" Value="16" />
     <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
+  <!-- The "For AO3" fields under a chapter's or the work's overview, in the manuscript face. -->
+  <Style Selector="Ellipse.changed-dot">
+    <Setter Property="Width" Value="6" />
+    <Setter Property="Height" Value="6" />
+    <Setter Property="Margin" Value="4,0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Fill" Value="{DynamicResource Accent}" />
+  </Style>
+  <Style Selector="TextBlock.field-count">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="LineHeight" Value="14" />
+    <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
+  </Style>
+  <Style Selector="TextBlock.field-count.over">
+    <Setter Property="Foreground" Value="{DynamicResource DangerText}" />
+  </Style>
+  <Style Selector="TextBox.ao3-field">
+    <Setter Property="FontFamily" Value="{StaticResource FontManuscript}" />
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="LineHeight" Value="23.25" />
+    <Setter Property="Padding" Value="12,10" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+    <Setter Property="VerticalContentAlignment" Value="Top" />
+  </Style>
   <Style Selector="TextBlock.toast-title">
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="TextWrapping" Value="Wrap" />
@@ -271,7 +295,7 @@
   </Style>
   <Style Selector="ListBox.navigator > ListBoxItem" x:DataType="views:NavigatorRow">
     <!-- Without it, screen readers read each row as its class name. -->
-    <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
+    <Setter Property="AutomationProperties.Name" Value="{Binding Spoken}" />
     <Setter Property="Padding" Value="0" />
     <Setter Property="MinHeight" Value="0" />
     <Setter Property="Margin" Value="{Binding Gap}" />
