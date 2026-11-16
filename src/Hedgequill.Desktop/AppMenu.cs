@@ -62,7 +62,8 @@ public sealed class AppMenu
             Item("Insert scene break", () => Workspace?.InsertSceneBreak(), Gesture(Key.Enter), Scene),
             new NativeMenuItemSeparator(),
             Item("Rename", () => Workspace?.StartRename(Workspace.Selected!), new KeyGesture(Key.F2), Renamable),
-            Item("Find…", () => Workspace?.OpenFind(), Gesture(Key.F), Document));
+            Item("Find…", () => Workspace?.OpenFind(), Gesture(Key.F), Document),
+            Item("Find in project…", () => Workspace?.OpenFindInProject(), Gesture(Key.H, KeyModifiers.Shift), Open));
 
         var view = Submenu(
             "View",

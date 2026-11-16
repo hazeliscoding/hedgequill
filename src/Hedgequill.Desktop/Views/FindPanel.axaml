@@ -1,0 +1,66 @@
+<!-- Find in project, in the navigator's place as the prototype draws it: find, replace, the options, and every match under its scene. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Hedgequill.Desktop.Views.FindPanel">
+  <UserControl.Styles>
+    <Style Selector="TextBox.find">
+      <Setter Property="Height" Value="28" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Padding" Value="10,0" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}" />
+    </Style>
+    <Style Selector="CheckBox">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+    </Style>
+    <Style Selector="TextBlock.group-title">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="LineHeight" Value="16" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+    <Style Selector="TextBlock.match">
+      <Setter Property="FontFamily" Value="{StaticResource FontManuscript}" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="LineHeight" Value="18" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+    </Style>
+    <Style Selector="Run.hit">
+      <Setter Property="Background" Value="{DynamicResource AccentSoft}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+    </Style>
+    <Style Selector="Button.match">
+      <Setter Property="Padding" Value="14,4,6,4" />
+      <Setter Property="Margin" Value="0" />
+    </Style>
+  </UserControl.Styles>
+  <DockPanel>
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="16,10,10,8">
+      <TextBlock Classes="heading" FontSize="13" Text="Find in project" VerticalAlignment="Center" AutomationProperties.HeadingLevel="2" />
+      <Button x:Name="Close" Grid.Column="1" Classes="icon" AutomationProperties.Name="Close find" ToolTip.Tip="Close find">
+        <Path Data="M3.5 3.5L8.5 8.5M8.5 3.5L3.5 8.5" />
+      </Button>
+    </Grid>
+    <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="10,0,10,8">
+      <TextBox x:Name="Query" Classes="find" PlaceholderText="Find" AutomationProperties.Name="Find" />
+      <TextBox x:Name="Replacement" Classes="find" PlaceholderText="Replace with" AutomationProperties.Name="Replace with" />
+      <StackPanel Orientation="Horizontal" Spacing="14">
+        <CheckBox x:Name="MatchCase" Content="Match case" />
+        <CheckBox x:Name="WholeWords" Content="Whole words" />
+      </StackPanel>
+      <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,0">
+        <TextBlock x:Name="Summary" Classes="caption" VerticalAlignment="Center" />
+        <Button x:Name="ReplaceAll" Grid.Column="1" Classes="small" Content="Replace all" />
+      </Grid>
+    </StackPanel>
+    <Border BorderBrush="{DynamicResource Separator}" BorderThickness="0,1,0,0">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel x:Name="Results" Margin="8,0,8,8" />
+      </ScrollViewer>
+    </Border>
+  </DockPanel>
+</UserControl>

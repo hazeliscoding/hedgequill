@@ -221,13 +221,13 @@ public sealed class EditorTests : IDisposable
         Press(window, PhysicalKey.F, Command | RawInputModifiers.Shift);
 
         Assert.True(workspace.FocusMode);
-        Assert.False(Find<DockPanel>(workspace, "NavigatorPane").IsVisible);
+        Assert.False(Find<Panel>(workspace, "NavigatorPane").IsVisible);
         Assert.Equal(["4 words", "Saved", "Esc to leave focus"], VisibleText(Find<StackPanel>(workspace, "FocusFooter")));
 
         Press(window, PhysicalKey.Escape);
 
         Assert.False(workspace.FocusMode);
-        Assert.True(Find<DockPanel>(workspace, "NavigatorPane").IsVisible);
+        Assert.True(Find<Panel>(workspace, "NavigatorPane").IsVisible);
     });
 
     [Fact]
