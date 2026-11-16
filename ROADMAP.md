@@ -91,6 +91,21 @@ What the design must protect, in this order when two conflict. Everything else g
 - **M2's one-frame bar counts as met with one garbage collection over it,** the owner's call. On a 10,082-word chapter with spell check on, a keystroke reached the screen in a median 2.2–2.4 ms (95th percentile about 5 ms), but one or two keystrokes in 380 took 15–23 ms: a single blocking .NET collection about a second after typing starts in a chapter just opened. Plain AvaloniaEdit does exactly the same, and a web editor, the fallback, has garbage collection pauses too. This gives up a strict "every keystroke" and leaves the stack as it is.
 - **Quotes are italic and secondary as the prototype draws them, but not indented.** AvaloniaEdit can't indent a line without replacing its `>` with something the caret can't enter. This gives up the prototype's 1.6 em indent.
 
+## Decisions (2026-11-16)
+
+- **One reader for the preview, the HTML and the word count.** `Ao3Text.Read` in `Hedgequill.Core` turns Markdown into blocks of styled runs. The AO3 HTML, the preview and every word count are drawn from it, so they can't disagree. It reads lines by the editor's rules (decided 2026-11-15). This gives up a ready-made Markdown library.
+- **How Markdown becomes AO3 HTML:**
+  - `#` is `<h2>`, as the prototype has it, because AO3 sets the chapter title above it, down to `<h6>`.
+  - Each block is one line of HTML, and lines inside a paragraph join with `<br />`, since AO3 turns a line break inside a paragraph into another break.
+  - Strikethrough is two tildes and becomes `<s>`.
+  - Links keep http, https, ftp, mailto and relative targets, as AO3's sanitizer does. A link with any other target keeps only its text.
+  - Lists are one level deep. A line that isn't an item ends the list.
+  - Images, tables and raw HTML stay as text, escaped.
+  - Fixtures in `tests/Hedgequill.Tests/Fixtures/Ao3/` fix this byte for byte.
+  - This gives up nested lists and lazy continuation lines, which fic rarely uses.
+- **Word counts follow AO3's code,** otwarchive's `lib/word_counter.rb` at `def2683` (checked 2026-11-16). It counts each text node of the HTML, so `*wo*rd` is two words on AO3 and in Hedgequill. Thai joins Chinese and Japanese in counting a word per character. The fixtures' counts come from an independent copy of AO3's counter, run on the expected HTML. This gives up nothing; it supersedes M1's count, as decided on 2026-11-14.
+- **The editor shows strikethrough and links as it shows emphasis:** `~~struck~~` is struck through and a link's brackets and target fade. The prototype doesn't draw either, but they follow its rule for markers. This gives up a link that looks like a link in the editor; the preview shows it as one.
+
 ## M0: Placeholder (as soon as possible)
 
 - [x] Add `LICENSE` (Apache-2.0), `.gitignore` and `.gitattributes`.
