@@ -105,6 +105,6 @@ public class RecentTests
     [InlineData("  *Two*   **words**  ", 2)]
     [InlineData("# Heading\n\nDon't stop — keep going.", 5)]
     [InlineData("---\n\n* * *\n\n> “Quoted,” she said.", 3)]
-    public void Words_skip_markdown_markers(string text, int count) =>
+    public void Words_count_as_AO3_does_and_skip_markdown_markers(string text, int count) =>
         Assert.Equal(count, Words.Count(text));
 }
