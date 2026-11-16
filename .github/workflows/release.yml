@@ -1,0 +1,277 @@
+name: Release
+
+# A pushed v* tag builds Windows and both Macs and creates a draft GitHub Release with the installers, Velopack's
+# update files and SHA256SUMS. Windows Setup is signed with Azure Artifact Signing; the Macs are signed ad hoc.
+# Run it by hand to build the same installers without signing or publishing anything.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to build (nothing is signed or published)
+        required: true
+        default: 0.0.1
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  AVALONIA_TELEMETRY_OPTOUT: true
+  # Never "Hedgequill": Setup empties %LOCALAPPDATA%\<packId>, and %LOCALAPPDATA%\Hedgequill holds the writer's settings.
+  PACK_ID: hazeliscoding.Hedgequill
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - id: version
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then version="${GITHUB_REF_NAME#v}"; else version="$INPUT_VERSION"; fi
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then echo "Not a version: $version"; exit 1; fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  # The tests and the build run every package they load, so this job gets no way to sign.
+  windows:
+    needs: version
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - run: dotnet test --project tests/Hedgequill.Tests --configuration Release
+      - name: Publish win-x64 (NativeAOT)
+        run: |
+          dotnet publish src/Hedgequill.Desktop --configuration Release --runtime win-x64 -p:Version="$VERSION" --output publish -warnaserror
+          # Symbols and API docs stay out of the installer.
+          rm -f publish/*.pdb publish/*.xml
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: publish-windows
+          path: publish/
+          if-no-files-found: error
+
+  # The only job that can sign. It runs no build or test code, and nothing it builds: it packs and signs with vpk.
+  windows-package:
+    needs: [version, windows]
+    runs-on: windows-latest
+    timeout-minutes: 20
+    # Tag builds run in the release environment, whose variables let this job sign in to Azure Artifact Signing.
+    # Manual runs have no environment, so they build unsigned.
+    environment: ${{ github.ref_type == 'tag' && 'release' || '' }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      SIGN: ${{ vars.AZURE_CLIENT_ID != '' && vars.ARTIFACT_SIGNING_ENDPOINT != '' }}
+    steps:
+      # For vpk's version in dotnet-tools.json and the icon.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - run: dotnet tool restore
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: publish-windows
+          path: publish
+      - name: Sign in to Azure for code signing
+        if: env.SIGN == 'true'
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Write the Artifact Signing metadata
+        if: env.SIGN == 'true'
+        shell: pwsh
+        env:
+          ENDPOINT: ${{ vars.ARTIFACT_SIGNING_ENDPOINT }}
+          ACCOUNT: ${{ vars.ARTIFACT_SIGNING_ACCOUNT }}
+          PROFILE: ${{ vars.ARTIFACT_SIGNING_PROFILE }}
+        run: |
+          [ordered]@{ Endpoint = $env:ENDPOINT; CodeSigningAccountName = $env:ACCOUNT; CertificateProfileName = $env:PROFILE } |
+            ConvertTo-Json | Out-File -Encoding utf8NoBOM "$env:RUNNER_TEMP/signing.json"
+      # Setup only: a portable copy can't update itself.
+      - name: Pack with Velopack
+        shell: bash
+        run: |
+          sign=()
+          if [ "$SIGN" = "true" ]; then sign=(--azureTrustedSignFile "$RUNNER_TEMP/signing.json"); fi
+          dotnet vpk pack --packId "$PACK_ID" --packVersion "$VERSION" --packDir publish --runtime win-x64 \
+            --mainExe Hedgequill.exe --packTitle Hedgequill --packAuthors "Hazel Granados" \
+            --icon docs/brand/app-icon.ico --noPortable --outputDir releases "${sign[@]}"
+      - name: Check the signatures
+        if: env.SIGN == 'true'
+        shell: pwsh
+        run: |
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
+            Where-Object FullName -like '*\x64\*' | Sort-Object FullName -Descending | Select-Object -First 1
+          & $signtool.FullName verify /pa /v "releases\$env:PACK_ID-win-Setup.exe"
+          if ($LASTEXITCODE -ne 0) { throw "Setup.exe isn't signed" }
+          New-Item -ItemType Directory package | Out-Null
+          tar -xf "releases\$env:PACK_ID-$env:VERSION-full.nupkg" -C package
+          & $signtool.FullName verify /pa (Get-ChildItem package -Recurse -Filter Hedgequill.exe).FullName
+          if ($LASTEXITCODE -ne 0) { throw "Hedgequill.exe isn't signed" }
+      - name: Collect this version's files
+        shell: bash
+        run: |
+          ls -la releases
+          mkdir dist
+          cp "releases/${PACK_ID}-win-Setup.exe" dist/Hedgequill-Setup.exe
+          cp releases/releases.win.json releases/RELEASES "releases/${PACK_ID}-${VERSION}-full.nupkg" dist/
+          ls -la dist
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist-windows
+          path: dist/*
+          if-no-files-found: error
+
+  # Installs Setup on a clean runner and opens the installed app, which the signing job must never run.
+  windows-smoke:
+    needs: windows-package
+    runs-on: windows-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist-windows
+          path: dist
+      - name: Install with Setup
+        timeout-minutes: 3
+        run: |
+          ./dist/Hedgequill-Setup.exe --silent
+          app="$(cygpath -u "$LOCALAPPDATA")/$PACK_ID/current/Hedgequill.exe"
+          test -f "$app" || { echo "Setup didn't install $app"; ls -laR "$(cygpath -u "$LOCALAPPDATA")/$PACK_ID" || true; exit 1; }
+      # A crash at start ends the app before 15 seconds are up. Its Recent list goes to a scratch folder.
+      - name: Smoke test the installed app
+        env:
+          HEDGEQUILL_SETTINGS: ${{ runner.temp }}/settings
+        run: |
+          "$(cygpath -u "$LOCALAPPDATA")/$PACK_ID/current/Hedgequill.exe" &
+          pid=$!
+          sleep 15
+          kill -0 "$pid" 2>/dev/null || { echo "The installed Hedgequill stopped within 15 seconds."; exit 1; }
+          kill "$pid"
+
+  macos:
+    needs: version
+    # Both builds run on the Apple Silicon runner: NativeAOT cross-compiles the Intel one, smoke-tested under Rosetta.
+    runs-on: macos-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: osx-arm64
+            arch: arm64
+          - rid: osx-x64
+            arch: x64
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      RID: ${{ matrix.rid }}
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - run: dotnet tool restore
+      - name: Publish ${{ matrix.rid }} (NativeAOT)
+        run: |
+          dotnet publish src/Hedgequill.Desktop --configuration Release --runtime "$RID" -p:Version="$VERSION" --output publish -warnaserror
+          rm -rf publish/*.dSYM publish/*.pdb publish/*.xml
+      # Each Mac has its own channel, so an update never brings the other architecture.
+      - name: Pack with Velopack, signed ad hoc
+        run: >
+          dotnet vpk pack --packId "$PACK_ID" --packVersion "$VERSION" --packDir publish --runtime "$RID"
+          --mainExe Hedgequill --packTitle Hedgequill --packAuthors "Hazel Granados"
+          --icon docs/brand/app-icon.icns --bundleId io.github.hazeliscoding.hedgequill
+          --signAppIdentity "-" --channel "$RID" --outputDir releases
+      # Apple Silicon won't run unsigned code, and a downloaded app with a broken signature is reported as damaged,
+      # with no Open Anyway. The portable zip is only for this check and the smoke test; the release ships the pkg.
+      - name: Check the app's signature
+        run: |
+          ls -la releases
+          mkdir unpacked
+          ditto -x -k releases/*-Portable.zip unpacked
+          app=$(ls -d unpacked/*.app)
+          codesign -dv "$app" 2>&1 | sed 's/^/  /'
+          codesign --verify --deep --strict --verbose=2 "$app"
+      - name: Smoke test the app
+        env:
+          HEDGEQUILL_SETTINGS: ${{ runner.temp }}/settings
+        run: |
+          run=()
+          if [ "$ARCH" = x64 ]; then
+            /usr/bin/pgrep -q oahd || softwareupdate --install-rosetta --agree-to-license
+            run=(arch -x86_64)
+          fi
+          app=$(ls -d unpacked/*.app)
+          "${run[@]}" "$app/Contents/MacOS/Hedgequill" &
+          pid=$!
+          # The first launch under Rosetta translates the whole app, so give it longer than the CI smoke test.
+          sleep 30
+          kill -0 "$pid" 2>/dev/null || { echo "Hedgequill stopped within 30 seconds."; exit 1; }
+          kill "$pid"
+      - name: Collect this version's files
+        run: |
+          mkdir dist
+          cp releases/*-Setup.pkg "dist/Hedgequill-macOS-$ARCH.pkg"
+          cp "releases/releases.$RID.json" "releases/RELEASES-$RID" releases/${PACK_ID}-${VERSION}-*.nupkg dist/
+          ls -la dist
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist-${{ matrix.rid }}
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    needs: [version, windows-package, windows-smoke, macos]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: dist-*
+          merge-multiple: true
+          path: dist
+      - name: Write SHA256SUMS
+        working-directory: dist
+        run: |
+          sha256sum -- * > "$RUNNER_TEMP/SHA256SUMS"
+          mv "$RUNNER_TEMP/SHA256SUMS" SHA256SUMS
+          cat SHA256SUMS
+      - name: Create a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          ls -la dist
+          gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --draft --title "Hedgequill $VERSION" --generate-notes
