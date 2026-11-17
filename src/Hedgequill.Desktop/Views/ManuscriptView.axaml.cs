@@ -27,6 +27,7 @@ public partial class ManuscriptView : UserControl
     private Node? _node;
     private readonly SearchPanel _search;
     private readonly MarkdownStyles _styles;
+    private readonly TitleSpace _titleSpace;
     private bool _loading;
     private int _menuOffset;
     private int _textSize = 100;
@@ -60,6 +61,16 @@ public partial class ManuscriptView : UserControl
         _styles = new MarkdownStyles { Faded = Brushes.Gray, Quote = Brushes.Gray, Title = FontFamily.Default };
         area.TextView.LineTransformers.Add(_styles);
         area.TextView.ElementGenerators.Add(new SceneBreaks(area));
+        _titleSpace = new TitleSpace(area.TextView);
+        area.TextView.ElementGenerators.Insert(0, _titleSpace);
+        // The caret on the first row brings the title above it back too, as Ctrl+Home would show a page's top.
+        area.Caret.PositionChanged += (_, _) =>
+        {
+            if (area.Caret.Line == 1 && area.Caret.CalculateCaretRectangle().Top <= _titleSpace.Height + 1)
+            {
+                area.TextView.MakeVisible(new Rect(0, 0, 1, 1));
+            }
+        };
         if (Speller.Value is { } speller)
         {
             Spelling = new SpellingUnderlines(area.TextView, speller, word => _project?.Knows(word) == true);
@@ -481,7 +492,8 @@ public partial class ManuscriptView : UserControl
         var header = DocHeader.Bounds.Height + DocHeader.Margin.Bottom;
         Overlay.Margin = new Thickness(side, _top, side, 0);
         EmptyHint.Margin = new Thickness(0, header, 0, 0);
-        Editor.Padding = new Thickness(side, _top + header, side, 160);
+        _titleSpace.Height = _top + header;
+        Editor.Padding = new Thickness(side, 0, side, 160);
     }
 
     private Node? ChapterOf(Node node)

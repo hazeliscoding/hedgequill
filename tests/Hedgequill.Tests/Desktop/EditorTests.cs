@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
@@ -6,6 +7,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using AvaloniaEdit;
+using AvaloniaEdit.Rendering;
 using AvaloniaEdit.Search;
 using Hedgequill.Desktop;
 using Hedgequill.Desktop.Views;
@@ -250,6 +252,71 @@ public sealed class EditorTests : IDisposable
         Assert.Equal("", editor.Text);
         Assert.Contains("Begin here.", VisibleText(Find<ManuscriptView>(workspace, "Manuscript")));
     });
+
+    [Fact]
+    public Task A_scene_scrolled_less_than_its_title_still_shows_its_first_line_under_it() => OnEditor((window, workspace, editor) =>
+    {
+        editor.Text = LongScene;
+        window.UpdateLayout();
+        var view = editor.TextArea.TextView;
+        var title = Find<TextBlock>(workspace, "DocTitle");
+        double Gap() => view.TranslatePoint(new Point(0, view.GetVisualPosition(new TextViewPosition(1, 1), VisualYPosition.LineTop).Y - view.ScrollOffset.Y), title)!.Value.Y;
+        var gap = Gap();
+        // 28 px under the title, as the prototype spaces a scene.
+        Assert.Equal(title.Bounds.Height + 28, gap, 0.5);
+
+        // Less than the title's height, and more than a line, which used to vanish into the room left for the title.
+        editor.GetVisualDescendants().OfType<ScrollViewer>().First().Offset = new Vector(0, 60);
+        window.UpdateLayout();
+        Assert.Equal(60, view.ScrollOffset.Y);
+        Assert.Contains(view.VisualLines, line => line.FirstDocumentLine.LineNumber == 1);
+        Assert.Equal(gap, Gap(), 0.5);
+    });
+
+    [Fact]
+    public Task The_caret_never_sits_in_the_titles_room() => OnEditor((window, workspace, editor) =>
+    {
+        var area = editor.TextArea;
+        var title = Find<TextBlock>(workspace, "DocTitle");
+        void Below()
+        {
+            Settle();
+            Assert.Equal(0, editor.CaretOffset);
+            var caret = area.Caret.CalculateCaretRectangle();
+            Assert.True(area.TextView.TranslatePoint(caret.TopLeft - area.TextView.ScrollOffset, title)!.Value.Y > title.Bounds.Height, "The caret is level with the title.");
+        }
+
+        editor.CaretOffset = 0;
+        Below();
+        foreach (var key in new[] { PhysicalKey.ArrowUp, PhysicalKey.ArrowLeft, PhysicalKey.Home })
+        {
+            Press(window, key);
+            Below();
+        }
+
+        workspace.Select(workspace.Rows.Single(row => row.Title == "Ferry").Node);
+        area.Focus();
+        Below();
+        window.KeyTextInput("Typed first.");
+        Assert.Equal("Typed first.", editor.Text);
+    });
+
+    [Fact]
+    public Task Going_to_the_start_of_a_long_scene_brings_its_title_back() => OnEditor((window, workspace, editor) =>
+    {
+        editor.Text = LongScene;
+        window.UpdateLayout();
+        editor.CaretOffset = editor.Text.Length;
+        editor.ScrollToEnd();
+        window.UpdateLayout();
+        Assert.True(editor.TextArea.TextView.ScrollOffset.Y > 200);
+
+        Press(window, PhysicalKey.Home, Command);
+        window.UpdateLayout();
+        Assert.Equal(0, editor.TextArea.TextView.ScrollOffset.Y);
+    });
+
+    private static string LongScene => string.Join("\n\n", Enumerable.Range(1, 40).Select(i => $"Invented paragraph {i}, in which the tide comes in again."));
 
     public void Dispose() => _temp.Dispose();
 
