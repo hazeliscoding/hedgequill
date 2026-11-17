@@ -10,8 +10,8 @@
 Writing apps for long fiction tend to be paid, or busy with features a fic doesn't need. Simple Markdown editors have no idea what a chapter or a scene is. And getting a chapter into AO3 with its italics and scene breaks intact means pasting and checking by hand. Hedgequill is one calm window for the whole job, and your words stay in plain files on your computer.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/welcome-dark.png">
-  <img alt="Hedgequill's Welcome screen: the name, &quot;A quiet place to write.&quot;, New project… and Open folder… buttons, a note that a project is a folder of Markdown files on your computer, and an empty Recent list that says &quot;Nothing here yet.&quot;" src="docs/screenshots/welcome-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/demo-dark.gif">
+  <img alt="Writing a scene in Hedgequill. A new paragraph is typed; Ctrl+I starts italics, whose markers stay faded, and the AO3 preview on the right catches up as the header goes from Saving… to Saved. Ctrl+Shift+C copies the chapter as HTML for AO3. Ctrl+Shift+F slides the list and the preview away for focus mode, and Escape slides them back. Ctrl+/ opens the keyboard shortcuts." src="docs/screenshots/demo-light.gif">
 </picture>
 
 > **Status: 1.0 is out.** [Download it](#download) for Windows or macOS. [ROADMAP.md](ROADMAP.md) says what's planned next.
