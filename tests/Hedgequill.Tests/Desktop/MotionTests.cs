@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.Animation;
@@ -91,6 +92,55 @@ public sealed class MotionTests : IDisposable
             Assert.Contains(opacities, opacity => opacity is > 0 and < 1);
             Assert.Equal(1, opacities[^1]);
             details.Hide();
+        }
+        finally
+        {
+            Motion.On = false;
+        }
+    });
+
+    [Fact]
+    public Task Probe_chevron_on_this_runner() => OnProject(workspace =>
+    {
+        Motion.On = true;
+        try
+        {
+            var chapter = workspace.Rows.Single(row => row.IsChapter).Node;
+            double Angle() => ((RotateTransform)Find<ListBox>(workspace, "Navigator").ContainerFromIndex(0)!
+                .GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Path>().First().RenderTransform!).Angle;
+            var expected = 90.0;
+            var lines = new List<string>();
+            var stuck = 0;
+            for (var run = 0; run < 40; run++)
+            {
+                expected = 90 - expected;
+                var clock = Stopwatch.StartNew();
+                workspace.Toggle(chapter);
+                var toggled = clock.ElapsedMilliseconds;
+                var frames = new List<string>();
+                var last = double.NaN;
+                while (clock.ElapsedMilliseconds < 1500)
+                {
+                    Thread.Sleep(16);
+                    AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+                    Settle();
+                    last = Angle();
+                    frames.Add($"{clock.ElapsedMilliseconds}:{last:F1}");
+                    if (last == expected && clock.ElapsedMilliseconds > 400)
+                    {
+                        break;
+                    }
+                }
+
+                if (last != expected)
+                {
+                    stuck++;
+                }
+
+                lines.Add($"run {run,2} to {expected,2} toggle {toggled}ms {(last == expected ? "ok" : "STUCK")}: {string.Join(" ", frames.Take(24))}");
+            }
+
+            Assert.Fail($"PROBE {RuntimeInformation.OSDescription}: {stuck} of 40 stuck" + Environment.NewLine + string.Join(Environment.NewLine, lines));
         }
         finally
         {
