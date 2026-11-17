@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Renders the Welcome screen to PNG with Avalonia's headless Skia renderer, in light and dark.
-    Argument: the output folder, e.g. docs/screenshots
+    Renders the Welcome screen and a workspace to PNG with Avalonia's headless Skia renderer, in light and dark.
+    Arguments: the output folder, e.g. docs/screenshots. The demo switch records the README's demo GIFs instead, with ffmpeg; AGENTS.md has the command.
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
