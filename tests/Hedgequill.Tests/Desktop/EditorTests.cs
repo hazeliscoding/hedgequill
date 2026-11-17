@@ -311,7 +311,9 @@ public sealed class EditorTests : IDisposable
         window.UpdateLayout();
         Assert.True(editor.TextArea.TextView.ScrollOffset.Y > 200);
 
-        Press(window, PhysicalKey.Home, Command);
+        // What Ctrl+Home (Cmd+Up on a Mac) does: the caret to the start, then into view.
+        editor.CaretOffset = 0;
+        editor.TextArea.Caret.BringCaretToView();
         window.UpdateLayout();
         Assert.Equal(0, editor.TextArea.TextView.ScrollOffset.Y);
     });
