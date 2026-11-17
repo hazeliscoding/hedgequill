@@ -1,5 +1,7 @@
 using Avalonia.Input;
 using Avalonia.Styling;
+using AvaloniaEdit;
+using AvaloniaEdit.Rendering;
 using Hedgequill.Core.Projects;
 using Hedgequill.Desktop.Views;
 using Hedgequill.Tests.Core;
@@ -29,14 +31,14 @@ public sealed class TextSizeTests : IDisposable
             Assert.Equal(19, editor.FontSize);
         }
 
-        var normal = editor.TextArea.TextView.VisualLines[0].Height;
+        var normal = Row(editor);
 
         Press(window, PhysicalKey.Equal, Command);
         Press(window, PhysicalKey.Equal, Command);
         using (Render(window))
         {
             Assert.Equal(19 * 1.25, editor.FontSize, 3);
-            Assert.Equal(normal * 1.25, editor.TextArea.TextView.VisualLines[0].Height, 0.5);
+            Assert.Equal(normal * 1.25, Row(editor), 0.5);
         }
 
         Assert.Equal("Text size 125%", Find<Toast>(window, "Notice").Title);
@@ -60,6 +62,14 @@ public sealed class TextSizeTests : IDisposable
             Assert.Equal(15.5 * 1.6, workspace.Editor.FontSize, 3);
         },
         before: () => new Preferences(_temp["settings"]).TextSize = 160);
+
+    // The first line's first row of text, below the room the scene's title rides in.
+    private static double Row(TextEditor editor)
+    {
+        var view = editor.TextArea.TextView;
+        var start = new TextViewPosition(1, 1);
+        return view.GetVisualPosition(start, VisualYPosition.LineBottom).Y - view.GetVisualPosition(start, VisualYPosition.LineTop).Y;
+    }
 
     public void Dispose() => _temp.Dispose();
 
