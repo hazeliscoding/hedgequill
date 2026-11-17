@@ -14,7 +14,7 @@ Writing apps for long fiction tend to be paid, or busy with features a fic doesn
   <img alt="Hedgequill's Welcome screen: the name, &quot;A quiet place to write.&quot;, New project… and Open folder… buttons, a note that a project is a folder of Markdown files on your computer, and an empty Recent list that says &quot;Nothing here yet.&quot;" src="docs/screenshots/welcome-light.png">
 </picture>
 
-> **Status: early.** There's nothing to download until 1.0. [ROADMAP.md](ROADMAP.md) says what gets built, in what order.
+> **Status: 1.0 is out.** [Download it](#download) for Windows or macOS. [ROADMAP.md](ROADMAP.md) says what's planned next.
 
 ## Before and after
 
