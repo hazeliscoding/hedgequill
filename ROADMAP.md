@@ -24,14 +24,15 @@ Each feature in M6 to M10 is drawn in the prototype and approved before it's bui
 
 ## M6: Markdown in your notes
 
-Notes and Research pages already style headings, emphasis, quotes, strikethrough and links. These add what notes use most. One editor draws pages and scenes, so scenes get them too.
+Notes and Research pages already style headings, emphasis, quotes, strikethrough and links. These add what notes use most. One editor draws pages and scenes, so scenes get them too. Version 7 of the prototype draws them all.
 
 - [ ] Lists: bullets and numbers with a hanging indent, so a wrapped line lines up under the text, not the marker. Enter continues a list, Enter on an empty item ends it, and Tab and Shift+Tab nest an item.
 - [ ] Checklists: `- [ ]` and `- [x]` draw a box. Clicking it writes or clears the x in the file, and Undo takes it back.
 - [ ] Code: `inline code` and fenced blocks in a monospace face on a light background, with their markers faded. AO3 HTML doesn't keep code, so in a scene it copies as plain text.
 - [ ] Tables: pipe tables in monospace, with the pipes and the header's dashes faded, and in a scene they copy as plain text too. Settle first how the columns line up: by rewriting the table's spacing in the file as you type, or by spacing drawn on screen that leaves the file as typed.
+- [ ] Reading view for Notes and Research pages, as Obsidian has: the page without its markers, with bullets, boxes that still tick, a drawn table and code without its fences. A book button at the end of the page's toolbar, View › Reading view, or Ctrl+E (⌘E on a Mac) switches to it, and the pencil button or the same keys switch back. Scenes don't get one, since the AO3 preview already shows a scene that way. Settle first whether a page remembers its view after Hedgequill restarts.
 
-**Done when:** tests on invented text cover a list's Enter, Tab and Shift+Tab, a box ticked by a click and then undone, a fenced block styled from its first line to its last, a table's columns lining up, and a scene with code and a table copying for AO3 as plain text; `ContrastTests` passes with code's background in all four themes; and the owner has kept notes with them.
+**Done when:** tests on invented text cover a list's Enter, Tab and Shift+Tab, a box ticked by a click and then undone, a page switched to reading view and back with a box ticked there, a fenced block styled from its first line to its last, a table's columns lining up, and a scene with code and a table copying for AO3 as plain text; `ContrastTests` passes with code's background in all four themes; and the owner has kept notes with them.
 
 ## M7: Bring work in, send it out
 
@@ -216,4 +217,4 @@ Each decision says why it was made and what it gave up. A changed one is marked 
 
 ### 2026-11-18
 
-- **Markdown in notes comes next, as M6,** at the owner's request. Pages are where a writer keeps character sheets, to-dos and research, and their lists, checklists, code and tables showed as plain text. The editor styles them in place, as it does emphasis, and in scenes too, since one editor draws both. Bring work in, send it out moves to M7 and the rest follow. This gives up starting with the milestone that brings a work in progress over from Google Docs or Word.
+- **Markdown in notes comes next, as M6,** at the owner's request. Pages are where a writer keeps character sheets, to-dos and research, and their lists, checklists, code and tables showed as plain text. The editor styles them in place, as it does emphasis, and in scenes too, since one editor draws both. Bring work in, send it out moves to M7 and the rest follow. Pages also get a reading view, as Obsidian has, at the owner's request; scenes don't, since their AO3 preview already reads that way. This gives up starting with the milestone that brings a work in progress over from Google Docs or Word.
