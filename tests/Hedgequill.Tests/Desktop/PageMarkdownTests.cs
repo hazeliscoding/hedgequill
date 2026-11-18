@@ -4,10 +4,12 @@ using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.VisualTree;
 using AvaloniaEdit;
 using AvaloniaEdit.Rendering;
 using Hedgequill.Core.Projects;
 using Hedgequill.Core.Text;
+using Hedgequill.Desktop.Views;
 using Hedgequill.Tests.Core;
 using static Hedgequill.Tests.Desktop.Ui;
 
@@ -89,9 +91,64 @@ public sealed class PageMarkdownTests : IDisposable
         Assert.Equal("| Name | Lives |\n|---|---|\n| Mrs. Okafor | downstairs |", editor.Text);
     });
 
+    [Fact]
+    public Task A_page_switches_to_reading_view_and_back_with_a_box_ticked_there() => OnPage("# Checks\n\n- [ ] Check the *tides*\n- Lamp", (window, editor) =>
+    {
+        var manuscript = Find<ManuscriptView>(window, "Manuscript");
+        Press(window, PhysicalKey.E, Command);
+
+        Assert.True(manuscript.IsReading);
+        Assert.False(editor.IsEffectivelyVisible);
+        var reading = Find<ReadingView>(window, "Reading");
+        Assert.Equal(["Checks", "Check the tides", "Lamp"], Words(reading));
+        Assert.Contains("•", VisibleText(reading));
+
+        Click(window, reading.GetVisualDescendants().OfType<CheckBox>().Single());
+
+        Assert.Equal("# Checks\n\n- [x] Check the *tides*\n- Lamp", editor.Text);
+        Assert.True(reading.GetVisualDescendants().OfType<CheckBox>().Single().IsChecked);
+
+        Press(window, PhysicalKey.E, Command);
+
+        Assert.False(manuscript.IsReading);
+        Assert.True(editor.IsEffectivelyVisible);
+        Press(window, PhysicalKey.Z, Command);
+        Assert.Equal("# Checks\n\n- [ ] Check the *tides*\n- Lamp", editor.Text);
+    });
+
+    [Fact]
+    public async Task A_page_opens_in_reading_view_again_after_a_restart()
+    {
+        await OnPage("Keeper of the lantern.", (window, _) => Press(window, PhysicalKey.E, Command));
+
+        await OnPage("Keeper of the lantern.", (window, editor) =>
+        {
+            Assert.True(Find<ManuscriptView>(window, "Manuscript").IsReading);
+            Assert.False(editor.IsEffectivelyVisible);
+        });
+    }
+
+    [Fact]
+    public Task A_scene_has_the_AO3_preview_instead_of_a_reading_view() => OnPage("Keeper of the lantern.", (window, editor) =>
+    {
+        var workspace = window.Workspace!;
+        workspace.Select(workspace.Rows.Single(row => row.Node.Kind == NodeKind.Scene).Node);
+        Settle();
+
+        Press(window, PhysicalKey.E, Command);
+
+        Assert.False(workspace.Reading);
+        Assert.True(editor.IsEffectivelyVisible);
+        Assert.False(Find<Button>(window, "ReadButton").IsVisible);
+    });
+
     public void Dispose() => _temp.Dispose();
 
-    private Task OnPage(string text, Action<Window, TextEditor> test)
+    // The reading view's text, a block or list item at a time.
+    private static List<string> Words(ReadingView reading) =>
+        reading.GetVisualDescendants().OfType<SelectableTextBlock>().Select(text => text.Inlines!.Text ?? "").Where(text => text.Length > 0).ToList();
+
+    private Task OnPage(string text, Action<MainWindow, TextEditor> test)
     {
         _temp.Write("stories/Tides/Chapter 1/Fog.md", "Invented fog rolled in.");
         _temp.Write("stories/Tides/Notes/Mara.md", text);

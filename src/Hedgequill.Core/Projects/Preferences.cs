@@ -32,6 +32,19 @@ public sealed class Preferences(string settingsFolder)
         set => Write(file => file.TextSize = Nearest(value));
     }
 
+    /// <summary>The pages that open in reading view, by their full paths. A missing or damaged file means none.</summary>
+    public IReadOnlySet<string> ReadingPages => Read().ReadingPages.ToHashSet(StringComparer.Ordinal);
+
+    /// <summary>Remembers whether a page opens in reading view.</summary>
+    public void SetReading(string page, bool reading) => Write(file =>
+    {
+        file.ReadingPages.Remove(page);
+        if (reading)
+        {
+            file.ReadingPages.Add(page);
+        }
+    });
+
     /// <summary>The next size up (1), down (-1), or back to 100 (0).</summary>
     public static int Step(int size, int direction) =>
         direction == 0 ? 100 : TextSizes[Math.Clamp(Array.IndexOf(TextSizes, Nearest(size)) + Math.Sign(direction), 0, TextSizes.Length - 1)];
@@ -64,4 +77,6 @@ internal sealed class PreferencesFile
     public Appearance Appearance { get; set; }
 
     public int TextSize { get; set; } = 100;
+
+    public List<string> ReadingPages { get; set; } = [];
 }
