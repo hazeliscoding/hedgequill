@@ -77,9 +77,7 @@ public partial class ManuscriptView : UserControl
             area.TextView.BackgroundRenderers.Add(Spelling);
         }
 
-        var menu = new MenuFlyout();
-        menu.Opening += (_, _) => menu.ItemsSource = EditorMenu();
-        area.ContextFlyout = menu;
+        area.ContextFlyout = new MenuFlyout().FillOnOpening(EditorMenu);
         area.AddHandler(ContextRequestedEvent, (_, e) => _menuOffset = OffsetAt(e), RoutingStrategies.Tunnel);
         AttachedToVisualTree += (_, _) => Restyle();
         ActualThemeVariantChanged += (_, _) => Restyle();

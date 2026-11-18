@@ -97,11 +97,11 @@ public sealed class SpellCheckUiTests : IDisposable
     }
 
     private static List<string?> Headers(MenuFlyout menu) =>
-        menu.ItemsSource!.Cast<Control>().Select(item => item is MenuItem named ? named.Header as string : "-").ToList();
+        Shown(menu).Select(item => item is MenuItem named ? named.Header as string : "-").ToList();
 
     private static void Choose(MenuFlyout menu, string header)
     {
-        var item = menu.ItemsSource!.OfType<MenuItem>().First(item => Equals(item.Header, header));
+        var item = Shown(menu).OfType<MenuItem>().First(item => Equals(item.Header, header));
         menu.Hide();
         item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
         Settle();

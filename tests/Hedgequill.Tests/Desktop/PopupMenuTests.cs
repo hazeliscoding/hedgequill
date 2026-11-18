@@ -60,6 +60,20 @@ public sealed class PopupMenuTests : IDisposable
     });
 
     [Fact]
+    public Task Right_clicking_the_preview_opens_its_menu() => OnProject((window, workspace) =>
+    {
+        var preview = Find<PreviewView>(workspace, "Preview");
+        var at = preview.TranslatePoint(new Point(preview.Bounds.Width / 2, preview.Bounds.Height / 2), window)!.Value;
+        window.MouseDown(at, MouseButton.Right);
+        window.MouseUp(at, MouseButton.Right);
+        Settle();
+
+        var menu = Assert.IsType<MenuFlyout>(preview.ContextFlyout);
+        Assert.True(menu.IsOpen);
+        Assert.Equal(["Copy chapter HTML", "Copy chapter title", "-", "Open chapter overview", "-", "Hide preview"], Headers(menu));
+    });
+
+    [Fact]
     public Task More_opens_the_add_menu() => OnProject((window, workspace) =>
     {
         var more = Find<Button>(workspace, "More");
@@ -111,11 +125,11 @@ public sealed class PopupMenuTests : IDisposable
     }
 
     private static List<string?> Headers(MenuFlyout menu) =>
-        menu.ItemsSource!.Cast<Control>().Select(item => item is MenuItem named ? named.Header as string : "-").ToList();
+        Shown(menu).Select(item => item is MenuItem named ? named.Header as string : "-").ToList();
 
     private static void Choose(MenuFlyout menu, string header)
     {
-        var item = menu.ItemsSource!.OfType<MenuItem>().Single(item => Equals(item.Header, header));
+        var item = Shown(menu).OfType<MenuItem>().Single(item => Equals(item.Header, header));
         menu.Hide();
         item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
         Settle();

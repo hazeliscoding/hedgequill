@@ -74,6 +74,9 @@ internal static class Ui
 
     public static void Settle() => Dispatcher.UIThread.RunJobs();
 
+    /// <summary>The items an open menu's popup shows, which can differ from the items the menu holds.</summary>
+    public static IEnumerable<Control> Shown(MenuFlyout menu) => ((MenuFlyoutPresenter)menu.Popup.Child!).Items.Cast<Control>();
+
     public static void Press(Window window, PhysicalKey key, RawInputModifiers modifiers = RawInputModifiers.None)
     {
         window.KeyPressQwerty(key, modifiers);
