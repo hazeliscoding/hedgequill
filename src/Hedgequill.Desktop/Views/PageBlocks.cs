@@ -55,10 +55,18 @@ public sealed class PageBlocks
         }
     }
 
+    // Only a line starting with a backtick, tilde or pipe can be a fence or a table row, so only those are read; the rest
+    // count as blank, which gives them the same kind. A chapter with neither, the usual case, allocates nothing per keystroke.
     private void Update()
     {
         var document = _document;
-        var lines = document?.Lines.Select(line => document.GetText(line)).ToArray() ?? [];
+        if (document is null || !document.Lines.Any(line => MaybeBlock(document, line)))
+        {
+            (_kinds, _columns) = ([], []);
+            return;
+        }
+
+        var lines = document.Lines.Select(line => MaybeBlock(document, line) ? document.GetText(line) : "").ToArray();
         _kinds = Markdown.Kinds(lines);
         _columns = new int[lines.Length][];
         for (var first = 0; first < lines.Length;)
@@ -81,6 +89,20 @@ public sealed class PageBlocks
 
             first = last + 1;
         }
+    }
+
+    private static bool MaybeBlock(TextDocument document, DocumentLine line)
+    {
+        for (var offset = line.Offset; offset < line.EndOffset; offset++)
+        {
+            var c = document.GetCharAt(offset);
+            if (c is not (' ' or '\t'))
+            {
+                return c is '`' or '~' or '|';
+            }
+        }
+
+        return false;
     }
 
     // Plain text only shifts when lines come and go, which the text view already handles; code and tables need a full redraw.
