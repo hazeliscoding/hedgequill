@@ -99,9 +99,7 @@ public partial class WorkspaceView : UserControl
                 }
             },
             RoutingStrategies.Tunnel);
-        var rowMenu = new MenuFlyout();
-        rowMenu.Opening += (_, _) => rowMenu.ItemsSource = _contextRow is { } row ? MenuFor(row.Node) : AddMenu();
-        Navigator.ContextFlyout = rowMenu;
+        Navigator.ContextFlyout = new MenuFlyout().FillOnOpening(() => _contextRow is { } row ? MenuFor(row.Node) : AddMenu());
         Navigator.AddHandler(PointerPressedEvent, OnPress, RoutingStrategies.Tunnel);
         Navigator.AddHandler(PointerMovedEvent, OnDrag, RoutingStrategies.Tunnel);
         Navigator.AddHandler(PointerReleasedEvent, OnRelease, RoutingStrategies.Tunnel);
@@ -146,9 +144,7 @@ public partial class WorkspaceView : UserControl
         };
         PreviewToggle.Click += (_, _) => TogglePreview();
         CopyHtml.Click += (_, _) => _ = CopyChapterHtml();
-        var previewMenu = new MenuFlyout();
-        previewMenu.Opening += (_, _) => previewMenu.ItemsSource = PreviewMenu();
-        Preview.ContextFlyout = previewMenu;
+        Preview.ContextFlyout = new MenuFlyout().FillOnOpening(PreviewMenu);
         // The preview starts hidden in a window too narrow for three columns, as the prototype does under 1,200 px.
         AttachedToVisualTree += (_, _) =>
         {
@@ -167,9 +163,7 @@ public partial class WorkspaceView : UserControl
             Manuscript.Reveal(offset, length);
         };
         FindPane.ReplaceRequested += ReplaceAll;
-        var addMenu = new MenuFlyout { Placement = PlacementMode.TopEdgeAlignedRight };
-        addMenu.Opening += (_, _) => addMenu.ItemsSource = AddMenu();
-        More.Flyout = addMenu;
+        More.Flyout = new MenuFlyout { Placement = PlacementMode.TopEdgeAlignedRight }.FillOnOpening(AddMenu);
 
         Refresh();
         Select(project.Scenes.FirstOrDefault());
