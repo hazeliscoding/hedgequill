@@ -52,6 +52,7 @@ One meaning per term. Use these words in code, docs and commits.
 - **Markers:** the Markdown characters that make emphasis and headings. The editor shows them faded.
 - **AO3 HTML:** the HTML Copy for AO3 produces, limited to what AO3 keeps.
 - **Save state:** Saving…, Saved, Couldn't save, Changed on disk or Read-only, as the prototype shows them.
+- **Reading view:** a Notes or Research page shown without its markers, in place of the editor. A scene has the AO3 preview instead.
 
 ## Commands
 

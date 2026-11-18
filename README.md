@@ -29,6 +29,7 @@ Writing apps for long fiction tend to cost money, or come crowded with features 
 
 - One window holds the list of acts, chapters and scenes, with Notes and Research pages, the page you're writing, and an AO3 preview you can hide.
 - There's no markup to learn. The files are Markdown, but Ctrl+B, Ctrl+I and the scene-break button type the markers for you.
+- Notes and Research pages take lists, checklists, code and tables, and Ctrl+E shows a page without its markers, as Obsidian's reading view does.
 - Copy for AO3 puts a chapter on the clipboard as HTML for AO3's editor. It keeps only what AO3 keeps: paragraphs, emphasis, strikethrough, headings, quotes, lists, links and scene breaks. Word counts match AO3's.
 - A project is a folder of Markdown files plus one small file for their order. Any text editor can open them, with or without Hedgequill, and the folder can live in OneDrive or another synced folder.
 - There's also spell check, find and replace across the project, earlier versions of each scene, focus mode and a text size you can change.
