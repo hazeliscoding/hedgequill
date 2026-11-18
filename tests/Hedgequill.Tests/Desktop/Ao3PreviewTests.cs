@@ -43,6 +43,20 @@ public sealed class Ao3PreviewTests : IDisposable
     });
 
     [Fact]
+    public Task A_quote_is_italic_in_the_preview_and_its_bold_stays_bold()
+    {
+        _temp.Write("stories/Tides/Chapter 1/Fog.md", "> Don't look back, **she** said.");
+        return OnWorkspace(1280, (window, workspace, preview) =>
+        {
+            var quote = Runs(preview).Where(run => run.Text is "Don't look back, " or "she" or " said.").ToList();
+
+            Assert.Equal(3, quote.Count);
+            Assert.All(quote, run => Assert.Equal(FontStyle.Italic, run.FontStyle));
+            Assert.Equal(FontWeight.Bold, quote[1].FontWeight);
+        });
+    }
+
+    [Fact]
     public Task The_preview_follows_typing_after_a_pause() => OnWorkspace(1280, (window, workspace, preview) =>
     {
         workspace.Editor.TextArea.Focus();
