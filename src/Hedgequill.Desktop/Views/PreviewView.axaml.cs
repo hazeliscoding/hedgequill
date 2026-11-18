@@ -80,14 +80,21 @@ public partial class PreviewView : UserControl
 
     private static TextBlock Heading(Heading heading) => Text([heading.Line], new Thickness(0, Size * 1.2, 0, Size * 0.5), "preview-heading");
 
-    // A link looks like one but never opens: Hedgequill launches nothing but the project folder.
+    // A link looks like one but never opens: Hedgequill launches nothing but the project folder. A plain run sets no
+    // style of its own, so a quote's italic carries into it.
     private static Run Inline(Ao3Run run)
     {
-        var inline = new Run(run.Text)
+        var inline = new Run(run.Text);
+        if (run.Style.HasFlag(Style.Emphasis))
         {
-            FontStyle = run.Style.HasFlag(Style.Emphasis) ? FontStyle.Italic : FontStyle.Normal,
-            FontWeight = run.Style.HasFlag(Style.Strong) ? FontWeight.Bold : FontWeight.Normal,
-        };
+            inline.FontStyle = FontStyle.Italic;
+        }
+
+        if (run.Style.HasFlag(Style.Strong))
+        {
+            inline.FontWeight = FontWeight.Bold;
+        }
+
         if (run.Style.HasFlag(Style.Strike))
         {
             inline.TextDecorations = TextDecorations.Strikethrough;
