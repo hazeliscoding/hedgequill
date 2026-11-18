@@ -27,6 +27,8 @@ public partial class ManuscriptView : UserControl
     private Node? _node;
     private readonly SearchPanel _search;
     private readonly MarkdownStyles _styles;
+    private readonly Checkboxes _boxes;
+    private readonly CodeBlocks _code;
     private readonly TitleSpace _titleSpace;
     private bool _loading;
     private int _menuOffset;
@@ -58,9 +60,16 @@ public partial class ManuscriptView : UserControl
         area.Bind(TextArea.SelectionForegroundProperty, area.GetResourceObservable("TextPrimary"));
         area.SelectionBorder = null;
         area.SelectionCornerRadius = 2;
-        _styles = new MarkdownStyles { Faded = Brushes.Gray, Quote = Brushes.Gray, Title = FontFamily.Default };
+        var blocks = new PageBlocks(area.TextView);
+        _styles = new MarkdownStyles { Blocks = blocks, Faded = Brushes.Gray, Quote = Brushes.Gray, Done = Brushes.Gray, CodeBackground = Brushes.LightGray, Title = FontFamily.Default, Mono = FontFamily.Default };
         area.TextView.LineTransformers.Add(_styles);
-        area.TextView.ElementGenerators.Add(new SceneBreaks(area));
+        area.TextView.ElementGenerators.Add(new SceneBreaks(area, blocks));
+        _boxes = new Checkboxes(blocks);
+        _code = new CodeBlocks(blocks);
+        area.TextView.ElementGenerators.Add(_boxes);
+        area.TextView.ElementGenerators.Add(_code);
+        area.TextView.ElementGenerators.Add(new TableColumns(blocks));
+        area.TextView.BackgroundRenderers.Add(_code);
         _titleSpace = new TitleSpace(area.TextView);
         area.TextView.ElementGenerators.Insert(0, _titleSpace);
         // The caret on the first row brings the title above it back too, as Ctrl+Home would show a page's top.
@@ -294,6 +303,18 @@ public partial class ManuscriptView : UserControl
             return;
         }
 
+        // In a list, Enter starts the next item or ends the list, and Tab and Shift+Tab nest an item.
+        if (e.Key is Key.Enter or Key.Tab && Editor.SelectionLength == 0 && _node?.IsFile == true && ListKey(e) is { } list)
+        {
+            if (list.Length > 0 || list.Insert.Length > 0)
+            {
+                Apply(list);
+            }
+
+            e.Handled = true;
+            return;
+        }
+
         var command = OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control;
         if (e.KeyModifiers != command)
         {
@@ -317,6 +338,13 @@ public partial class ManuscriptView : UserControl
 
         e.Handled = true;
     }
+
+    private Change? ListKey(KeyEventArgs e) => (e.Key, e.KeyModifiers) switch
+    {
+        (Key.Enter, KeyModifiers.None) => Markdown.Enter(Editor.Document.Text, Editor.CaretOffset),
+        (Key.Tab, KeyModifiers.None or KeyModifiers.Shift) => Markdown.Nest(Editor.Document.Text, Editor.CaretOffset, e.KeyModifiers == KeyModifiers.Shift),
+        _ => null,
+    };
 
     private void ShowDocument(Node node)
     {
@@ -342,7 +370,7 @@ public partial class ManuscriptView : UserControl
         DocTitle.Text = node.Title;
         DocTitle.FontSize = isPage ? 26 : 30;
         DocHeader.Margin = DocHeader.Margin.WithBottom(isPage ? 20 : 28);
-        EmptyHint.Text = isPage ? "Notes are plain pages. Write anything." : "Begin here.";
+        EmptyHint.Text = isPage ? "Write anything. Lists, checklists, code and tables work here too." : "Begin here.";
         EmptyHint.IsVisible = document.TextLength == 0;
         AutomationProperties.SetName(Editor.TextArea, node.Title);
         Layout();
@@ -379,6 +407,12 @@ public partial class ManuscriptView : UserControl
         _styles.Faded = Resource<IBrush>("MarkerFaded") ?? _styles.Faded;
         _styles.Quote = Resource<IBrush>("TextSecondary") ?? _styles.Quote;
         _styles.Title = Resource<FontFamily>("FontTitle") ?? _styles.Title;
+        _styles.Mono = Resource<FontFamily>("FontMono") ?? _styles.Mono;
+        _styles.Done = Resource<IBrush>("TextTertiary") ?? _styles.Done;
+        _styles.CodeBackground = _code.Background = Resource<IBrush>("BgInset") ?? _styles.CodeBackground;
+        _boxes.Border = Resource<IBrush>("TextTertiary") ?? _boxes.Border;
+        _boxes.Accent = Resource<IBrush>("Accent") ?? _boxes.Accent;
+        _boxes.Tick = Resource<IBrush>("TextOnAccent") ?? _boxes.Tick;
         if (Spelling is not null)
         {
             Spelling.Brush = Resource<IBrush>("Misspelling") ?? Spelling.Brush;

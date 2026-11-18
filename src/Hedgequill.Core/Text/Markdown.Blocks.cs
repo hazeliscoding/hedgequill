@@ -60,7 +60,7 @@ public static partial class Markdown
 
         if (string.IsNullOrWhiteSpace(line[item.Text..]))
         {
-            return new Change(start, end - start, "", start);
+            return new Change(start, end - start, "\n", start + 1);
         }
 
         var marker = line.Substring(item.Indent, item.Marker);

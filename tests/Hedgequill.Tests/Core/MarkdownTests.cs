@@ -41,8 +41,8 @@ public class MarkdownTests
     [InlineData("1. Fog|", "1. Fog\n2. |")]
     [InlineData("9)  Fog|", "9)  Fog\n10)  |")]
     [InlineData("- [x] Fog|", "- [x] Fog\n- [ ] |")]
-    [InlineData("- Fog\n- |", "- Fog\n|")]
-    [InlineData("- Fog\n- [ ] |\n- Rain", "- Fog\n|\n- Rain")]
+    [InlineData("- Fog\n- |", "- Fog\n\n|")]
+    [InlineData("- Fog\n- [ ] |\n- Rain", "- Fog\n\n|\n- Rain")]
     public void Enter_continues_a_list_and_ends_it_on_an_empty_item(string before, string after) =>
         Assert.Equal(after, Key(before, Markdown.Enter));
 
