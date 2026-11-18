@@ -52,7 +52,10 @@ public partial class PreviewView : UserControl
         Paragraph paragraph => Text(paragraph.Lines, new Thickness(0, 0, 0, Size * 0.9)),
         Heading heading => Heading(heading),
         Quote quote => Stack(new Thickness(Size * 1.4, 0, 0, Size * 0.9), quote.Paragraphs.Select(paragraph => Text(paragraph.Lines, new Thickness(0, 0, 0, Size * 0.9), "quote"))),
-        ListBlock list => Stack(new Thickness(Size * 1.4, 0, 0, Size * 0.9), list.Items.Select((item, i) => Item(list.Ordered ? $"{list.Start + i}." : "•", item))),
+        ListBlock list => Stack(new Thickness(Size * 1.4, 0, 0, Size * 0.9), list.Items.Select((item, i) => Item(list.Ordered ? $"{list.Start + i}." : "•", Ao3Text.Posted(item)))),
+        // AO3 doesn't keep code or tables, so they show as the plain lines it posts.
+        CodeBlock code => Text(code.Lines, new Thickness(0, 0, 0, Size * 0.9)),
+        Table table => Text(table.Rows.Select(Ao3Text.Posted), new Thickness(0, 0, 0, Size * 0.9)),
         _ => Divider(),
     };
 
@@ -108,12 +111,12 @@ public partial class PreviewView : UserControl
         return inline;
     }
 
-    private static Grid Item(string marker, Paragraph item)
+    private static Grid Item(string marker, IEnumerable<Line> item)
     {
         var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), Margin = new Thickness(0, 0, 0, Size * 0.3) };
         var number = new TextBlock { Text = marker, Margin = new Thickness(0, 0, 8, 0) };
         number.Classes.Add("preview-text");
-        var text = Text(item.Lines, default);
+        var text = Text(item, default);
         Grid.SetColumn(text, 1);
         grid.Children.AddRange([number, text]);
         return grid;

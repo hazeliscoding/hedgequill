@@ -11,6 +11,9 @@ public enum Style
     Emphasis = 1,
     Strong = 2,
     Strike = 4,
+
+    /// <summary>Inline or fenced code, which AO3 doesn't keep: it posts as plain text, and only the reading view sets it apart.</summary>
+    Code = 8,
 }
 
 /// <summary>A run of text in one style, which becomes one text node in AO3 HTML. Link is its target inside a link.</summary>
@@ -28,14 +31,24 @@ public sealed record Heading(int Level, Line Line) : Block;
 
 public sealed record Quote(IReadOnlyList<Paragraph> Paragraphs) : Block;
 
-public sealed record ListBlock(bool Ordered, int Start, IReadOnlyList<Paragraph> Items) : Block;
+public sealed record ListBlock(bool Ordered, int Start, IReadOnlyList<ListEntry> Items) : Block;
+
+/// <summary>A list item: its text, how far it's nested, its box if it's a checklist item, and the source line it came from.</summary>
+public sealed record ListEntry(Paragraph Text, int Level, bool? Checked, int Source);
+
+/// <summary>The lines between two code fences, each one run of code.</summary>
+public sealed record CodeBlock(IReadOnlyList<Line> Lines) : Block;
+
+/// <summary>A table's rows of cells, header first, without its rule row.</summary>
+public sealed record Table(IReadOnlyList<IReadOnlyList<Line>> Rows) : Block;
 
 public sealed record SceneBreak : Block;
 
 /// <summary>
 /// Markdown read as AO3 keeps it: paragraphs, emphasis, strikethrough, headings, quotes, lists, links and scene breaks.
-/// Anything else stays plain text, so the preview shows what gets posted. The HTML and the preview both draw from Read,
-/// and Words counts it the way AO3 does.
+/// Anything else stays plain text, so the preview shows what gets posted: code and tables post as plain lines, and a
+/// checklist's boxes as [ ] and [x]. The HTML, the preview and a page's reading view all draw from Read, and Words counts
+/// it the way AO3 does.
 /// </summary>
 public static partial class Ao3Text
 {
@@ -46,7 +59,9 @@ public static partial class Ao3Text
         List<Line>? paragraph = null;
         List<Paragraph>? quote = null;
         List<Line>? quoted = null;
-        (bool Ordered, int Start, List<Paragraph> Items)? list = null;
+        (bool Ordered, int Start, List<ListEntry> Items)? list = null;
+        List<Line>? code = null;
+        List<IReadOnlyList<Line>>? table = null;
 
         void Close()
         {
@@ -65,17 +80,55 @@ public static partial class Ao3Text
                 blocks.Add(new Quote(quote));
             }
 
-            if (list is { } items)
+            if (list is { Items.Count: > 0 } items)
             {
                 blocks.Add(new ListBlock(items.Ordered, items.Start, items.Items));
             }
 
-            (paragraph, quote, quoted, list) = (null, null, null, null);
+            if (code is not null)
+            {
+                blocks.Add(new CodeBlock(code));
+            }
+
+            if (table is not null)
+            {
+                blocks.Add(new Table(table));
+            }
+
+            (paragraph, quote, quoted, list, code, table) = (null, null, null, null, null, null);
         }
 
-        foreach (var line in markdown.ReplaceLineEndings("\n").Split('\n'))
+        var lines = markdown.ReplaceLineEndings("\n").Split('\n');
+        var kinds = Markdown.Kinds(lines);
+        for (var number = 0; number < lines.Length; number++)
         {
-            if (string.IsNullOrWhiteSpace(line))
+            var line = lines[number];
+            if (kinds[number] == LineKind.Fence)
+            {
+                // A fence opens a code block or closes the one that's open.
+                var opens = code is null;
+                Close();
+                code = opens ? [] : null;
+            }
+            else if (kinds[number] == LineKind.Code)
+            {
+                code!.Add(new Line(line.Length > 0 ? [new Run(line, Style.Code, null)] : []));
+            }
+            else if (kinds[number] is LineKind.TableHeader or LineKind.TableRow)
+            {
+                if (table is null)
+                {
+                    Close();
+                    table = [];
+                }
+
+                table.Add(Markdown.Cells(line).Select(cell => Inline(cell.Trim())).ToList());
+            }
+            else if (kinds[number] == LineKind.TableRule)
+            {
+                continue;
+            }
+            else if (string.IsNullOrWhiteSpace(line))
             {
                 Close();
             }
@@ -111,16 +164,20 @@ public static partial class Ao3Text
                     quoted = [];
                 }
             }
-            else if (ListItem().Match(line) is { Success: true } item)
+            else if (Markdown.ListItemAt(line) is { } item)
             {
-                var ordered = item.Groups["number"].Success;
+                var ordered = item.Number is not null;
                 if (list is not { } open || open.Ordered != ordered)
                 {
                     Close();
-                    list = (ordered, ordered ? int.Parse(item.Groups["number"].Value, System.Globalization.CultureInfo.InvariantCulture) : 1, []);
+                    list = (ordered, item.Number ?? 1, []);
                 }
 
-                list.Value.Items.Add(new Paragraph([Inline(item.Groups["text"].Value.Trim())]));
+                // An empty item keeps the list going but posts nothing.
+                if (line[item.Text..].Trim() is { Length: > 0 } text)
+                {
+                    list.Value.Items.Add(new ListEntry(new Paragraph([Inline(text)]), item.Level, item.Checked, number));
+                }
             }
             else
             {
@@ -195,7 +252,9 @@ public static partial class Ao3Text
                 Paragraph paragraph => paragraph.Lines,
                 Heading heading => [heading.Line],
                 Quote quote => quote.Paragraphs.SelectMany(paragraph => paragraph.Lines),
-                ListBlock list => list.Items.SelectMany(item => item.Lines),
+                ListBlock list => list.Items.SelectMany(Posted),
+                CodeBlock code => code.Lines,
+                Table table => table.Rows.Select(Posted),
                 _ => [],
             };
             foreach (var line in lines)
@@ -234,10 +293,20 @@ public static partial class Ao3Text
         Heading heading => $"<h{heading.Level}>{Html(heading.Line)}</h{heading.Level}>",
         Quote quote => $"<blockquote>{string.Concat(quote.Paragraphs.Select(paragraph => $"<p>{Html(paragraph.Lines)}</p>"))}</blockquote>",
         ListBlock list => (list.Ordered ? list.Start == 1 ? "<ol>" : $"<ol start=\"{list.Start}\">" : "<ul>")
-            + string.Concat(list.Items.Select(item => $"<li>{Html(item.Lines)}</li>"))
+            + string.Concat(list.Items.Select(item => $"<li>{Html(Posted(item))}</li>"))
             + (list.Ordered ? "</ol>" : "</ul>"),
+        CodeBlock code => $"<p>{Html(code.Lines)}</p>",
+        Table table => $"<p>{Html(table.Rows.Select(Posted))}</p>",
         _ => "<hr />",
     };
+
+    /// <summary>A list item's lines as AO3 gets them, a checklist's box written in front as [ ] or [x].</summary>
+    public static IReadOnlyList<Line> Posted(ListEntry item) =>
+        item.Checked is not { } done ? item.Text.Lines : [new Line([new Run(done ? "[x] " : "[ ] ", Style.None, null), .. item.Text.Lines[0].Runs]), .. item.Text.Lines.Skip(1)];
+
+    /// <summary>A table row as AO3 gets it: one line, its cells between pipes.</summary>
+    public static Line Posted(IReadOnlyList<Line> row) =>
+        new([.. row.SelectMany((cell, i) => i == 0 ? cell.Runs : [new Run(" | ", Style.None, null), .. cell.Runs])]);
 
     private static string Html(IEnumerable<Line> lines) => string.Join("<br />", lines.Select(Html));
 
@@ -316,6 +385,7 @@ public static partial class Ao3Text
                 Mark.Emphasis => Style.Emphasis,
                 Mark.Strong => Style.Strong,
                 Mark.Strike => Style.Strike,
+                Mark.Code => Style.Code,
                 _ => Style.None,
             };
             var target = span.Mark == Mark.Link ? Target(text, span) : null;
@@ -367,8 +437,4 @@ public static partial class Ao3Text
 
     [GeneratedRegex(@"^([A-Za-z][A-Za-z0-9+.-]*):")]
     private static partial Regex Scheme();
-
-    // - * or + then a space for a bullet; a number, . or ) and a space for a numbered item.
-    [GeneratedRegex(@"^ {0,3}(?:[-*+]|(?<number>\d{1,9})[.)])[ \t]+(?<text>\S.*)$")]
-    private static partial Regex ListItem();
 }
