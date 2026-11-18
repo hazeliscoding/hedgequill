@@ -16,6 +16,7 @@ What the design must protect, in this order when two conflict. Everything else g
 |---|---|---|
 | 1.0.0 | 2026-11-16 | M0 to M5, in [#1](https://github.com/hazeliscoding/hedgequill/pull/1) and [#3](https://github.com/hazeliscoding/hedgequill/pull/3) to [#9](https://github.com/hazeliscoding/hedgequill/pull/9): the workspace with acts, chapters, scenes, Notes and Research; styled Markdown and spell check; Copy for AO3 with its preview, summary and notes, and AO3's word count; find and replace across the project, earlier versions, synced folders, text size and high contrast; motion; and a signed Windows Setup and Mac packages that update themselves, with Help. |
 | 1.0.1 | 2026-11-16 | A long scene's first lines stay in view as it scrolls under the title ([#11](https://github.com/hazeliscoding/hedgequill/pull/11)). |
+| 1.0.2 | 2026-11-18 | Right-click menus and the navigator's More menu show their items again, and Escape leaves focus mode from a chapter's overview too ([#16](https://github.com/hazeliscoding/hedgequill/pull/16)). |
 
 The milestones' checklists, "Done when" lines and evidence are in `git show v1.0.1:ROADMAP.md`. 1.0.0 installed on clean Windows and macOS runners and updated itself to a test 1.0.1 when closed ([run](https://github.com/hazeliscoding/hedgequill/actions/runs/43965594186)). M5's last check, a chapter written in Hedgequill and posted to AO3, moved to M6.
 
