@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -76,7 +77,7 @@ public partial class MainWindow : Window
                 _lastText = editor;
             }
         });
-        KeyDown += (_, e) => e.Handled = e.Handled || _menu.TryShortcut(e);
+        KeyDown += (_, e) => e.Handled = e.Handled || _menu.TryShortcut(e) || LeaveFocusMode(e);
         // Updates are checked at launch and every few hours, quietly until one is ready.
         Opened += (_, _) =>
         {
@@ -305,6 +306,18 @@ public partial class MainWindow : Window
 
         Notice.Show("The project is still open", "Some changes couldn't be written to disk yet. Retry, or save a copy, from the save state at the top.");
         return false;
+    }
+
+    // Escape leaves focus mode wherever the keyboard is, even with no editor open, once nothing nearer took it: a sheet, Find or a rename keeps it.
+    private bool LeaveFocusMode(KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape || e.KeyModifiers != KeyModifiers.None || Workspace is not { FocusMode: true } workspace)
+        {
+            return false;
+        }
+
+        workspace.ToggleFocus();
+        return true;
     }
 
     /// <summary>Edit menu commands act on the text field or editor that last had focus, since opening a menu can take focus away.</summary>

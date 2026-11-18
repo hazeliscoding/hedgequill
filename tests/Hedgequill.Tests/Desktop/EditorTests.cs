@@ -233,6 +233,18 @@ public sealed class EditorTests : IDisposable
     });
 
     [Fact]
+    public Task Escape_leaves_focus_mode_from_a_chapters_overview_too() => OnEditor((window, workspace, editor) =>
+    {
+        workspace.Select(workspace.Rows.First(row => row.IsChapter).Node);
+        Press(window, PhysicalKey.F, Command | RawInputModifiers.Shift);
+        Assert.True(workspace.FocusMode);
+
+        Press(window, PhysicalKey.Escape);
+
+        Assert.False(workspace.FocusMode);
+    });
+
+    [Fact]
     public Task Close_project_saves_and_goes_back_to_Welcome() => OnEditor((window, workspace, editor) =>
     {
         window.KeyTextInput("Last words. ");
