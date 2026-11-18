@@ -111,6 +111,11 @@ public partial class WorkspaceView : UserControl
         Manuscript.OpenRequested += Select;
         Manuscript.AddSceneRequested += AddScene;
         Manuscript.FocusToggleRequested += ToggleFocus;
+        Manuscript.ReadingChanged += (path, reading) =>
+        {
+            ReadingChanged?.Invoke(path, reading);
+            StateChanged?.Invoke();
+        };
         Manuscript.NoticeRequested += (heading, detail) => NoticeRequested?.Invoke(heading, detail, null, null);
         Manuscript.Edited += node =>
         {
@@ -194,6 +199,22 @@ public partial class WorkspaceView : UserControl
     public event Action<Node>? VersionsRequested;
 
     /// <summary>The page's text size, in percent.</summary>
+    /// <summary>Whether the page at this path opens in reading view. The window answers from settings.json.</summary>
+    public Func<string, bool> RemembersReading
+    {
+        set => Manuscript.RemembersReading = value;
+    }
+
+    /// <summary>A page switched between editing and its reading view: its path, and whether it's reading now.</summary>
+    public event Action<string, bool>? ReadingChanged;
+
+    public bool CanRead => Manuscript.CanRead;
+
+    public bool Reading => Manuscript.IsReading;
+
+    /// <summary>View › Reading view, for a Notes or Research page.</summary>
+    public void ToggleReading() => Manuscript.ToggleReading();
+
     public int TextSize
     {
         get => Manuscript.TextSize;

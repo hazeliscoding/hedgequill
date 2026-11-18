@@ -71,6 +71,7 @@ public sealed class AppMenu
             Toggle("Navigator", () => Workspace?.ToggleNavigator(), () => Workspace?.NavigatorShown == true, Gesture(Key.OemPipe), () => Open() && Workspace?.FocusMode != true),
             Toggle("Preview", () => Workspace?.TogglePreview(), () => Workspace?.PreviewShown == true, Gesture(Key.P, KeyModifiers.Shift), () => Open() && Workspace?.FocusMode != true),
             Toggle("Focus mode", () => Workspace?.ToggleFocus(), () => Workspace?.FocusMode == true, Gesture(Key.F, KeyModifiers.Shift), Open),
+            Toggle("Reading view", () => Workspace?.ToggleReading(), () => Workspace?.Reading == true, Gesture(Key.E), () => Workspace?.CanRead == true),
             new NativeMenuItemSeparator(),
             Item("Larger text", () => window.ChangeTextSize(1), Gesture(Key.OemPlus), () => Open() && window.TextSize < Preferences.TextSizes[^1]),
             Item("Smaller text", () => window.ChangeTextSize(-1), Gesture(Key.OemMinus), () => Open() && window.TextSize > Preferences.TextSizes[0]),
@@ -127,7 +128,7 @@ public sealed class AppMenu
     [
         Group("Writing", "Bold", "Italic", "Insert scene break", "Undo", "Redo", "Find…", "Find in project…"),
         Group("Project", "New scene", "New project…", "Open folder…", "Rename"),
-        Group("View", "Navigator", "Preview", "Focus mode", "Larger text", "Smaller text", "Actual size"),
+        Group("View", "Navigator", "Preview", "Focus mode", "Reading view", "Larger text", "Smaller text", "Actual size"),
         Group("AO3 and Help", "Copy chapter HTML", "Keyboard shortcuts"),
     ];
 

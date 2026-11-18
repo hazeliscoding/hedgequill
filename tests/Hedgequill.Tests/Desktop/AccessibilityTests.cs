@@ -25,6 +25,8 @@ public sealed class AccessibilityTests : IDisposable
         ["Bold"] = "Ctrl+B or ⌘B",
         ["Italic"] = "Ctrl+I or ⌘I",
         ["Scene break"] = "Ctrl+Enter or ⌘↩",
+        ["Reading view"] = "Ctrl+E or ⌘E",
+        ["Edit"] = "Ctrl+E or ⌘E",
         ["Expand or collapse"] = "Right and Left in the navigator",
     };
 

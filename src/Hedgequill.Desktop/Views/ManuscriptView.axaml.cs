@@ -31,12 +31,17 @@ public partial class ManuscriptView : UserControl
     private readonly CodeBlocks _code;
     private readonly TitleSpace _titleSpace;
     private bool _loading;
+    private bool _reading;
     private int _menuOffset;
     private int _textSize = 100;
 
     // The page's top margin: 64 px, or 120 in focus mode, sliding between them.
     private double _top = 64;
     private readonly Slide _topSlide;
+
+    // The toolbar's book, for reading view, and its pencil, for going back to editing, on the tool buttons' 16 px grid.
+    private const string Book = "M2 3.5h3.5A2.5 2.5 0 0 1 8 6v7a2 2 0 0 0-2-2H2zM14 3.5h-3.5A2.5 2.5 0 0 0 8 6v7a2 2 0 0 1 2-2h4z";
+    private const string Pencil = "M10.6 2.9a1.6 1.6 0 0 1 2.3 2.3L5.6 12.5 2.5 13.5l1-3.1zM9.4 4.1l2.3 2.3";
 
     // One system checker for the app, opened the first time an editor needs it.
     private static readonly Lazy<SpellChecker?> Speller = new(SpellChecker.Create);
@@ -103,6 +108,11 @@ public partial class ManuscriptView : UserControl
         Editor.TextChanged += (_, _) =>
         {
             EmptyHint.IsVisible = Editor.Document.TextLength == 0;
+            if (IsReading)
+            {
+                ShowRead();
+            }
+
             if (!_loading && _node is { } node)
             {
                 Edited?.Invoke(node);
@@ -116,6 +126,8 @@ public partial class ManuscriptView : UserControl
         BoldButton.Click += (_, _) => Wrap(Markdown.Bold);
         ItalicButton.Click += (_, _) => Wrap(Markdown.Italic);
         BreakButton.Click += (_, _) => InsertSceneBreak();
+        ReadButton.Click += (_, _) => ToggleReading();
+        Reading.Toggled += Tick;
         AddSceneButton.Click += (_, _) => AddSceneRequested?.Invoke();
         LeaveFocus.Click += (_, _) => FocusToggleRequested?.Invoke();
         ChapterScenes.AddHandler(Button.ClickEvent, (_, e) =>
@@ -151,6 +163,17 @@ public partial class ManuscriptView : UserControl
     public SpellingUnderlines? Spelling { get; }
 
     public Node? Node => _node;
+
+    /// <summary>Whether the page at this path opens in reading view. The window answers from settings.json.</summary>
+    public Func<string, bool> RemembersReading { get; set; } = _ => false;
+
+    /// <summary>A page switched between editing and its reading view: its path, and whether it's reading now.</summary>
+    public event Action<string, bool>? ReadingChanged;
+
+    /// <summary>Notes and Research pages have a reading view; a scene has the AO3 preview instead.</summary>
+    public bool CanRead => _node?.Kind == NodeKind.Page;
+
+    public bool IsReading => _reading && CanRead;
 
     public bool FocusMode
     {
@@ -260,6 +283,7 @@ public partial class ManuscriptView : UserControl
     /// <summary>Selects text in the open scene or page and scrolls to it, as a match in Find in project does.</summary>
     public void Reveal(int offset, int length)
     {
+        Edit();
         offset = Math.Min(offset, Editor.Document.TextLength);
         Editor.Select(offset, Math.Min(length, Editor.Document.TextLength - offset));
         var location = Editor.Document.GetLocation(offset);
@@ -272,7 +296,66 @@ public partial class ManuscriptView : UserControl
     {
         if (_node?.IsFile == true)
         {
+            Edit();
             _search.Open();
+        }
+    }
+
+    /// <summary>View › Reading view, the toolbar's book and pencil, and Ctrl+E, on a Notes or Research page.</summary>
+    public void ToggleReading()
+    {
+        if (CanRead)
+        {
+            SetReading(!IsReading, remember: true);
+        }
+    }
+
+    // Find and a match in Find in project need the text, so they switch back to editing.
+    private void Edit()
+    {
+        if (IsReading)
+        {
+            SetReading(false, remember: true);
+        }
+    }
+
+    private void SetReading(bool reading, bool remember)
+    {
+        _reading = reading;
+        Editor.IsVisible = Overlay.IsVisible = !IsReading;
+        ReadingPane.IsVisible = IsReading;
+        BoldButton.IsVisible = ItalicButton.IsVisible = !IsReading;
+        BreakButton.IsVisible = !IsReading && _node?.Kind == NodeKind.Scene;
+        ReadButton.IsVisible = CanRead;
+        ReadIcon.Data = Geometry.Parse(IsReading ? Pencil : Book);
+        var label = IsReading ? "Edit" : "Reading view";
+        AutomationProperties.SetName(ReadButton, label);
+        ToolTip.SetTip(ReadButton, $"{label} ({Command}E)");
+        if (IsReading)
+        {
+            ShowRead();
+        }
+
+        if (remember && _project is { } project && _node is { } node)
+        {
+            ReadingChanged?.Invoke(project.PathOf(node), IsReading);
+            _ = IsReading ? ReadingPane.Focus() : Editor.TextArea.Focus();
+        }
+    }
+
+    private void ShowRead()
+    {
+        ReadingTitle.Text = _node?.Title;
+        Reading.Show(Editor.Document.Text, Editor.FontSize);
+    }
+
+    // A box ticked in reading view makes the same edit a click in the editor does, so autosave and Undo see it.
+    private void Tick(int line)
+    {
+        var document = Editor.Document;
+        if (line < document.LineCount && document.GetLineByNumber(line + 1) is var row && Markdown.ListItemAt(document.GetText(row)) is { Checked: { } done } item)
+        {
+            document.Replace(row.Offset + item.Indent + item.Marker + 1, 1, done ? " " : "x");
         }
     }
 
@@ -282,7 +365,7 @@ public partial class ManuscriptView : UserControl
 
     private void Apply(Change change)
     {
-        if (_node?.IsFile != true)
+        if (_node?.IsFile != true || IsReading)
         {
             return;
         }
@@ -362,7 +445,7 @@ public partial class ManuscriptView : UserControl
         Editor.Classes.Set("page", isPage);
         EmptyHint.Classes.Set("page", isPage);
         ApplyTextSize();
-        BreakButton.IsVisible = !isPage;
+        SetReading(isPage && _project is { } project && RemembersReading(project.PathOf(node)), remember: false);
 
         var chapter = ChapterOf(node);
         Eyebrow.IsVisible = !isPage;
@@ -497,6 +580,10 @@ public partial class ManuscriptView : UserControl
         var size = (Editor.Classes.Contains("page") ? 15.5 : 19) * _textSize / 100.0;
         Editor.FontSize = size;
         EmptyHint.FontSize = size;
+        if (IsReading)
+        {
+            ShowRead();
+        }
     }
 
     /// <summary>The prototype's line heights: 1.7 for the manuscript, 1.65 for pages. AvaloniaEdit scales the font's own line spacing, so start from that.</summary>
@@ -523,6 +610,7 @@ public partial class ManuscriptView : UserControl
         var side = Math.Max(32, ((Editor.Bounds.Width - measure) / 2) + 32);
         var header = DocHeader.Bounds.Height + DocHeader.Margin.Bottom;
         Overlay.Margin = new Thickness(side, _top, side, 0);
+        ReadingColumn.Margin = new Thickness(32, _top, 32, 160);
         EmptyHint.Margin = new Thickness(0, header, 0, 0);
         _titleSpace.Height = _top + header;
         Editor.Padding = new Thickness(side, 0, side, 160);

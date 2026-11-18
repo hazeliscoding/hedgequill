@@ -19,6 +19,13 @@
         </StackPanel>
         <TextBlock x:Name="EmptyHint" Classes="empty-hint" VerticalAlignment="Top" />
       </Panel>
+      <!-- A Notes or Research page's reading view, in the same column as the editor. -->
+      <ScrollViewer x:Name="ReadingPane" IsVisible="False" Focusable="True" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel x:Name="ReadingColumn" MaxWidth="576" Margin="32,64,32,160">
+          <TextBlock x:Name="ReadingTitle" Classes="doc-title" FontSize="26" Margin="0,0,0,20" />
+          <views:ReadingView x:Name="Reading" />
+        </StackPanel>
+      </ScrollViewer>
       <StackPanel x:Name="Toolbar" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,18,0" Spacing="2">
         <Button x:Name="BoldButton" Classes="tool" AutomationProperties.Name="Bold" Focusable="False">
           <Path Data="M4.5 8H10a2.5 2.5 0 0 1 0 5H5.2a.7.7 0 0 1-.7-.7V3.7a.7.7 0 0 1 .7-.7H9.5a2.5 2.5 0 0 1 0 5" />
@@ -28,6 +35,9 @@
         </Button>
         <Button x:Name="BreakButton" Classes="tool" AutomationProperties.Name="Scene break" Focusable="False">
           <Path Data="M3.5 8H12.5" />
+        </Button>
+        <Button x:Name="ReadButton" Classes="tool" AutomationProperties.Name="Reading view" Focusable="False" IsVisible="False">
+          <Path x:Name="ReadIcon" Data="M2 3.5h3.5A2.5 2.5 0 0 1 8 6v7a2 2 0 0 0-2-2H2zM14 3.5h-3.5A2.5 2.5 0 0 0 8 6v7a2 2 0 0 1 2-2h4z" />
         </Button>
       </StackPanel>
     </Panel>

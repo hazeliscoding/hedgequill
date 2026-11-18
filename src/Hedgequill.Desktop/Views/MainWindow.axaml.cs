@@ -354,7 +354,21 @@ public partial class MainWindow : Window
         }
 
         Title = $"{project.Title} — Hedgequill";
-        var workspace = new WorkspaceView(project);
+        var workspace = new WorkspaceView(project)
+        {
+            RemembersReading = page => _preferences.ReadingPages.Contains(page),
+        };
+        workspace.ReadingChanged += (page, reading) =>
+        {
+            try
+            {
+                _preferences.SetReading(page, reading);
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            {
+                // The page still switches; it just won't open that way next time.
+            }
+        };
         workspace.ConfirmRequested += Confirmation.Show;
         workspace.HtmlRequested += copy => Ao3Html.Show(copy, workspace.CopyText, done => Notice.Show(done, ""));
         workspace.VersionsRequested += scene => Attempt("Couldn't read the earlier versions", () =>

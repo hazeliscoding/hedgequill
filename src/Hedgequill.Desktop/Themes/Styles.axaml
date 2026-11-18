@@ -459,6 +459,63 @@
   <Style Selector="Border.preview-break">
     <Setter Property="Background" Value="{DynamicResource Separator}" />
   </Style>
+
+  <!-- A page's reading view, in the page's face, as the prototype draws it. ReadingView sets the sizes, which follow View › Larger text. -->
+  <Style Selector="SelectableTextBlock.reading">
+    <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+  </Style>
+  <Style Selector="SelectableTextBlock.reading.reading-heading">
+    <Setter Property="FontFamily" Value="{StaticResource FontTitle}" />
+  </Style>
+  <Style Selector="SelectableTextBlock.reading.quote">
+    <Setter Property="FontStyle" Value="Italic" />
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
+  </Style>
+  <Style Selector="SelectableTextBlock.reading.done">
+    <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
+  </Style>
+  <Style Selector="SelectableTextBlock.reading.code">
+    <Setter Property="FontFamily" Value="{StaticResource FontMono}" />
+  </Style>
+  <Style Selector="SelectableTextBlock.reading.header">
+    <Setter Property="FontWeight" Value="SemiBold" />
+  </Style>
+  <Style Selector="Run.code">
+    <Setter Property="FontFamily" Value="{StaticResource FontMono}" />
+    <Setter Property="Background" Value="{DynamicResource BgInset}" />
+  </Style>
+  <Style Selector="TextBlock.reading-marker">
+    <Setter Property="Foreground" Value="{DynamicResource TextTertiary}" />
+  </Style>
+  <Style Selector="Border.reading-quote, Border.reading-cell">
+    <Setter Property="BorderBrush" Value="{DynamicResource Separator}" />
+  </Style>
+  <Style Selector="Border.reading-code">
+    <Setter Property="Background" Value="{DynamicResource BgInset}" />
+  </Style>
+  <!-- A checklist's box: 13 px, 3 px corners and a 1.5 px border, filled with the accent and ticked when done. -->
+  <Style Selector="CheckBox.box">
+    <Setter Property="Width" Value="13" />
+    <Setter Property="Height" Value="13" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="Box" CornerRadius="3" BorderThickness="1.5" BorderBrush="{DynamicResource TextTertiary}" Background="Transparent">
+          <Path Name="Tick" Data="M2.1 5.1 4 7 7.9 2.9" Stroke="{DynamicResource TextOnAccent}" StrokeThickness="1.6" StrokeLineCap="Round" StrokeJoin="Round" IsVisible="False" />
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="CheckBox.box:checked /template/ Border#Box">
+    <Setter Property="Background" Value="{DynamicResource Accent}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+  </Style>
+  <Style Selector="CheckBox.box:checked /template/ Path#Tick">
+    <Setter Property="IsVisible" Value="True" />
+  </Style>
   <Style Selector="Border.header-separator">
     <Setter Property="Width" Value="1" />
     <Setter Property="Height" Value="16" />
