@@ -59,4 +59,24 @@ public class Ao3TextTests
     [Fact]
     public void A_word_split_by_emphasis_counts_twice_as_on_AO3() =>
         Assert.Equal(2, Ao3Text.Words("*wo*rd"));
+
+    [Theory]
+    [InlineData("Write `Platform Nine` with a capital N.", "<p>Write Platform Nine with a capital N.</p>", 7)]
+    [InlineData("```\n23:52  Platform 9\n\nlast <train>\n```", "<p>23:52  Platform 9<br /><br />last &lt;train&gt;</p>", 6)]
+    [InlineData("| Name | Lives |\n|---|---|\n| Mira | *the* flat |", "<p>Name | Lives<br />Mira | <em>the</em> flat</p>", 5)]
+    [InlineData("- [x] Name the ferry\n- [ ] Check the tides", "<ul><li>[x] Name the ferry</li><li>[ ] Check the tides</li></ul>", 7)]
+    [InlineData("- Fog\n  - Rain\n- ", "<ul><li>Fog</li><li>Rain</li></ul>", 2)]
+    public void Code_tables_and_checklists_post_as_plain_text(string markdown, string html, int words)
+    {
+        Assert.Equal(html, Ao3Text.Html(markdown));
+        Assert.Equal(words, Ao3Text.Words(markdown));
+    }
+
+    [Fact]
+    public void A_list_item_keeps_its_level_box_and_source_line()
+    {
+        var list = Assert.IsType<ListBlock>(Assert.Single(Ao3Text.Read("- [ ] Tides\n    - [x] Ferry\n- Lamp")));
+
+        Assert.Equal([(0, false, 0), (2, true, 1), (0, null, 2)], list.Items.Select(item => (item.Level, item.Checked, item.Source)));
+    }
 }

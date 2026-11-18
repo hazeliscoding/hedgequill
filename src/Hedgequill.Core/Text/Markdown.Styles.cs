@@ -5,10 +5,12 @@ public enum Mark
 {
     Heading,
     Quote,
+    Code,
     Emphasis,
     Strong,
     Strike,
     Link,
+    Done,
     Marker,
 }
 
@@ -70,8 +72,57 @@ public static partial class Markdown
             spans.Add(new(0, line.Length, Mark.Quote));
             spans.Add(new(0, body, Mark.Marker));
         }
+        else if (ListItemAt(line) is { } item)
+        {
+            spans.Add(new(item.Indent, item.Marker + item.Box, Mark.Marker));
+            if (item.Checked == true)
+            {
+                spans.Add(new(item.Text, line.Length - item.Text, Mark.Done));
+            }
+
+            body = item.Text;
+        }
 
         InlineSpans(line, body, spans);
+        spans.Sort((a, b) => a.Mark.CompareTo(b.Mark));
+        return spans;
+    }
+
+    /// <summary>
+    /// How to style a line that <see cref="Kinds"/> placed: code in the code face, with a fence's backticks faded; a table in
+    /// the code face too, its pipes and rule row faded and its header row strong.
+    /// </summary>
+    public static List<Span> Spans(string line, LineKind kind)
+    {
+        switch (kind)
+        {
+            case LineKind.Text:
+                return Spans(line);
+            case LineKind.Code:
+                return [new(0, line.Length, Mark.Code)];
+            case LineKind.Fence or LineKind.TableRule:
+                return [new(0, line.Length, Mark.Code), new(0, line.Length, Mark.Marker)];
+        }
+
+        var spans = new List<Span> { new(0, line.Length, Mark.Code) };
+        var pipes = Pipes(line);
+        foreach (var pipe in pipes)
+        {
+            spans.Add(new(pipe, 1, Mark.Marker));
+        }
+
+        for (var i = 0; i < pipes.Count; i++)
+        {
+            var start = pipes[i] + 1;
+            var cell = line[start..(i + 1 < pipes.Count ? pipes[i + 1] : line.Length)];
+            if (kind == LineKind.TableHeader && cell.Trim().Length > 0)
+            {
+                spans.Add(new(start, cell.Length, Mark.Strong));
+            }
+
+            spans.AddRange(Inline(cell).Select(span => span with { Start = span.Start + start }));
+        }
+
         spans.Sort((a, b) => a.Mark.CompareTo(b.Mark));
         return spans;
     }
@@ -173,6 +224,30 @@ public static partial class Markdown
                 continue;
             }
 
+            // A code span runs to the next run of as many backticks, and nothing inside it is emphasis.
+            if (c == '`')
+            {
+                var ticks = i;
+                while (ticks < line.Length && line[ticks] == '`')
+                {
+                    ticks++;
+                }
+
+                if (CodeEnd(line, ticks, ticks - i) is { } codeEnd)
+                {
+                    spans.Add(new(i, ticks - i, Mark.Marker));
+                    spans.Add(new(ticks, codeEnd - ticks, Mark.Code));
+                    spans.Add(new(codeEnd, ticks - i, Mark.Marker));
+                    i = codeEnd + ticks - i;
+                }
+                else
+                {
+                    i = ticks;
+                }
+
+                continue;
+            }
+
             if (c is not ('*' or '_' or '~'))
             {
                 i++;
@@ -258,6 +333,33 @@ public static partial class Markdown
 
         var paren = line.IndexOf(')', close + 2);
         return paren > close + 2 && line.AsSpan(close + 2, paren - close - 2).IndexOfAny(" \t(") < 0 ? (close, paren) : null;
+    }
+
+    // Where the run of exactly this many backticks that closes a code span starts, past at least one character of code.
+    private static int? CodeEnd(string line, int from, int count)
+    {
+        for (var i = from + 1; i < line.Length; i++)
+        {
+            if (line[i] != '`')
+            {
+                continue;
+            }
+
+            var end = i;
+            while (end < line.Length && line[end] == '`')
+            {
+                end++;
+            }
+
+            if (end - i == count)
+            {
+                return i;
+            }
+
+            i = end;
+        }
+
+        return null;
     }
 
     // A run that can both open and close can't pair with one whose lengths sum to a multiple of 3, unless both are: "*a**b*" stays one emphasis.
