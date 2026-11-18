@@ -18,11 +18,22 @@ What the design must protect, in this order when two conflict. Everything else g
 | 1.0.1 | 2026-11-16 | A long scene's first lines stay in view as it scrolls under the title ([#11](https://github.com/hazeliscoding/hedgequill/pull/11)). |
 | 1.0.2 | 2026-11-18 | Right-click menus and the navigator's More menu show their items again, and Escape leaves focus mode from a chapter's overview too ([#16](https://github.com/hazeliscoding/hedgequill/pull/16)). |
 
-The milestones' checklists, "Done when" lines and evidence are in `git show v1.0.1:ROADMAP.md`. 1.0.0 installed on clean Windows and macOS runners and updated itself to a test 1.0.1 when closed ([run](https://github.com/hazeliscoding/hedgequill/actions/runs/43965594186)). M5's last check, a chapter written in Hedgequill and posted to AO3, moved to M6.
+The milestones' checklists, "Done when" lines and evidence are in `git show v1.0.1:ROADMAP.md`. 1.0.0 installed on clean Windows and macOS runners and updated itself to a test 1.0.1 when closed ([run](https://github.com/hazeliscoding/hedgequill/actions/runs/43965594186)). M5's last check, a chapter written in Hedgequill and posted to AO3, moved to M7.
 
-Each feature in M6 to M9 is drawn in the prototype and approved before it's built.
+Each feature in M6 to M10 is drawn in the prototype and approved before it's built.
 
-## M6: Bring work in, send it out
+## M6: Markdown in your notes
+
+Notes and Research pages already style headings, emphasis, quotes, strikethrough and links. These add what notes use most. One editor draws pages and scenes, so scenes get them too.
+
+- [ ] Lists: bullets and numbers with a hanging indent, so a wrapped line lines up under the text, not the marker. Enter continues a list, Enter on an empty item ends it, and Tab and Shift+Tab nest an item.
+- [ ] Checklists: `- [ ]` and `- [x]` draw a box. Clicking it writes or clears the x in the file, and Undo takes it back.
+- [ ] Code: `inline code` and fenced blocks in a monospace face on a light background, with their markers faded. AO3 HTML doesn't keep code, so in a scene it copies as plain text.
+- [ ] Tables: pipe tables in monospace, with the pipes and the header's dashes faded, and in a scene they copy as plain text too. Settle first how the columns line up: by rewriting the table's spacing in the file as you type, or by spacing drawn on screen that leaves the file as typed.
+
+**Done when:** tests on invented text cover a list's Enter, Tab and Shift+Tab, a box ticked by a click and then undone, a fenced block styled from its first line to its last, a table's columns lining up, and a scene with code and a table copying for AO3 as plain text; `ContrastTests` passes with code's background in all four themes; and the owner has kept notes with them.
+
+## M7: Bring work in, send it out
 
 - [ ] Write a chapter in Hedgequill and post it to AO3, the check left over from M5.
 - [ ] Paste from Google Docs or Word keeps italics and bold: Hedgequill reads the HTML they put on the clipboard and writes Markdown markers. Everything else comes in as plain text.
@@ -31,7 +42,7 @@ Each feature in M6 to M9 is drawn in the prototype and approved before it's buil
 
 **Done when:** fixture tests pass on invented text copied from Google Docs and from Word, as each puts it on the clipboard; a chapter with a comment copies for AO3 and for a beta reader without it; and the owner has posted a chapter written in Hedgequill to AO3 and brought a work in progress over from Google Docs or Word.
 
-## M7: Writing days
+## M8: Writing days
 
 - [ ] Targets: a word goal and a deadline per project, such as an exchange's minimum or a Big Bang's, and the words written today, all counted as AO3 counts them. Settle first where today's count lives so it survives a restart; `hedgequill.json` is the likely home for the goal and deadline.
 - [ ] Notes beside the page: a Notes or Research page in the right pane, in place of the AO3 preview, saved like any other page.
@@ -39,7 +50,7 @@ Each feature in M6 to M9 is drawn in the prototype and approved before it's buil
 
 **Done when:** tests on invented text cover a target's progress and deadline, today's words across a restart, curly quotes and dashes with their Undo, and a page saved from the right pane; and the owner has written toward a target.
 
-## M8: Proofread and print
+## M9: Proofread and print
 
 - [ ] Read aloud for proofreading, in the voices installed on the computer, never an online one. It needs native calls, as spell check does, so it gets its own file and its own names in the network guard, and a NativeAOT probe on Windows and macOS runs first.
 - [ ] Export as a book: a print-ready PDF at 5 × 8 in, laid out like an AO3 download.
@@ -50,7 +61,7 @@ Each feature in M6 to M9 is drawn in the prototype and approved before it's buil
 
 **Done when:** an invented work exports to a PDF that a test reads back, with 5 × 8 in pages, mirrored margins and each chapter starting a new page; the read-aloud probe passes under NativeAOT on Windows and macOS; and the owner has printed a copy.
 
-## M9: More places to run it
+## M10: More places to run it
 
 - [ ] Linux. Avalonia and Velopack support it. Settle first who tests it, and which spell checker it uses, since Hedgequill ships no dictionaries.
 - [ ] A winget package. Settle first who updates the install: Velopack updates Hedgequill in place, and a winget upgrade must not fight it.
@@ -64,7 +75,7 @@ Nothing yet. A new idea waits here until it has a milestone.
 
 ## Not planned
 
-- Tag syntax, build settings, compile formats (ePub, Word, or any PDF except M8's book), templates, corkboards and labels. They're what made Scrivener and novelWriter feel heavy, and both apps do them well.
+- Tag syntax, build settings, compile formats (ePub, Word, or any PDF except M9's book), templates, corkboards and labels. They're what made Scrivener and novelWriter feel heavy, and both apps do them well.
 - Posting to AO3 from the app. Copy for AO3 and AO3's own editor keep your AO3 login out of Hedgequill.
 - Accounts, sync, telemetry, crash reports Hedgequill sends itself, or anything hosted.
 - A portable zip, which can't update itself.
@@ -93,13 +104,13 @@ Each decision says why it was made and what it gave up. A changed one is marked 
 - **The UI prototype is the reference** for layout, states and copy: the claude.ai artifact "Hedgequill Prototype", which isn't public. It covers the Welcome screen, the workspace, Copy for AO3, every save state, the menus, light and dark, and Windows and macOS frames. This gives up designing screens in code. One fix to carry over: its Windows title bar still shows an "M" tile from the Margin name.
 - **Public, under Apache-2.0,** like the owner's other Avalonia apps. Velopack's GitHub Releases updater needs public releases to work without a token, and a privacy promise is easier to trust when people can read the code. This gives up a closed-source paid app.
 - **Hedgequill updates itself.** It checks GitHub Releases at launch and every few hours, downloads in the background, shows "Update ready, restart to finish", and installs when you close it. It never restarts on its own, so an update can't interrupt a sentence. Help › Check for updates… checks on demand. The request sends nothing about the writer or their words. It's the only network code, and the owner chose it so that every copy stays on the latest version. This gives up a strict "no network" promise, and an off switch: a setting would be the app's first, and copies with updates off fall behind.
-- **Windows and macOS at 1.0.** These are what the prototype draws. The owner writes on Windows, and many AO3 writers use Macs. NativeAOT can't build for another OS, so each platform publishes on its own CI runner, as in Prompuff. This gives up Linux until someone asks (now M9).
+- **Windows and macOS at 1.0.** These are what the prototype draws. The owner writes on Windows, and many AO3 writers use Macs. NativeAOT can't build for another OS, so each platform publishes on its own CI runner, as in Prompuff. This gives up Linux until someone asks (now M10).
 - **NativeAOT by default,** as in the owner's other Avalonia apps, for start-up time and memory. AvaloniaEdit hasn't been tried under it, and a library can fail there (Ical.Net did, in another app), so M0 publishes a probe first. If AvaloniaEdit fails, Hedgequill ships self-contained without NativeAOT, as Prompuff does. This gives up a few MB and some start-up time in that case.
 - **Laid out like the owner's other apps:** `Hedgequill.Core` (the project model, files, saving and AO3 HTML, no UI), `Hedgequill.Desktop` (the app) and `Hedgequill.Tests`. A test fails if Core references Avalonia, so the parts that guard your words can be tested without a window. This gives up a single project.
 - **Velopack's package ID is `hazeliscoding.Hedgequill`,** not `Hedgequill`. Setup empties `%LOCALAPPDATA%\<packId>` on every install and the uninstaller deletes it, so the ID must never equal the folder that holds settings and the recent-projects list. This gives up an install folder named plainly Hedgequill.
 - **Setup only, no portable zip.** A portable copy can't update itself, and the owner wants every copy up to date. This gives up running without installing.
 - **Signing as in the owner's other apps:** Windows Setup is signed with the owner's Azure Artifact Signing profile, through OIDC in a release job of its own, so no package the build loads can reach the signing token. macOS builds are ad-hoc signed and not notarized, as in Prompuff, and the README explains Open Anyway. This gives up a Mac first launch without Gatekeeper's warning.
-- **The logo is the spiny quill,** the owner's pick from six options: a quill pen whose vane has hedgehog spines. The lockup sets the wordmark in Gloock, the prototype's title face, outlined to paths. This gives up a hedgehog figure in the mark; a mascot can come separately (now M9).
+- **The logo is the spiny quill,** the owner's pick from six options: a quill pen whose vane has hedgehog spines. The lockup sets the wordmark in Gloock, the prototype's title face, outlined to paths. This gives up a hedgehog figure in the mark; a mascot can come separately (now M10).
 - **Design tokens come from the prototype,** in `docs/brand/tokens.md`. Its tertiary text fell below 4.5:1, so it's darkened in light mode and lightened in dark. This gives up an exact match with the prototype's grey.
 - **Avalonia's build telemetry is off,** as in Carmine. Avalonia 12 sends usage data from every build, and a private app shouldn't send anything its contributors didn't choose. This gives up Avalonia's usage data from this repo.
 
@@ -119,7 +130,7 @@ Each decision says why it was made and what it gave up. A changed one is marked 
 - **Changed on disk is noticed when Hedgequill next saves that file:** before writing, it compares the file with what it last read or wrote. It never overwrites the other app's change without Keep mine. This gives up a warning the moment another app saves; a file watcher can add one later.
 - **Choose folder… copies the whole project,** with the text in memory, into the folder the writer picks, and carries on there. A read-only folder can't take a single scene, and splitting a project across folders would break it. This gives up writing just the one scene elsewhere; Save a copy… still does that when a save fails.
 - **Closing with unsaved text asks first:** "Close without saving?", with Close anyway. The prototype doesn't draw it, but AGENTS.md's first rule is never to lose words without the writer choosing to. This gives up a window that always closes at once.
-- **A printed book moves from Not planned to Later,** at the owner's request: a PDF to print and bind, like the gift edition the owner already makes with a script (now in M8). Not planned keeps ePub, Word and other compile formats. This gives up part of the line that kept Hedgequill out of compiling.
+- **A printed book moves from Not planned to Later,** at the owner's request: a PDF to print and bind, like the gift edition the owner already makes with a script (now in M9). Not planned keeps ePub, Word and other compile formats. This gives up part of the line that kept Hedgequill out of compiling.
 - **The menu bar is one NativeMenu:** File, Edit, View and Chapter, as the prototype draws them.
   - macOS shows it at the top of the screen. Windows shows it in the prototype's caption row (app icon, menus, title), and Avalonia draws the window buttons there.
   - Help and the AO3 items stay out until M3 and M4, so no item does nothing.
@@ -201,4 +212,8 @@ Each decision says why it was made and what it gave up. A changed one is marked 
 - **Accessibility is three tests:** in every screen and sheet, each control Narrator and VoiceOver can reach has a name that isn't its type's; every button a mouse can press takes keyboard focus, except Bold, Italic, Scene break and the navigator's chevrons, whose keys are listed beside them; and `ContrastTests` holds text to 4.5:1 in all four themes. The name and focus checks each have a positive control. This gives up nothing.
 - **Security reports go through GitHub's private vulnerability reporting,** which `SECURITY.md` points to, so the repo carries no email address. This gives up nothing.
 - **The README drops its Alternatives table,** at the owner's request. Checked on 2026-11-12, it compared Hedgequill with Scrivener, novelWriter, Obsidian with Longform, Ellipsus, Typora and iA Writer, and said when to pick each one. `git show v1.0.1:README.md` still has it. This gives up telling a reader when another app would suit them better.
-- **After 1.0 the shipped milestones fold into a Shipped table,** as the owner's other projects do, and Later's ideas become M6 to M9. M6 comes first: pasting from Google Docs or Word is the easiest way to bring a work in progress over, and M6 carries 1.0's last check. Linux and winget wait until M9, since each has a question to settle first, about who tests it and who updates it. This gives up M0 to M5's checklists in this file; `git show v1.0.1:ROADMAP.md` has them.
+- **After 1.0 the shipped milestones fold into a Shipped table,** as the owner's other projects do, and Later's ideas become M6 to M9. M6 comes first: pasting from Google Docs or Word is the easiest way to bring a work in progress over, and M6 carries 1.0's last check. Linux and winget wait until M9, since each has a question to settle first, about who tests it and who updates it. This gives up M0 to M5's checklists in this file; `git show v1.0.1:ROADMAP.md` has them. Its M6 to M9 are now M7 to M10, since Markdown in notes went first (2026-11-18).
+
+### 2026-11-18
+
+- **Markdown in notes comes next, as M6,** at the owner's request. Pages are where a writer keeps character sheets, to-dos and research, and their lists, checklists, code and tables showed as plain text. The editor styles them in place, as it does emphasis, and in scenes too, since one editor draws both. Bring work in, send it out moves to M7 and the rest follow. This gives up starting with the milestone that brings a work in progress over from Google Docs or Word.
