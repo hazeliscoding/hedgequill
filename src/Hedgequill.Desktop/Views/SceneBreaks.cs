@@ -16,12 +16,14 @@ namespace Hedgequill.Desktop.Views;
 public sealed class SceneBreaks : VisualLineElementGenerator
 {
     private readonly TextArea _area;
+    private readonly PageBlocks _blocks;
     private int _caretLine;
     private bool _shown;
 
-    public SceneBreaks(TextArea area)
+    public SceneBreaks(TextArea area, PageBlocks blocks)
     {
         _area = area;
+        _blocks = blocks;
         _caretLine = area.Caret.Line;
         area.Caret.PositionChanged += (_, _) =>
         {
@@ -48,7 +50,7 @@ public sealed class SceneBreaks : VisualLineElementGenerator
     public override int GetFirstInterestedOffset(int startOffset)
     {
         var line = CurrentContext.VisualLine.FirstDocumentLine;
-        return startOffset == line.Offset && line.LineNumber != _area.Caret.Line && Markdown.IsSceneBreak(CurrentContext.Document.GetText(line))
+        return startOffset == line.Offset && line.LineNumber != _area.Caret.Line && IsBreak(line.LineNumber, CurrentContext.Document.GetText(line))
             ? line.Offset
             : -1;
     }
@@ -64,11 +66,14 @@ public sealed class SceneBreaks : VisualLineElementGenerator
     private void Redraw(int lineNumber)
     {
         var document = _area.Document;
-        if (document is not null && lineNumber <= document.LineCount && document.GetLineByNumber(lineNumber) is var line && Markdown.IsSceneBreak(document.GetText(line)))
+        if (document is not null && lineNumber <= document.LineCount && document.GetLineByNumber(lineNumber) is var line && IsBreak(lineNumber, document.GetText(line)))
         {
             _area.TextView.Redraw(line);
         }
     }
+
+    // Three dashes inside a code block or under a table's header are code and a rule row, not a break.
+    private bool IsBreak(int lineNumber, string text) => _blocks.KindOf(lineNumber) == LineKind.Text && Markdown.IsSceneBreak(text);
 
     // It never holds the caret, since the caret's line shows plain text.
     private sealed class Ornament(int length, char mark, int count, double column) : VisualLineElement(1, length)

@@ -7,30 +7,43 @@ namespace Hedgequill.Desktop.Views;
 
 /// <summary>
 /// Styles Markdown in place, as the prototype's editor does: emphasis in italic, strong in bold, headings in the title
-/// face at 1.3 times the size, quotes in italic and the secondary color, struck text struck through, and the markers that
-/// make them faded, a link's brackets and target among them.
+/// face at 1.3 times the size, quotes in italic and the secondary color, struck text struck through, code in the code
+/// face, a ticked item's text quieter, and the markers that make them faded, a link's brackets and target among them.
 /// </summary>
 public sealed class MarkdownStyles : DocumentColorizingTransformer
 {
+    public required PageBlocks Blocks { get; init; }
+
     public required IBrush Faded { get; set; }
 
     public required IBrush Quote { get; set; }
 
+    public required IBrush Done { get; set; }
+
+    /// <summary>Behind inline code; a fenced block's background is drawn whole, by <see cref="CodeBlocks"/>.</summary>
+    public required IBrush CodeBackground { get; set; }
+
     public required FontFamily Title { get; set; }
+
+    public required FontFamily Mono { get; set; }
+
+    /// <summary>Code is set smaller than the text around it, as the prototype sets it, at 0.85 of its size.</summary>
+    public const double CodeScale = 0.85;
 
     protected override void ColorizeLine(DocumentLine line)
     {
         var text = CurrentContext.Document.GetText(line);
-        foreach (var span in Markdown.Spans(text))
+        var kind = Blocks.KindOf(line.LineNumber);
+        foreach (var span in Markdown.Spans(text, kind))
         {
             if (span.Length > 0)
             {
-                ChangeLinePart(line.Offset + span.Start, line.Offset + span.Start + span.Length, element => Apply(element.TextRunProperties, span.Mark));
+                ChangeLinePart(line.Offset + span.Start, line.Offset + span.Start + span.Length, element => Apply(element.TextRunProperties, span.Mark, kind));
             }
         }
     }
 
-    private void Apply(VisualLineElementTextRunProperties run, Mark mark)
+    private void Apply(VisualLineElementTextRunProperties run, Mark mark, LineKind kind)
     {
         var face = run.Typeface;
         switch (mark)
@@ -43,6 +56,15 @@ public sealed class MarkdownStyles : DocumentColorizingTransformer
                 run.SetTypeface(new Typeface(face.FontFamily, FontStyle.Italic, face.Weight));
                 run.SetForegroundBrush(Quote);
                 break;
+            case Mark.Code:
+                run.SetTypeface(new Typeface(Mono, face.Style, face.Weight));
+                run.SetFontRenderingEmSize(run.FontRenderingEmSize * CodeScale);
+                if (kind == LineKind.Text)
+                {
+                    run.SetBackgroundBrush(CodeBackground);
+                }
+
+                break;
             case Mark.Emphasis:
                 run.SetTypeface(new Typeface(face.FontFamily, FontStyle.Italic, face.Weight));
                 break;
@@ -51,6 +73,9 @@ public sealed class MarkdownStyles : DocumentColorizingTransformer
                 break;
             case Mark.Strike:
                 run.SetTextDecorations(TextDecorations.Strikethrough);
+                break;
+            case Mark.Done:
+                run.SetForegroundBrush(Done);
                 break;
             case Mark.Marker:
                 run.SetForegroundBrush(Faded);
