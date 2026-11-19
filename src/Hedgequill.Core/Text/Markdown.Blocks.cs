@@ -12,6 +12,12 @@ public enum LineKind
     TableHeader,
     TableRule,
     TableRow,
+
+    /// <summary>A line inside a comment that started on a line above.</summary>
+    Comment,
+
+    /// <summary>The line where a comment that started above ends, at its -->.</summary>
+    CommentEnd,
 }
 
 /// <summary>
@@ -94,15 +100,22 @@ public static partial class Markdown
     /// <summary>
     /// What each line is where its neighbours decide. A fence is three or more backticks or tildes, and the lines up to the
     /// next fence like it are code. A table, as GitHub's Markdown has it, is a row of cells between pipes, a rule row of dashes
-    /// under it, and the rows below that start with a pipe.
+    /// under it, and the rows below that start with a pipe. A comment, &lt;!-- to --&gt;, can run over several lines.
     /// </summary>
     public static LineKind[] Kinds(IReadOnlyList<string> lines)
     {
         var kinds = new LineKind[lines.Count];
         string? fence = null;
+        var comment = false;
         for (var i = 0; i < lines.Count; i++)
         {
-            if (fence is not null)
+            if (comment)
+            {
+                var end = lines[i].IndexOf("-->", StringComparison.Ordinal);
+                kinds[i] = end < 0 ? LineKind.Comment : LineKind.CommentEnd;
+                comment = end < 0 || Opens(lines[i][(end + 3)..]);
+            }
+            else if (fence is not null)
             {
                 var closes = Fence(lines[i]) is { } close && close[0] == fence[0] && close.Length >= fence.Length && lines[i].Trim().Length == close.Length;
                 kinds[i] = closes ? LineKind.Fence : LineKind.Code;
@@ -122,10 +135,57 @@ public static partial class Markdown
                     kinds[++i] = LineKind.TableRow;
                 }
             }
+            else
+            {
+                comment = Opens(lines[i]);
+            }
         }
 
         return kinds;
     }
+
+    /// <summary>
+    /// A line without its comments to yourself, for AO3 HTML, the beta reader's copy and the word count. Open says the line
+    /// starts inside a comment from above.
+    /// </summary>
+    public static string WithoutComments(string line, bool open = false)
+    {
+        var text = new System.Text.StringBuilder();
+        var at = 0;
+        if (open)
+        {
+            var end = line.IndexOf("-->", StringComparison.Ordinal);
+            if (end < 0)
+            {
+                return "";
+            }
+
+            at = end + 3;
+        }
+
+        while (at < line.Length)
+        {
+            var start = line.IndexOf("<!--", at, StringComparison.Ordinal);
+            if (start < 0)
+            {
+                text.Append(line, at, line.Length - at);
+                break;
+            }
+
+            text.Append(line, at, start - at);
+            var end = line.IndexOf("-->", start + 4, StringComparison.Ordinal);
+            at = end < 0 ? line.Length : end + 3;
+        }
+
+        return text.ToString();
+    }
+
+    /// <summary>Edit › Add comment: the selection inside a comment, with the caret before its end; nothing selected, an empty one to type in.</summary>
+    public static Change Comment(string text, int start, int end) =>
+        new(start, end - start, "<!-- " + text[start..end] + " -->", end + 5);
+
+    // Whether a comment opens on this line and stays open past its end.
+    private static bool Opens(string line) => line.LastIndexOf("<!--", StringComparison.Ordinal) is var open and >= 0 && line.IndexOf("-->", open + 4, StringComparison.Ordinal) < 0;
 
     /// <summary>Where a table row's pipes are, leaving out a pipe escaped with a backslash.</summary>
     public static List<int> Pipes(string line)

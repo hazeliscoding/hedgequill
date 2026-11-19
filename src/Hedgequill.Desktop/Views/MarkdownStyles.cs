@@ -8,7 +8,8 @@ namespace Hedgequill.Desktop.Views;
 /// <summary>
 /// Styles Markdown in place, as the prototype's editor does: emphasis in italic, strong in bold, headings in the title
 /// face at 1.3 times the size, quotes in italic and the secondary color, struck text struck through, code in the code
-/// face, a ticked item's text quieter, and the markers that make them faded, a link's brackets and target among them.
+/// face, a ticked item's text and a comment to yourself quieter, a comment in italic too, and the markers that make them
+/// faded, a link's brackets and target among them.
 /// </summary>
 public sealed class MarkdownStyles : DocumentColorizingTransformer
 {
@@ -73,6 +74,10 @@ public sealed class MarkdownStyles : DocumentColorizingTransformer
                 break;
             case Mark.Strike:
                 run.SetTextDecorations(TextDecorations.Strikethrough);
+                break;
+            case Mark.Comment:
+                run.SetTypeface(new Typeface(face.FontFamily, FontStyle.Italic, face.Weight));
+                run.SetForegroundBrush(Done);
                 break;
             case Mark.Done:
                 run.SetForegroundBrush(Done);

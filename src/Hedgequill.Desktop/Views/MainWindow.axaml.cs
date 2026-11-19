@@ -202,7 +202,10 @@ public partial class MainWindow : Window
 
     public void Copy() => Edit(box => box.Copy(), editor => editor.Copy());
 
-    public void Paste() => Edit(box => box.Paste(), editor => editor.Paste());
+    public void Paste() => Edit(box => box.Paste(), _ => Workspace?.Paste(plain: false));
+
+    /// <summary>Edit › Paste as plain text: a text field pastes plain text anyway; the editor leaves the italics and bold behind.</summary>
+    public void PastePlain() => Edit(box => box.Paste(), _ => Workspace?.Paste(plain: true));
 
     /// <summary>Writes what's unsaved first. Text that still can't be written stops the close until the writer chooses to lose it.</summary>
     protected override void OnClosed(EventArgs e)

@@ -53,6 +53,7 @@ One meaning per term. Use these words in code, docs and commits.
 - **AO3 HTML:** the HTML Copy for AO3 produces, limited to what AO3 keeps.
 - **Save state:** Saving…, Saved, Couldn't save, Changed on disk or Read-only, as the prototype shows them.
 - **Reading view:** a Notes or Research page shown without its markers, in place of the editor. A scene has the AO3 preview instead.
+- **Comment:** a note to yourself in Markdown's `<!-- -->`, faded in the editor and left out of AO3 HTML, the beta reader's copy and the word count.
 
 ## Commands
 
@@ -62,7 +63,7 @@ One meaning per term. Use these words in code, docs and commits.
 - `HEDGEQUILL_UPDATE_FEED` points an installed app's update check at a local folder of Velopack releases instead of GitHub Releases; the release workflow's update test uses it. A network share is ignored.
 - `global.json` pins .NET SDK 10.0.404 or later, because older 10.0 SDKs bring a NativeAOT compiler with a known vulnerability. It looks in a repo-local `.dotnet/` first (git-ignored), then the system install.
 - `dotnet publish src/Hedgequill.Desktop -c Release -r win-x64 -warnaserror` builds the NativeAOT app (`osx-arm64` on a Mac; NativeAOT can't build for another OS). On Windows with Visual Studio 18, put `%ProgramFiles(x86)%\Microsoft Visual Studio\Installer` on `PATH` first, or the link step fails because `vswhere.exe` isn't found.
-- `tools/Hedgequill.AotProbe`, published the same way and run, opens AvaloniaEdit under NativeAOT, types, undoes, selects and styles Markdown markers, and exits 0 only if every check passed. CI runs it on Windows and macOS. It opens a window for about a second.
+- `tools/Hedgequill.AotProbe`, published the same way and run, opens AvaloniaEdit under NativeAOT, types, undoes, selects and styles Markdown markers, checks the system spell checker and HTML on the clipboard, and exits 0 only if every check passed. CI runs it on Windows and macOS. It opens a window for about a second and replaces what's on the clipboard, so run it locally only when that's fine.
 - `tools/Hedgequill.TypingProbe`, published the same way and run on the PC being measured, opens the app on an invented 10,000-word chapter with spell check on, types 400 keys into it, and prints how long each took to reach the screen against one 60 Hz frame (16.7 ms). It types only into its own window, for about half a minute. With `--bare` it types into plain AvaloniaEdit instead, for comparison. With `--slide` it slides the navigator and the preview shut and open 20 times in a 1,100 px window, where the chapter rewraps as they move, and times each frame instead.
 - `dotnet run --project tools/Hedgequill.Screenshots -- docs/screenshots` renders the Welcome screen and an invented project's workspace headlessly, in light and dark, with an empty Recent list rather than yours. Rerun it when either changes. With `--demo` it records the README's `demo-light.gif` and `demo-dark.gif` instead: about 20 seconds of typing, shortcuts with their keys on screen, and the panes sliding. It plays in real time, needs ffmpeg on `PATH`, and should be rerun when the motion, the shortcuts or the workspace's layout change.
 - `uv run --no-project --with resvg-py --with pillow python -I scripts/make_icons.py docs/brand` rebuilds the app icons from `app-icon.svg`.

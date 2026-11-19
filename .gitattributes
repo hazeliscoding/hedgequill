@@ -6,3 +6,6 @@
 *.ico binary
 *.icns binary
 *.ttf binary
+
+# Clipboard captures keep their CRLFs, since their headers count bytes.
+*.cfhtml binary

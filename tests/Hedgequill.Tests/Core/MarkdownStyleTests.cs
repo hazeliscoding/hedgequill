@@ -102,6 +102,16 @@ public class MarkdownStyleTests
     [InlineData("- *not* a list", LineKind.Code, "Code[- *not* a list]")]
     public void Code_and_tables_are_in_the_code_face(string line, LineKind kind, string spans) => Assert.Equal(spans, Describe(line, kind));
 
+    [Theory]
+    [InlineData("Fog. <!-- check the tide --> Rain.", "Marker[<!--] Comment[ check the tide ] Marker[-->]")]
+    [InlineData("Fog. <!-- runs on", "Marker[<!--] Comment[ runs on]")]
+    [InlineData("`<!-- code -->`", "Marker[`] Code[<!-- code -->] Marker[`]")]
+    public void A_comment_to_yourself_is_quieter_and_its_markers_fade(string line, string spans) => Assert.Equal(spans, Describe(line));
+
+    [Fact]
+    public void A_comment_from_above_ends_at_its_marker() =>
+        Assert.Equal("Comment[still the note ] Marker[-->] Marker[*] Emphasis[then] Marker[*]", Describe("still the note --> *then* the text", LineKind.CommentEnd));
+
     // The spans in reading order, each with the text it covers.
     private static string Describe(string line, LineKind kind = LineKind.Text) =>
         string.Join(' ', Markdown.Spans(line, kind).OrderBy(span => span.Start).ThenBy(span => span.Mark).Select(span => $"{span.Mark}[{line.Substring(span.Start, span.Length)}]"));

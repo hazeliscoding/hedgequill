@@ -12,9 +12,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <!-- M2's spell check probe runs the app's own spell checker files. -->
+  <!-- M2's spell check probe runs the app's own spell checker files, and M7's clipboard probe its own clipboard HTML. -->
   <ItemGroup>
     <Compile Include="..\..\src\Hedgequill.Desktop\Spelling\*.cs" LinkBase="Spelling" />
+    <Compile Include="..\..\src\Hedgequill.Core\Text\ClipboardHtml.cs" LinkBase="Core" />
   </ItemGroup>
 
   <ItemGroup>

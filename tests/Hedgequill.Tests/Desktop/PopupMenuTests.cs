@@ -29,7 +29,7 @@ public sealed class PopupMenuTests : IDisposable
         Assert.Equal("Fog", workspace.Selected?.Title);
         menu.Hide();
 
-        Assert.Equal(["New scene", "Rename", "Duplicate", "-", "Copy chapter HTML", "-", "Delete chapter"], Headers(RightClick(window, workspace, "Chapter 1")));
+        Assert.Equal(["New scene", "Rename", "Duplicate", "-", "Copy chapter HTML", "Copy for a beta reader", "-", "Delete chapter"], Headers(RightClick(window, workspace, "Chapter 1")));
         Find<ListBox>(workspace, "Navigator").ContextFlyout!.Hide();
         Assert.Equal(["New page"], Headers(RightClick(window, workspace, "Notes")));
     });
@@ -70,7 +70,7 @@ public sealed class PopupMenuTests : IDisposable
 
         var menu = Assert.IsType<MenuFlyout>(preview.ContextFlyout);
         Assert.True(menu.IsOpen);
-        Assert.Equal(["Copy chapter HTML", "Copy chapter title", "-", "Open chapter overview", "-", "Hide preview"], Headers(menu));
+        Assert.Equal(["Copy chapter HTML", "Copy chapter title", "Copy for a beta reader", "-", "Open chapter overview", "-", "Hide preview"], Headers(menu));
     });
 
     [Fact]

@@ -10,6 +10,7 @@ public enum Mark
     Strong,
     Strike,
     Link,
+    Comment,
     Done,
     Marker,
 }
@@ -102,6 +103,14 @@ public static partial class Markdown
                 return [new(0, line.Length, Mark.Code)];
             case LineKind.Fence or LineKind.TableRule:
                 return [new(0, line.Length, Mark.Code), new(0, line.Length, Mark.Marker)];
+            case LineKind.Comment:
+                return [new(0, line.Length, Mark.Comment)];
+            case LineKind.CommentEnd:
+                var end = line.IndexOf("-->", StringComparison.Ordinal);
+                var rest = new List<Span> { new(0, end, Mark.Comment), new(end, 3, Mark.Marker) };
+                InlineSpans(line, end + 3, rest);
+                rest.Sort((a, b) => a.Mark.CompareTo(b.Mark));
+                return rest;
         }
 
         var spans = new List<Span> { new(0, line.Length, Mark.Code) };
@@ -245,6 +254,22 @@ public static partial class Markdown
                     i = ticks;
                 }
 
+                continue;
+            }
+
+            // A comment to yourself runs to its -->, or to the line's end, where Kinds carries it on.
+            if (c == '<' && string.CompareOrdinal(line, i, "<!--", 0, 4) == 0)
+            {
+                var commentEnd = line.IndexOf("-->", i + 4, StringComparison.Ordinal);
+                spans.Add(new(i, 4, Mark.Marker));
+                spans.Add(new(i + 4, (commentEnd < 0 ? line.Length : commentEnd) - i - 4, Mark.Comment));
+                if (commentEnd < 0)
+                {
+                    break;
+                }
+
+                spans.Add(new(commentEnd, 3, Mark.Marker));
+                i = commentEnd + 3;
                 continue;
             }
 

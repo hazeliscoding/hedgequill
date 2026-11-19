@@ -47,8 +47,8 @@ public sealed record SceneBreak : Block;
 /// <summary>
 /// Markdown read as AO3 keeps it: paragraphs, emphasis, strikethrough, headings, quotes, lists, links and scene breaks.
 /// Anything else stays plain text, so the preview shows what gets posted: code and tables post as plain lines, and a
-/// checklist's boxes as [ ] and [x]. The HTML, the preview and a page's reading view all draw from Read, and Words counts
-/// it the way AO3 does.
+/// checklist's boxes as [ ] and [x]. Comments to yourself stay out. The HTML, the preview and a page's reading view all
+/// draw from Read, and Words counts it the way AO3 does.
 /// </summary>
 public static partial class Ao3Text
 {
@@ -103,6 +103,19 @@ public static partial class Ao3Text
         for (var number = 0; number < lines.Length; number++)
         {
             var line = lines[number];
+
+            // Comments to yourself stay out; a line that held only a comment goes too, so it doesn't split a paragraph.
+            if (kinds[number] is LineKind.Text or LineKind.Comment or LineKind.CommentEnd)
+            {
+                var kept = Markdown.WithoutComments(line, kinds[number] != LineKind.Text);
+                if (kept != line && string.IsNullOrWhiteSpace(kept))
+                {
+                    continue;
+                }
+
+                line = kept;
+            }
+
             if (kinds[number] == LineKind.Fence)
             {
                 // A fence opens a code block or closes the one that's open.
@@ -203,6 +216,34 @@ public static partial class Ao3Text
     /// <summary>AO3 HTML for a chapter: its scenes in order, with a scene break between them.</summary>
     public static string ChapterHtml(IEnumerable<string> scenes) =>
         string.Join("\n<hr />\n", scenes.Select(Html).Where(html => html.Length > 0));
+
+    /// <summary>
+    /// A chapter as a beta reader gets it, for Google Docs or an email: its title as a heading, then its scenes, with a
+    /// centred * * * for each scene break and between scenes. The HTML keeps italics and bold, and the plain text is for
+    /// apps that don't take HTML. Comments to yourself stay out, as they do for AO3.
+    /// </summary>
+    public static (string Html, string Text) BetaCopy(string title, IEnumerable<string> scenes)
+    {
+        const string Break = "<p style=\"text-align:center\">* * *</p>";
+        var html = new StringBuilder($"<h1>{Escape(title)}</h1>");
+        var text = new StringBuilder(title);
+        foreach (var (blocks, index) in scenes.Select(Read).Where(blocks => blocks.Count > 0).Select((blocks, index) => (blocks, index)))
+        {
+            if (index > 0)
+            {
+                html.Append('\n').Append(Break);
+                text.Append("\n\n* * *");
+            }
+
+            foreach (var block in blocks)
+            {
+                html.Append('\n').Append(block is SceneBreak ? Break : Html(block));
+                text.Append("\n\n").Append(Plain(block));
+            }
+        }
+
+        return (html.ToString(), text.ToString());
+    }
 
     /// <summary>The word count AO3 shows for this text.</summary>
     public static int Words(string markdown) => Words(Read(markdown));
@@ -307,6 +348,20 @@ public static partial class Ao3Text
     /// <summary>A table row as AO3 gets it: one line, its cells between pipes.</summary>
     public static Line Posted(IReadOnlyList<Line> row) =>
         new([.. row.SelectMany((cell, i) => i == 0 ? cell.Runs : [new Run(" | ", Style.None, null), .. cell.Runs])]);
+
+    // A block as plain text: its lines, a list item after its bullet or number, a scene break as * * *.
+    private static string Plain(Block block) => block switch
+    {
+        Paragraph paragraph => Plain(paragraph.Lines),
+        Heading heading => Plain([heading.Line]),
+        Quote quote => string.Join("\n\n", quote.Paragraphs.Select(paragraph => Plain(paragraph.Lines))),
+        ListBlock list => string.Join("\n", list.Items.Select((item, i) => (list.Ordered ? $"{list.Start + i}. " : "\u2022 ") + Plain(Posted(item)))),
+        CodeBlock code => Plain(code.Lines),
+        Table table => Plain(table.Rows.Select(Posted)),
+        _ => "* * *",
+    };
+
+    private static string Plain(IEnumerable<Line> lines) => string.Join("\n", lines.Select(line => string.Concat(line.Runs.Select(run => run.Text))));
 
     private static string Html(IEnumerable<Line> lines) => string.Join("<br />", lines.Select(Html));
 
