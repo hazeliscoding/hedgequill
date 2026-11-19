@@ -23,6 +23,7 @@ public class HtmlPasteTests
     [InlineData("<p>2 * 3 is `six`</p>", "2 \\* 3 is \\`six\\`")]
     [InlineData("<p>* * *</p>", "* * *")]
     [InlineData("<p>Fish &amp; chips&nbsp;&lt;here&gt;</p>", "Fish & chips <here>")]
+    [InlineData("<p>caf&#233; &#x2014; Theo&rsquo;s &bogus; &#xD800;</p>", "café — Theo’s &bogus; &#xD800;")]
     [InlineData("<style>p { color: red }</style><!-- note --><p>Kept</p><script>var a = '<p>';</script>", "Kept")]
     [InlineData("<h2>Ferry</h2><ul><li>Rope</li><li><em>Lamp</em></li></ul>", "Ferry\n\nRope\n\n*Lamp*")]
     [InlineData("<i>a</i><i>b</i> and <strong><em>both</em></strong>", "*ab* and ***both***")]

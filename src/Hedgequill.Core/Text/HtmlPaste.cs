@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -33,7 +32,7 @@ public static partial class HtmlPaste
                 if (hidden == 0)
                 {
                     var (bold, italic) = open.Count > 0 ? (open[^1].Bold, open[^1].Italic) : (false, false);
-                    runs.Add(new Run(Collapse(WebUtility.HtmlDecode(html[i..next])), bold, italic));
+                    runs.Add(new Run(Collapse(Decode(html[i..next])), bold, italic));
                 }
 
                 i = next;
@@ -175,9 +174,44 @@ public static partial class HtmlPaste
         runs.Clear();
     }
 
+    // HTML's character references. .NET's WebUtility would decode them, but it sits in the networking namespace the network
+    // guard keeps out of the code. Docs, Word and browsers copy their text as UTF-8 and name only a few characters, so these
+    // and the numbered forms cover them; any other reference stays as written.
+    private static readonly Dictionary<string, string> Named = new(StringComparer.Ordinal)
+    {
+        ["amp"] = "&",
+        ["lt"] = "<",
+        ["gt"] = ">",
+        ["quot"] = "\"",
+        ["apos"] = "'",
+        ["nbsp"] = "\u00A0",
+        ["shy"] = "",
+        ["lsquo"] = "\u2018",
+        ["rsquo"] = "\u2019",
+        ["ldquo"] = "\u201C",
+        ["rdquo"] = "\u201D",
+        ["ndash"] = "\u2013",
+        ["mdash"] = "\u2014",
+        ["hellip"] = "\u2026",
+    };
+
+    private static string Decode(string text) => Reference().Replace(text, match =>
+    {
+        var name = match.Groups[1].Value;
+        if (name[0] != '#')
+        {
+            return Named.TryGetValue(name, out var named) ? named : match.Value;
+        }
+
+        var number = name[1] is 'x' or 'X'
+            ? int.TryParse(name.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var hex) ? hex : -1
+            : int.TryParse(name.AsSpan(1), NumberStyles.None, CultureInfo.InvariantCulture, out var dec) ? dec : -1;
+        return number is > 0 and <= 0x10FFFF and not (>= 0xD800 and <= 0xDFFF) ? char.ConvertFromUtf32(number) : match.Value;
+    });
+
     private static string Escape(string text) => text.Replace("*", "\\*", StringComparison.Ordinal).Replace("`", "\\`", StringComparison.Ordinal);
 
-    private static string Collapse(string text) => Whitespace().Replace(text.Replace(' ', ' '), " ");
+    private static string Collapse(string text) => Whitespace().Replace(text.Replace('\u00A0', ' '), " ");
 
     private static int? Skip(string html, int at, string start, string end)
     {
@@ -244,6 +278,9 @@ public static partial class HtmlPaste
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex Whitespace();
+
+    [GeneratedRegex(@"&(#[xX][0-9a-fA-F]{1,6}|#[0-9]{1,7}|[a-zA-Z]{2,8});")]
+    private static partial Regex Reference();
 
     [GeneratedRegex(@"\bstyle\s*=\s*(?:""(?<value>[^""]*)""|'(?<value>[^']*)'|(?<value>[^\s>]+))", RegexOptions.IgnoreCase)]
     private static partial Regex StyleAttribute();
