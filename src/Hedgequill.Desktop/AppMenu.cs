@@ -57,6 +57,7 @@ public sealed class AppMenu
             Item("Cut", window.Cut, Gesture(Key.X), Open),
             Item("Copy", window.Copy, Gesture(Key.C), Open),
             Item("Paste", window.Paste, Gesture(Key.V), Open),
+            Item("Paste as plain text", window.PastePlain, Gesture(Key.V, KeyModifiers.Shift), Open),
             new NativeMenuItemSeparator(),
             Item("Bold", () => Workspace?.Wrap(Markdown.Bold), Gesture(Key.B), Document),
             Item("Italic", () => Workspace?.Wrap(Markdown.Italic), Gesture(Key.I), Document),
@@ -126,7 +127,7 @@ public sealed class AppMenu
     /// <summary>Help › Keyboard shortcuts, grouped as the prototype draws it, with each command's keys as its menu item shows them.</summary>
     public IReadOnlyList<ShortcutGroup> ShortcutGroups() =>
     [
-        Group("Writing", "Bold", "Italic", "Insert scene break", "Undo", "Redo", "Find…", "Find in project…"),
+        Group("Writing", "Bold", "Italic", "Insert scene break", "Paste as plain text", "Undo", "Redo", "Find…", "Find in project…"),
         Group("Project", "New scene", "New project…", "Open folder…", "Rename"),
         Group("View", "Navigator", "Preview", "Focus mode", "Reading view", "Larger text", "Smaller text", "Actual size"),
         Group("AO3 and Help", "Copy chapter HTML", "Keyboard shortcuts"),

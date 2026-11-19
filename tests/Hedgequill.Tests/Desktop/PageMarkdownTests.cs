@@ -9,6 +9,7 @@ using AvaloniaEdit;
 using AvaloniaEdit.Rendering;
 using Hedgequill.Core.Projects;
 using Hedgequill.Core.Text;
+using Hedgequill.Desktop;
 using Hedgequill.Desktop.Views;
 using Hedgequill.Tests.Core;
 using static Hedgequill.Tests.Desktop.Ui;
@@ -142,7 +143,39 @@ public sealed class PageMarkdownTests : IDisposable
         Assert.False(Find<Button>(window, "ReadButton").IsVisible);
     });
 
+    [Fact]
+    public Task Paste_keeps_italics_and_bold_from_HTML_and_Shift_pastes_plain_text() => OnPage("", (window, editor) =>
+    {
+        const string Docs = "<b style=\"font-weight:normal\" id=\"docs-internal-guid-1\"><p><span>The fog </span><span style=\"font-style:italic\">never</span><span style=\"font-weight:700\"> lifted</span>.</p></b>";
+        Wait(RichClipboard.Write(window.Clipboard!, "The fog never lifted.", Docs));
+
+        Press(window, PhysicalKey.V, Command);
+        Wait(Task.Delay(50));
+
+        Assert.Equal("The fog *never* **lifted**.", editor.Text);
+
+        editor.SelectAll();
+        Press(window, PhysicalKey.V, Command | RawInputModifiers.Shift);
+        Wait(Task.Delay(50));
+
+        Assert.Equal("The fog never lifted.", editor.Text);
+        Press(window, PhysicalKey.Z, Command);
+        Assert.Equal("The fog *never* **lifted**.", editor.Text);
+    });
+
     public void Dispose() => _temp.Dispose();
+
+    // Runs the UI thread's jobs until an asynchronous step, such as a clipboard read, is done.
+    private static void Wait(Task task)
+    {
+        while (!task.IsCompleted)
+        {
+            Settle();
+        }
+
+        task.GetAwaiter().GetResult();
+        Settle();
+    }
 
     // The reading view's text, a block or list item at a time.
     private static List<string> Words(ReadingView reading) =>

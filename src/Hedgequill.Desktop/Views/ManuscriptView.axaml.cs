@@ -4,6 +4,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using AvaloniaEdit.Document;
@@ -359,6 +360,43 @@ public partial class ManuscriptView : UserControl
         }
     }
 
+    /// <summary>
+    /// Pastes over the selection. HTML that Google Docs, Word or a browser left on the clipboard comes in as Markdown with its
+    /// italics and bold; plain, as Paste as plain text asks, takes the text alone. Nothing is pasted while reading.
+    /// </summary>
+    public async Task Paste(bool plain)
+    {
+        if (_node?.IsFile != true || IsReading || TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard)
+        {
+            return;
+        }
+
+        var document = Editor.Document;
+        string? text;
+        try
+        {
+            text = !plain && await RichClipboard.ReadHtml(clipboard) is { } html ? HtmlPaste.ToMarkdown(html) : null;
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                text = await clipboard.TryGetTextAsync();
+            }
+        }
+        catch (Exception error) when (error is not OutOfMemoryException)
+        {
+            // Another app holding the clipboard open refuses it; pasting again works once it lets go.
+            return;
+        }
+
+        // A paste that arrives after the writer moved to another scene goes nowhere, rather than into the wrong one.
+        if (string.IsNullOrEmpty(text) || Editor.Document != document)
+        {
+            return;
+        }
+
+        text = text.ReplaceLineEndings("\n");
+        Apply(new Change(Editor.SelectionStart, Editor.SelectionLength, text, Editor.SelectionStart + text.Length));
+    }
+
     public void Wrap(string marker) => Apply(Markdown.Wrap(Editor.Document.Text, Editor.SelectionStart, Editor.SelectionStart + Editor.SelectionLength, marker));
 
     public void InsertSceneBreak() => Apply(Markdown.InsertSceneBreak(Editor.Document.Text, Editor.SelectionStart, Editor.SelectionStart + Editor.SelectionLength));
@@ -399,6 +437,15 @@ public partial class ManuscriptView : UserControl
         }
 
         var command = OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control;
+
+        // Paste reads the HTML an app left on the clipboard, so italics and bold come along; with Shift it's the text alone.
+        if (e.Key == Key.V && (e.KeyModifiers == command || e.KeyModifiers == (command | KeyModifiers.Shift)))
+        {
+            _ = Paste(plain: e.KeyModifiers != command);
+            e.Handled = true;
+            return;
+        }
+
         if (e.KeyModifiers != command)
         {
             return;
@@ -533,7 +580,7 @@ public partial class ManuscriptView : UserControl
         [
             Item("Cut", Editor.Cut, Gesture(Key.X), selected),
             Item("Copy", Editor.Copy, Gesture(Key.C), selected),
-            Item("Paste", Editor.Paste, Gesture(Key.V)),
+            Item("Paste", () => _ = Paste(plain: false), Gesture(Key.V)),
             new Separator(),
             Item("Bold", () => Wrap(Markdown.Bold), Gesture(Key.B)),
             Item("Italic", () => Wrap(Markdown.Italic), Gesture(Key.I)),

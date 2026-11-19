@@ -280,6 +280,8 @@ public partial class WorkspaceView : UserControl
 
     public void Wrap(string marker) => Manuscript.Wrap(marker);
 
+    public Task Paste(bool plain) => Manuscript.Paste(plain);
+
     public void InsertSceneBreak() => Manuscript.InsertSceneBreak();
 
     public void OpenFind() => Manuscript.OpenFind();
