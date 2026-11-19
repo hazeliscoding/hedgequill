@@ -53,6 +53,7 @@ One meaning per term. Use these words in code, docs and commits.
 - **AO3 HTML:** the HTML Copy for AO3 produces, limited to what AO3 keeps.
 - **Save state:** Saving…, Saved, Couldn't save, Changed on disk or Read-only, as the prototype shows them.
 - **Reading view:** a Notes or Research page shown without its markers, in place of the editor. A scene has the AO3 preview instead.
+- **Comment:** a note to yourself in Markdown's `<!-- -->`, faded in the editor and left out of AO3 HTML, the beta reader's copy and the word count.
 
 ## Commands
 
