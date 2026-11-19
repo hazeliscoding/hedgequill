@@ -399,6 +399,9 @@ public partial class ManuscriptView : UserControl
 
     public void Wrap(string marker) => Apply(Markdown.Wrap(Editor.Document.Text, Editor.SelectionStart, Editor.SelectionStart + Editor.SelectionLength, marker));
 
+    /// <summary>Edit › Add comment: wraps the selection in a comment to yourself, or starts an empty one at the caret.</summary>
+    public void Comment() => Apply(Markdown.Comment(Editor.Document.Text, Editor.SelectionStart, Editor.SelectionStart + Editor.SelectionLength));
+
     public void InsertSceneBreak() => Apply(Markdown.InsertSceneBreak(Editor.Document.Text, Editor.SelectionStart, Editor.SelectionStart + Editor.SelectionLength));
 
     private void Apply(Change change)

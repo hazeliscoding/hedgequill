@@ -73,6 +73,15 @@ public class Ao3TextTests
     }
 
     [Fact]
+    public void A_chapter_copies_for_AO3_without_its_comments_and_they_dont_count()
+    {
+        const string Scene = "Fog rolled in. <!-- check the date -->\n<!-- a note\nover two lines -->\nRain followed.";
+
+        Assert.Equal("<p>Fog rolled in.<br />Rain followed.</p>", Ao3Text.ChapterHtml([Scene]));
+        Assert.Equal(5, Ao3Text.Words(Scene));
+    }
+
+    [Fact]
     public void A_list_item_keeps_its_level_box_and_source_line()
     {
         var list = Assert.IsType<ListBlock>(Assert.Single(Ao3Text.Read("- [ ] Tides\n    - [x] Ferry\n- Lamp")));

@@ -55,8 +55,9 @@ public sealed class PageBlocks
         }
     }
 
-    // Only a line starting with a backtick, tilde or pipe can be a fence or a table row, so only those are read; the rest
-    // count as blank, which gives them the same kind. A chapter with neither, the usual case, allocates nothing per keystroke.
+    // Only a line starting with a backtick, tilde or pipe can be a fence or a table row, and only one holding <!-- or --> can
+    // open or close a comment, so only those are read; the rest count as blank, which gives them the same kind. A chapter
+    // with none of them, the usual case, allocates nothing per keystroke.
     private void Update()
     {
         var document = _document;
@@ -98,7 +99,8 @@ public sealed class PageBlocks
             var c = document.GetCharAt(offset);
             if (c is not (' ' or '\t'))
             {
-                return c is '`' or '~' or '|';
+                return c is '`' or '~' or '|' || document.IndexOf("<!--", line.Offset, line.Length, StringComparison.Ordinal) >= 0
+                    || document.IndexOf("-->", line.Offset, line.Length, StringComparison.Ordinal) >= 0;
             }
         }
 

@@ -93,6 +93,30 @@ public class MarkdownTests
     }
 
     [Fact]
+    public void A_comment_can_run_over_several_lines_but_not_out_of_code()
+    {
+        string[] lines = ["Fog <!-- check", "the tides", "and ferries --> Rain", "```", "<!-- code", "```", "after"];
+
+        Assert.Equal(
+            [LineKind.Text, LineKind.Comment, LineKind.CommentEnd, LineKind.Fence, LineKind.Code, LineKind.Fence, LineKind.Text],
+            Markdown.Kinds(lines));
+    }
+
+    [Theory]
+    [InlineData("Fog <!-- a --> and <!-- b --> rain", false, "Fog  and  rain")]
+    [InlineData("Fog <!-- runs on", false, "Fog ")]
+    [InlineData("still a note --> Rain", true, " Rain")]
+    [InlineData("all note", true, "")]
+    public void Comments_leave_a_line_with_only_its_text(string line, bool open, string kept) =>
+        Assert.Equal(kept, Markdown.WithoutComments(line, open));
+
+    [Theory]
+    [InlineData("She [ran] home.", "She <!-- ran| --> home.")]
+    [InlineData("She []ran.", "She <!-- | -->ran.")]
+    public void Add_comment_wraps_the_selection(string before, string after) =>
+        Assert.Equal(after, Apply(before, Markdown.Comment));
+
+    [Fact]
     public void An_unclosed_fence_runs_to_the_end() => Assert.Equal([LineKind.Fence, LineKind.Code, LineKind.Code], Markdown.Kinds(["```", "| A |", "|---|"]));
 
     [Fact]

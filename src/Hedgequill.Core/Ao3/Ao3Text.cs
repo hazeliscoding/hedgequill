@@ -47,8 +47,8 @@ public sealed record SceneBreak : Block;
 /// <summary>
 /// Markdown read as AO3 keeps it: paragraphs, emphasis, strikethrough, headings, quotes, lists, links and scene breaks.
 /// Anything else stays plain text, so the preview shows what gets posted: code and tables post as plain lines, and a
-/// checklist's boxes as [ ] and [x]. The HTML, the preview and a page's reading view all draw from Read, and Words counts
-/// it the way AO3 does.
+/// checklist's boxes as [ ] and [x]. Comments to yourself stay out. The HTML, the preview and a page's reading view all
+/// draw from Read, and Words counts it the way AO3 does.
 /// </summary>
 public static partial class Ao3Text
 {
@@ -103,6 +103,19 @@ public static partial class Ao3Text
         for (var number = 0; number < lines.Length; number++)
         {
             var line = lines[number];
+
+            // Comments to yourself stay out; a line that held only a comment goes too, so it doesn't split a paragraph.
+            if (kinds[number] is LineKind.Text or LineKind.Comment or LineKind.CommentEnd)
+            {
+                var kept = Markdown.WithoutComments(line, kinds[number] != LineKind.Text);
+                if (kept != line && string.IsNullOrWhiteSpace(kept))
+                {
+                    continue;
+                }
+
+                line = kept;
+            }
+
             if (kinds[number] == LineKind.Fence)
             {
                 // A fence opens a code block or closes the one that's open.

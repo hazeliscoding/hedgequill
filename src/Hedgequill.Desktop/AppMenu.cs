@@ -62,6 +62,7 @@ public sealed class AppMenu
             Item("Bold", () => Workspace?.Wrap(Markdown.Bold), Gesture(Key.B), Document),
             Item("Italic", () => Workspace?.Wrap(Markdown.Italic), Gesture(Key.I), Document),
             Item("Insert scene break", () => Workspace?.InsertSceneBreak(), Gesture(Key.Enter), Scene),
+            Item("Add comment", () => Workspace?.Comment(), enabled: Document),
             new NativeMenuItemSeparator(),
             Item("Rename", () => Workspace?.StartRename(Workspace.Selected!), new KeyGesture(Key.F2), Renamable),
             Item("Find…", () => Workspace?.OpenFind(), Gesture(Key.F), Document),

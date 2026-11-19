@@ -284,6 +284,8 @@ public partial class WorkspaceView : UserControl
 
     public void InsertSceneBreak() => Manuscript.InsertSceneBreak();
 
+    public void Comment() => Manuscript.Comment();
+
     public void OpenFind() => Manuscript.OpenFind();
 
     /// <summary>Edit › Find in project…: the find panel takes the navigator's place, leaving focus mode as the prototype does.</summary>
