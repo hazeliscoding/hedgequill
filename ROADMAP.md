@@ -19,30 +19,19 @@ What the design must protect, in this order when two conflict. Everything else g
 | 1.0.2 | 2026-11-18 | Right-click menus and the navigator's More menu show their items again, and Escape leaves focus mode from a chapter's overview too ([#16](https://github.com/hazeliscoding/hedgequill/pull/16)). |
 | 1.1.0 | 2026-11-18 | M6, in [#17](https://github.com/hazeliscoding/hedgequill/pull/17): lists, checklists, code and tables on a page, and a reading view for Notes and Research pages. Quotes show in italic in the AO3 preview ([#18](https://github.com/hazeliscoding/hedgequill/pull/18)). |
 
-The milestones' checklists, "Done when" lines and evidence are in `git show v1.0.1:ROADMAP.md`. 1.0.0 installed on clean Windows and macOS runners and updated itself to a test 1.0.1 when closed ([run](https://github.com/hazeliscoding/hedgequill/actions/runs/43965594186)). M5's last check, a chapter written in Hedgequill and posted to AO3, moved to M7.
+M0 to M5's checklists, "Done when" lines and evidence are in `git show v1.0.1:ROADMAP.md`, and M6's in `git show v1.1.0:ROADMAP.md`. 1.0.0 installed on clean Windows and macOS runners and updated itself to a test 1.0.1 when closed ([run](https://github.com/hazeliscoding/hedgequill/actions/runs/43965594186)). In the typing probe, 1.1.0 measured within noise of 1.0.2 on the same day. M5's last check, a chapter written in Hedgequill and posted to AO3, moved to M7, and so did M6's, keeping notes with its Markdown.
 
-Each feature in M6 to M10 is drawn in the prototype and approved before it's built.
-
-## M6: Markdown in your notes
-
-Notes and Research pages already style headings, emphasis, quotes, strikethrough and links. These add what notes use most. One editor draws pages and scenes, so scenes get them too. Version 7 of the prototype draws them all.
-
-- [x] Lists: bullets and numbers with their markers faded. In reading view a wrapped line hangs under the text, not the marker; the editor can't yet (2026-11-18). Enter continues a list, Enter on an empty item ends it with a blank line, and Tab and Shift+Tab nest an item.
-- [x] Checklists: `- [ ]` and `- [x]` draw a box. Clicking it writes or clears the x in the file, and Undo takes it back.
-- [x] Code: `inline code` and fenced blocks in a monospace face on a light background, with their markers faded. AO3 HTML doesn't keep code, so in a scene it copies as plain text.
-- [x] Tables: pipe tables in monospace, with the pipes and the header's dashes faded, and in a scene they copy as plain text too. The columns line up on screen, and the file keeps the table as typed (2026-11-18).
-- [x] Reading view for Notes and Research pages, as Obsidian has: the page without its markers, with bullets, boxes that still tick, a drawn table and code without its fences. A book button at the end of the page's toolbar, View › Reading view, or Ctrl+E (⌘E on a Mac) switches to it, and the pencil button or the same keys switch back. Scenes don't get one, since the AO3 preview already shows a scene that way. Each page's view is remembered on this computer (2026-11-18).
-
-**Done when:** tests on invented text cover a list's Enter, Tab and Shift+Tab, a box ticked by a click and then undone, a page switched to reading view and back with a box ticked there, a fenced block styled from its first line to its last, a table's columns lining up, and a scene with code and a table copying for AO3 as plain text; `ContrastTests` passes with code's background in all four themes; and the owner has kept notes with them.
+Each feature in M7 to M10 is drawn in the prototype and approved before it's built.
 
 ## M7: Bring work in, send it out
 
 - [ ] Write a chapter in Hedgequill and post it to AO3, the check left over from M5.
+- [ ] Keep notes in Hedgequill with lists, checklists, code, tables and the reading view, the check left over from M6.
 - [ ] Paste from Google Docs or Word keeps italics and bold: Hedgequill reads the HTML they put on the clipboard and writes Markdown markers. Everything else comes in as plain text.
 - [ ] Copy for a beta reader: the chapter's HTML goes on the clipboard as rich text, so it pastes into Google Docs or an email with its italics. Settle first that Avalonia can put HTML on the clipboard on both systems under NativeAOT.
 - [ ] Comments to yourself: Markdown's `<!-- -->` comments, faded in the editor and left out of AO3 HTML and the beta reader's copy. The word count comes from the same HTML, so it leaves them out too.
 
-**Done when:** fixture tests pass on invented text copied from Google Docs and from Word, as each puts it on the clipboard; a chapter with a comment copies for AO3 and for a beta reader without it; and the owner has posted a chapter written in Hedgequill to AO3 and brought a work in progress over from Google Docs or Word.
+**Done when:** fixture tests pass on invented text copied from Google Docs and from Word, as each puts it on the clipboard; a chapter with a comment copies for AO3 and for a beta reader without it; and the owner has posted a chapter written in Hedgequill to AO3, kept notes with M6's Markdown, and brought a work in progress over from Google Docs or Word.
 
 ## M8: Writing days
 
