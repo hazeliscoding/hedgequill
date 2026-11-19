@@ -90,6 +90,7 @@ public sealed class AppMenu
             "Chapter",
             Item("Copy chapter HTML", () => _ = Workspace?.CopyChapterHtml(), Gesture(Key.C, KeyModifiers.Shift), () => Workspace?.CanCopyChapter == true),
             Item("Copy chapter title", () => _ = Workspace?.CopyChapterTitle(), enabled: Chapter),
+            Item("Copy for a beta reader", () => _ = Workspace?.CopyForBeta(), enabled: () => Workspace?.CanCopyChapter == true),
             Item("Show last HTML…", () => Workspace?.ShowLastHtml(), enabled: () => Workspace?.LastCopy is not null),
             new NativeMenuItemSeparator(),
             Item("Open chapter overview", () => Workspace?.Select(Workspace.CurrentChapter), enabled: Chapter),

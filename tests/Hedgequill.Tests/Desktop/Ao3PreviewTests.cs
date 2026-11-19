@@ -5,6 +5,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Hedgequill.Core.Ao3;
+using Hedgequill.Desktop;
 using Hedgequill.Desktop.Views;
 using Hedgequill.Tests.Core;
 using static Hedgequill.Tests.Desktop.Ui;
@@ -53,6 +54,23 @@ public sealed class Ao3PreviewTests : IDisposable
             Assert.Equal(3, quote.Count);
             Assert.All(quote, run => Assert.Equal(FontStyle.Italic, run.FontStyle));
             Assert.Equal(FontWeight.Bold, quote[1].FontWeight);
+        });
+    }
+
+    [Fact]
+    public Task A_chapter_copies_for_a_beta_reader_as_rich_text_without_its_comments()
+    {
+        _temp.Write("stories/Tides/Chapter 1/Fog.md", "*Fog* rolled in. <!-- check the tide tables -->");
+        return OnWorkspace(1280, (window, workspace, preview) =>
+        {
+            Run(workspace.CopyForBeta());
+
+            var html = Run(RichClipboard.ReadHtml(window.Clipboard!));
+            var text = Run(window.Clipboard!.TryGetTextAsync());
+            Assert.Equal(
+                "<h1>Chapter 1: Chapter 1</h1>\n<p><em>Fog</em> rolled in.</p>\n<p style=\"text-align:center\">* * *</p>\n<p>Rain on the <a href=\"https://example.org/platform\">platform</a>.</p>",
+                html);
+            Assert.Equal("Chapter 1: Chapter 1\n\nFog rolled in.\n\n* * *\n\nRain on the platform.", text);
         });
     }
 

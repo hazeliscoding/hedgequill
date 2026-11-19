@@ -522,6 +522,33 @@ public partial class WorkspaceView : UserControl
         }
     }
 
+    /// <summary>
+    /// Copy for a beta reader: the chapter on the clipboard as rich text, to paste into Google Docs or an email with its
+    /// italics and bold, and as plain text for anywhere else.
+    /// </summary>
+    public async Task CopyForBeta(Node? chapter = null)
+    {
+        chapter ??= CurrentChapter;
+        if (chapter is not { Kind: NodeKind.Chapter, Children.Count: > 0 } || TopLevel.GetTopLevel(this)?.Clipboard is not { } clipboard)
+        {
+            return;
+        }
+
+        Manuscript.Commit();
+        var number = Chapters().IndexOf(chapter) + 1;
+        var (html, text) = Ao3Text.BetaCopy($"Chapter {number}: {chapter.Title}", chapter.Children.Select(scene => scene.Text));
+        try
+        {
+            await RichClipboard.Write(clipboard, text, html);
+            NoticeRequested?.Invoke($"Chapter {number} copied for a beta reader", "Paste it into Google Docs or an email. The italics and bold come with it; your comments stay out.", null, null);
+        }
+        catch (Exception error) when (error is not OutOfMemoryException)
+        {
+            // Another app holding the clipboard open refuses it.
+            NoticeRequested?.Invoke("Couldn't reach the clipboard", "Nothing was copied. Try again in a moment.", null, null);
+        }
+    }
+
     public async Task CopyChapterTitle()
     {
         if (CurrentChapter is { } chapter && await CopyText(chapter.Title))
@@ -645,13 +672,14 @@ public partial class WorkspaceView : UserControl
         {
             Item("Copy chapter HTML", () => _ = CopyChapterHtml(), copy),
             Item("Copy chapter title", () => _ = CopyChapterTitle()),
+            Item("Copy for a beta reader", () => _ = CopyForBeta()),
             new Separator(),
             Item("Open chapter overview", () => Select(chapter)),
             new Separator(),
             Item("Hide preview", TogglePreview, hide),
         };
-        items[0].IsEnabled = CanCopyChapter;
-        items[1].IsEnabled = items[3].IsEnabled = chapter is not null;
+        items[0].IsEnabled = items[2].IsEnabled = CanCopyChapter;
+        items[1].IsEnabled = items[4].IsEnabled = chapter is not null;
         return items;
     }
 
@@ -890,7 +918,7 @@ public partial class WorkspaceView : UserControl
             NodeKind.Scene or NodeKind.Page =>
                 [Item("Rename", () => StartRename(node), rename), Item("Duplicate", () => Duplicate(node), duplicate), .. (node.Kind == NodeKind.Scene ? [Item("Earlier versions…", () => ShowVersions(node))] : Array.Empty<Control>()), new Separator(), Item(node.Kind == NodeKind.Scene ? "Delete scene" : "Delete page", () => AskDelete(node), delete, danger: true)],
             NodeKind.Chapter =>
-                [Item("New scene", () => Add(node, NodeKind.Scene)), Item("Rename", () => StartRename(node), rename), Item("Duplicate", () => Duplicate(node)), new Separator(), Item("Copy chapter HTML", () => _ = CopyChapterHtml(node), new KeyGesture(Key.C, (OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control) | KeyModifiers.Shift)), new Separator(), Item("Delete chapter", () => AskDelete(node), delete, danger: true)],
+                [Item("New scene", () => Add(node, NodeKind.Scene)), Item("Rename", () => StartRename(node), rename), Item("Duplicate", () => Duplicate(node)), new Separator(), Item("Copy chapter HTML", () => _ = CopyChapterHtml(node), new KeyGesture(Key.C, (OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control) | KeyModifiers.Shift)), Item("Copy for a beta reader", () => _ = CopyForBeta(node)), new Separator(), Item("Delete chapter", () => AskDelete(node), delete, danger: true)],
             NodeKind.Act =>
                 [Item("New chapter", () => Add(node, NodeKind.Chapter)), Item("Rename", () => StartRename(node), rename), new Separator(), Item("Delete act", () => AskDelete(node), delete, danger: true)],
             _ => [Item("New page", () => Add(node, NodeKind.Page))],

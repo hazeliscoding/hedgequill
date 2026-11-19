@@ -37,7 +37,7 @@ public sealed class MenuTests : IDisposable
             ["Navigator", "Preview", "Focus mode", "Reading view", "-", "Larger text", "Smaller text", "Actual size", "-", "Appearance", "Match system", "Light", "Dark", "-", "Collapse all"],
             Headers(window, "View"));
         Assert.Equal(
-            ["Copy chapter HTML", "Copy chapter title", "Show last HTML…", "-", "Open chapter overview", "Duplicate chapter", "-", "Delete chapter"],
+            ["Copy chapter HTML", "Copy chapter title", "Copy for a beta reader", "Show last HTML…", "-", "Open chapter overview", "Duplicate chapter", "-", "Delete chapter"],
             Headers(window, "Chapter"));
         Assert.Equal(
             ["Writing in Hedgequill", "Keyboard shortcuts", "Pasting into AO3", "-", "Check for updates…", "About Hedgequill"],

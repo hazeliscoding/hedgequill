@@ -82,6 +82,17 @@ public class Ao3TextTests
     }
 
     [Fact]
+    public void A_chapter_copies_for_a_beta_reader_with_centred_breaks_and_without_comments()
+    {
+        var (html, text) = Ao3Text.BetaCopy("Chapter 1: Tides", ["Fog *rolled* in. <!-- check the date -->\n\n---\n\nRain.", "", "**Dawn.**"]);
+
+        Assert.Equal(
+            "<h1>Chapter 1: Tides</h1>\n<p>Fog <em>rolled</em> in.</p>\n<p style=\"text-align:center\">* * *</p>\n<p>Rain.</p>\n<p style=\"text-align:center\">* * *</p>\n<p><strong>Dawn.</strong></p>",
+            html);
+        Assert.Equal("Chapter 1: Tides\n\nFog rolled in.\n\n* * *\n\nRain.\n\n* * *\n\nDawn.", text);
+    }
+
+    [Fact]
     public void A_list_item_keeps_its_level_box_and_source_line()
     {
         var list = Assert.IsType<ListBlock>(Assert.Single(Ao3Text.Read("- [ ] Tides\n    - [x] Ferry\n- Lamp")));
